@@ -133,6 +133,70 @@ const App: React.FC = () => {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !showSignatureModal) return;
+
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.strokeStyle = document.documentElement.classList.contains('dark') ? '#FFFFFF' : '#000000';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+
+    let lastX = 0;
+    let lastY = 0;
+
+    const getCoords = (e: MouseEvent | TouchEvent): { x: number, y: number } => {
+        const rect = canvas.getBoundingClientRect();
+        const event = e instanceof MouseEvent ? e : e.touches[0];
+        return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    }
+
+    const startDrawing = (e: MouseEvent | TouchEvent) => {
+        e.preventDefault();
+        const { x, y } = getCoords(e);
+        isDrawing.current = true;
+        [lastX, lastY] = [x, y];
+    };
+
+    const draw = (e: MouseEvent | TouchEvent) => {
+        e.preventDefault();
+        if (!isDrawing.current) return;
+        const { x, y } = getCoords(e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        [lastX, lastY] = [x, y];
+    };
+
+    const stopDrawing = () => {
+        isDrawing.current = false;
+    };
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDrawing);
+
+    return () => {
+        canvas.removeEventListener('mousedown', startDrawing);
+        canvas.removeEventListener('mousemove', draw);
+        canvas.removeEventListener('mouseup', stopDrawing);
+        canvas.removeEventListener('mouseleave', stopDrawing);
+        canvas.removeEventListener('touchstart', startDrawing);
+        canvas.removeEventListener('touchmove', draw);
+        canvas.removeEventListener('touchend', stopDrawing);
+    };
+  }, [showSignatureModal]);
+
   const handleInstallApp = async () => {
     if (!installPrompt) return;
     installPrompt.prompt();
@@ -570,6 +634,31 @@ const App: React.FC = () => {
       setAuthLoading(false);
     }
   };
+
+  const clearSignature = () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  };
+
+  const saveSignature = () => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+          const blank = document.createElement('canvas');
+          blank.width = canvas.width;
+          blank.height = canvas.height;
+          if (canvas.toDataURL() === blank.toDataURL()) {
+              notify("A assinatura está vazia.", "info");
+              return;
+          }
+          const dataUrl = canvas.toDataURL('image/png');
+          setFormData(p => ({ ...p, signatureData: dataUrl }));
+          setShowSignatureModal(false);
+          notify("Assinatura guardada!", "success");
+      }
+  };
   
   return (
     <Suspense fallback={<PageLoader />}>
@@ -726,11 +815,36 @@ const App: React.FC = () => {
              </div>
          </div>
        )}
-       {showSignatureModal && (
-          <div className="fixed inset-0 bg-black/80 z-[80] flex items-center justify-center p-4">
-             <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl overflow-hidden transition-colors">...</div>
+
+      {showSignatureModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[80] flex items-center justify-center p-4 animate-fadeIn">
+              <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                  <div className="p-6 border-b dark:border-slate-800 flex justify-between items-center flex-shrink-0">
+                      <h3 className="font-bold text-lg dark:text-white">Assinatura Digital</h3>
+                      <button onClick={() => setShowSignatureModal(false)} className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-colors hover:bg-slate-200">
+                          <i className="fa-solid fa-times text-slate-500"></i>
+                      </button>
+                  </div>
+                  <div className="p-6 flex-grow flex flex-col">
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Desenhe no campo abaixo. A sua assinatura será adicionada ao documento.</p>
+                      <div className="w-full h-48 md:h-64 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 cursor-crosshair">
+                        <canvas
+                            ref={canvasRef}
+                            className="w-full h-full"
+                        ></canvas>
+                      </div>
+                  </div>
+                  <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t dark:border-slate-800 flex justify-end gap-4 flex-shrink-0">
+                      <button onClick={clearSignature} className="bg-white dark:bg-slate-700 border dark:border-slate-600 text-slate-700 dark:text-white font-bold py-3 px-6 rounded-xl transition-colors hover:bg-slate-100">
+                          Limpar
+                      </button>
+                      <button onClick={saveSignature} className="bg-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-colors hover:bg-blue-700 shadow-lg shadow-blue-500/20">
+                          Guardar Assinatura
+                      </button>
+                  </div>
+              </div>
           </div>
-       )}
+      )}
     </Suspense>
   );
 };
