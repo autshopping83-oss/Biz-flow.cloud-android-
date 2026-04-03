@@ -14,6 +14,77 @@ interface Props {
 
 type TimeRange = 'WEEK' | 'MONTH' | 'YEAR';
 
+// Pie Chart Slice coordinate helper
+const getCoordinatesForPercent = (percent: number) => {
+    const x = Math.cos(2 * Math.PI * percent);
+    const y = Math.sin(2 * Math.PI * percent);
+    return [x, y];
+};
+
+const PieChart: React.FC<{ data: { labels: string[], data: number[], total: number }, currency: string }> = ({ data, currency }) => {
+    if (!data || data.data.length === 0 || data.total <= 0) {
+        return (
+            <div className="flex items-center justify-center h-full text-slate-500 text-sm p-10">
+                <i className="fa-solid fa-chart-pie mr-2"></i>
+                Sem dados de despesas para analisar.
+            </div>
+        );
+    }
+
+    const colors = ['#f43f5e', '#f97316', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef'];
+    let cumulativePercent = 0;
+    
+    const slices = data.data.map((value, index) => {
+        const percent = value / data.total;
+        if (percent === 0) return null;
+
+        const [startX, startY] = getCoordinatesForPercent(cumulativePercent);
+        cumulativePercent += percent;
+        const [endX, endY] = getCoordinatesForPercent(cumulativePercent);
+        
+        const largeArcFlag = percent > 0.5 ? 1 : 0;
+        
+        const pathData = [
+            `M ${startX} ${startY}`,
+            `A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`,
+            `L 0 0`,
+        ].join(' ');
+
+        return <path key={index} d={pathData} fill={colors[index % colors.length]} />;
+    }).filter(Boolean);
+
+    const legend = data.labels.map((label, index) => {
+        if(data.data[index] === 0) return null;
+        const percentage = (data.data[index] / data.total) * 100;
+        return (
+            <div key={label} className="flex items-center justify-between gap-4 text-xs w-full">
+                <div className="flex items-center gap-2 overflow-hidden">
+                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors[index % colors.length] }}></div>
+                    <span className="text-slate-600 dark:text-slate-300 capitalize truncate">{label}</span>
+                </div>
+                <div className="flex items-baseline gap-2 flex-shrink-0">
+                  <span className="font-bold text-slate-500 dark:text-slate-400 text-[10px]">{formatMoney(data.data[index], currency)}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 w-10 text-right">{percentage.toFixed(0)}%</span>
+                </div>
+            </div>
+        )
+    }).filter(Boolean);
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            <div className="w-40 h-40 mx-auto transition-transform hover:scale-105">
+                 <svg viewBox="-1 -1 2 2" style={{ transform: 'rotate(-90deg)' }}>
+                    {slices}
+                </svg>
+            </div>
+            <div className="flex flex-col gap-3 w-full">
+                {legend}
+            </div>
+        </div>
+    );
+};
+
+
 export const FinanceManager: React.FC<Props> = ({ currency, t, userId }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -72,7 +143,7 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId }) => {
       setTransactions(updated);
 
       notify('Transação adicionada com sucesso!', 'success');
-      setNewTrans({ ...newTrans, amount: '', description: '' });
+      setNewTrans({ ...newTrans, amount: '', description: '', category: '' });
       setShowForm(false);
     } catch (error: any) {
       notify('Erro ao salvar transação: ' + error.message, 'error');
@@ -178,6 +249,27 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId }) => {
     const maxExpense = Math.max(...data.map(d => d.expense), 1);
     return { data, maxIncome, maxExpense, maxValue: Math.max(maxIncome, maxExpense) };
   }, [transactions, timeRange]);
+  
+  const expenseByCategory = useMemo(() => {
+    const categoryMap = new Map<string, number>();
+    transactions
+        .filter(t => t.type === 'EXPENSE' && t.amount > 0)
+        .forEach(t => {
+            const category = t.category || 'Outros';
+            const currentTotal = categoryMap.get(category) || 0;
+            categoryMap.set(category, currentTotal + t.amount);
+        });
+
+    const sortedCategories = Array.from(categoryMap.entries())
+        .sort((a, b) => b[1] - a[1]); // Sort descending
+
+    const labels = sortedCategories.map(item => item[0]);
+    const data = sortedCategories.map(item => item[1]);
+    const total = data.reduce((a, b) => a + b, 0);
+
+    return { labels, data, total };
+  }, [transactions]);
+
 
   const totalIncome = transactions.reduce((sum, t) => t.type === 'INCOME' ? sum + t.amount : sum, 0);
   const totalExpense = transactions.reduce((sum, t) => t.type === 'EXPENSE' ? sum + t.amount : sum, 0);
@@ -260,51 +352,59 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId }) => {
              <input required type="date" value={newTrans.date} onChange={e => setNewTrans({...newTrans, date: e.target.value})} className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 dark:text-white" />
              <input required type="text" placeholder={t('description')} value={newTrans.description} onChange={e => setNewTrans({...newTrans, description: e.target.value})} className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 dark:text-white" />
              <input required type="number" step="any" placeholder="Valor" value={newTrans.amount} onChange={e => setNewTrans({...newTrans, amount: e.target.value})} className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 dark:text-white" />
-             <input type="text" placeholder={t('category')} value={newTrans.category} onChange={e => setNewTrans({...newTrans, category: e.target.value})} className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 md:col-span-2 dark:text-white" />
+             <input type="text" placeholder="Categoria (ex: Marketing, Salários, Renda)" value={newTrans.category} onChange={e => setNewTrans({...newTrans, category: e.target.value})} className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 md:col-span-2 dark:text-white" />
              <button className="md:col-span-2 bg-slate-900 dark:bg-blue-600 text-white font-bold py-3 rounded-xl hover:opacity-90 transition">{t('save')}</button>
           </form>
         </div>
       )}
 
-      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 mb-8 shadow-sm">
-         <div className="flex justify-between items-center mb-6">
-             <h3 className="font-bold text-slate-900 dark:text-white">Análise Financeira</h3>
-             <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-                <button onClick={() => setTimeRange('WEEK')} className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${timeRange === 'WEEK' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500'}`}>Semana</button>
-                <button onClick={() => setTimeRange('MONTH')} className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${timeRange === 'MONTH' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500'}`}>Mês</button>
-                <button onClick={() => setTimeRange('YEAR')} className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${timeRange === 'YEAR' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500'}`}>Ano</button>
-             </div>
-         </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold text-slate-900 dark:text-white">Análise de Período</h3>
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                  <button onClick={() => setTimeRange('WEEK')} className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${timeRange === 'WEEK' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500'}`}>Semana</button>
+                  <button onClick={() => setTimeRange('MONTH')} className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${timeRange === 'MONTH' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500'}`}>Mês</button>
+                  <button onClick={() => setTimeRange('YEAR')} className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${timeRange === 'YEAR' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500'}`}>Ano</button>
+              </div>
+          </div>
 
-         <div className="w-full overflow-x-auto">
-            <div className="min-w-[600px] h-[250px] relative">
-                <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="w-full h-full" preserveAspectRatio="none">
-                    {[0, 0.25, 0.5, 0.75, 1].map(tick => (
-                        <line key={tick} x1="0" y1={CHART_HEIGHT * tick} x2={CHART_WIDTH} y2={CHART_HEIGHT * tick} stroke="#e2e8f0" strokeDasharray="4 4" strokeWidth="1" className="dark:stroke-slate-800" />
-                    ))}
-                    {processedData.data.map((d, i) => {
-                        const x = (i * (CHART_WIDTH / processedData.data.length)) + (CHART_WIDTH / processedData.data.length / 2) - BAR_WIDTH;
-                        const incomeH = (d.income / processedData.maxValue) * (CHART_HEIGHT * 0.85);
-                        const expenseH = (d.expense / processedData.maxValue) * (CHART_HEIGHT * 0.85);
-                        return (
-                            <g key={i} onMouseEnter={() => setHoveredData(d)} onMouseLeave={() => setHoveredData(null)}>
-                                <rect x={x} y={CHART_HEIGHT - incomeH - 20} width={BAR_WIDTH} height={Math.max(incomeH, 0)} className="fill-emerald-500 hover:fill-emerald-400 transition-all cursor-pointer" rx="4"/>
-                                <rect x={x + BAR_WIDTH + GAP} y={CHART_HEIGHT - expenseH - 20} width={BAR_WIDTH} height={Math.max(expenseH, 0)} className="fill-rose-500 hover:fill-rose-400 transition-all cursor-pointer" rx="4"/>
-                                <text x={x + BAR_WIDTH} y={CHART_HEIGHT} fontSize="12" textAnchor="middle" className="fill-slate-400 font-sans">{d.label}</text>
-                            </g>
-                        )
-                    })}
-                </svg>
-                {hoveredData && (
-                    <div className="absolute top-0 right-0 bg-slate-900/90 text-white p-3 rounded-lg shadow-lg pointer-events-none backdrop-blur-sm z-10 text-sm">
-                        <p className="font-bold mb-1 text-slate-300 border-b border-slate-700 pb-1">{hoveredData.label}</p>
-                        <div className="flex justify-between gap-4 text-emerald-400"><span>Entrada:</span><span className="font-mono">{formatMoney(hoveredData.income, currency)}</span></div>
-                        <div className="flex justify-between gap-4 text-rose-400"><span>Saída:</span><span className="font-mono">{formatMoney(hoveredData.expense, currency)}</span></div>
-                    </div>
-                )}
-            </div>
-         </div>
+          <div className="w-full overflow-x-auto">
+              <div className="min-w-[600px] h-[250px] relative">
+                  <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="w-full h-full" preserveAspectRatio="none">
+                      {[0, 0.25, 0.5, 0.75, 1].map(tick => (
+                          <line key={tick} x1="0" y1={CHART_HEIGHT * tick} x2={CHART_WIDTH} y2={CHART_HEIGHT * tick} stroke="#e2e8f0" strokeDasharray="4 4" strokeWidth="1" className="dark:stroke-slate-800" />
+                      ))}
+                      {processedData.data.map((d, i) => {
+                          const x = (i * (CHART_WIDTH / processedData.data.length)) + (CHART_WIDTH / processedData.data.length / 2) - BAR_WIDTH;
+                          const incomeH = (d.income / processedData.maxValue) * (CHART_HEIGHT * 0.85);
+                          const expenseH = (d.expense / processedData.maxValue) * (CHART_HEIGHT * 0.85);
+                          return (
+                              <g key={i} onMouseEnter={() => setHoveredData(d)} onMouseLeave={() => setHoveredData(null)}>
+                                  <rect x={x} y={CHART_HEIGHT - incomeH - 20} width={BAR_WIDTH} height={Math.max(incomeH, 0)} className="fill-emerald-500 hover:fill-emerald-400 transition-all cursor-pointer" rx="4"/>
+                                  <rect x={x + BAR_WIDTH + GAP} y={CHART_HEIGHT - expenseH - 20} width={BAR_WIDTH} height={Math.max(expenseH, 0)} className="fill-rose-500 hover:fill-rose-400 transition-all cursor-pointer" rx="4"/>
+                                  <text x={x + BAR_WIDTH} y={CHART_HEIGHT} fontSize="12" textAnchor="middle" className="fill-slate-400 font-sans">{d.label}</text>
+                              </g>
+                          )
+                      })}
+                  </svg>
+                  {hoveredData && (
+                      <div className="absolute top-0 right-0 bg-slate-900/90 text-white p-3 rounded-lg shadow-lg pointer-events-none backdrop-blur-sm z-10 text-sm">
+                          <p className="font-bold mb-1 text-slate-300 border-b border-slate-700 pb-1">{hoveredData.label}</p>
+                          <div className="flex justify-between gap-4 text-emerald-400"><span>Entrada:</span><span className="font-mono">{formatMoney(hoveredData.income, currency)}</span></div>
+                          <div className="flex justify-between gap-4 text-rose-400"><span>Saída:</span><span className="font-mono">{formatMoney(hoveredData.expense, currency)}</span></div>
+                      </div>
+                  )}
+              </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+            <h3 className="font-bold text-slate-900 dark:text-white mb-6">Despesas por Categoria</h3>
+            <PieChart data={expenseByCategory} currency={currency} />
+        </div>
       </div>
+
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
         <table className="w-full text-left border-collapse">

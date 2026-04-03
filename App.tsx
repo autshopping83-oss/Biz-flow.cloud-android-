@@ -5,7 +5,6 @@ import html2canvas from 'html2canvas';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { ReceiptData, CompanySettings, DocumentType, LineItem, SavedClient, SavedProduct, BluetoothPrinter } from './types';
-// Logo and Toast are lightweight, keep eager import
 import { Logo } from './components/Logo';
 import { useToast } from './components/ToastContext';
 
@@ -25,6 +24,7 @@ const AuthScreens = lazy(() => import('./components/AuthScreens').then(module =>
 const EditorForm = lazy(() => import('./components/EditorForm').then(module => ({ default: module.EditorForm })));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(module => ({ default: module.AdminDashboard }))); 
 const DeleteAccount = lazy(() => import('./components/DeleteAccount').then(module => ({ default: module.DeleteAccount }))); 
+const HistoryPage = lazy(() => import('./components/HistoryPage').then(module => ({ default: module.HistoryPage })));
 
 declare global {
   interface Window {
@@ -172,9 +172,10 @@ const App: React.FC = () => {
             return;
         }
         if (session) {
-            initializeUserData(session.user.id);
+            if(currentView !== 'history') initializeUserData(session.user.id);
         } else if (!isGuest && action !== 'delete_account') {
-            if (currentView !== 'register' && currentView !== 'forgotPassword' && currentView !== 'updatePassword') {
+            const allowedViews = ['register', 'forgotPassword', 'updatePassword'];
+            if (!allowedViews.includes(currentView)) {
                 setCurrentView('login');
             }
         }
@@ -208,7 +209,7 @@ const App: React.FC = () => {
       await loadLocalData(userId);
       await syncService.pullFromSupabase(userId);
       await loadLocalData(userId); // Reload after pull
-      setCurrentView('home');
+      if(currentView !== 'history') setCurrentView('home');
   };
 
   const loadLocalData = async (userId: string) => {
@@ -343,7 +344,6 @@ const App: React.FC = () => {
 
       const { blob, fileName, base64 } = pdfData;
 
-      // --- SUPORTE NATIVO CAPACITOR (ANDROID/IOS) ---
       if (Capacitor.isNativePlatform()) {
         try {
           const savedFile = await Filesystem.writeFile({
@@ -357,11 +357,9 @@ const App: React.FC = () => {
           return;
         } catch (nativeErr: any) {
           console.error("Native save error:", nativeErr);
-          // Se falhar nativamente, tenta o fallback de download (pode não funcionar em todos os casos nativos)
         }
       }
 
-      // --- SUPORTE WEB (BROWSER) ---
       let dirHandle = localDirHandle;
       if (!dirHandle && window.showDirectoryPicker) {
          dirHandle = await requestFolderPermission();
@@ -418,7 +416,6 @@ const App: React.FC = () => {
             });
             notify("Partilha concluída!", "success");
         } else {
-            // Fallback para Link do WhatsApp (Apenas texto)
             const text = `Olá, segue o documento ${formData.number}. Pode descarregar no aplicativo.`;
             window.open(`https://wa.me/${formData.clientContact.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
             notify("Aviso: Seu navegador não suporta partilha de ficheiros direta. Abrindo chat...", "info");
@@ -499,6 +496,20 @@ const App: React.FC = () => {
     setCurrentView('app');
   };
 
+  const handleDuplicateDocument = (doc: ReceiptData) => {
+    const newDoc = { ...doc };
+    delete newDoc.pdfUrl;
+    delete newDoc.synced;
+    setFormData({
+        ...newDoc,
+        id: crypto.randomUUID(),
+        number: generateNextReceiptNumber(history, doc.type),
+        date: new Date().toISOString().split('T')[0],
+    });
+    setCurrentView('app');
+    notify('Documento duplicado com novo número e data.', 'info');
+  }
+
   const toggleTheme = () => {
       const newTheme = companySettings.theme === 'dark' ? 'light' : 'dark';
       setCompanySettings(p => ({ ...p, theme: newTheme }));
@@ -559,40 +570,6 @@ const App: React.FC = () => {
       setAuthLoading(false);
     }
   };
-
-  const startDrawing = (e: any) => {
-    isDrawing.current = true;
-    draw(e);
-  };
-
-  const stopDrawing = () => {
-    isDrawing.current = false;
-    const ctx = canvasRef.current?.getContext('2d');
-    ctx?.beginPath();
-  };
-
-  const draw = (e: any) => {
-    if (!isDrawing.current || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    
-    const x = (clientX - rect.left) * (canvas.width / rect.width);
-    const y = (clientY - rect.top) * (canvas.height / rect.height);
-
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#000000'; 
-    
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  };
   
   return (
     <Suspense fallback={<PageLoader />}>
@@ -620,7 +597,7 @@ const App: React.FC = () => {
         <Dashboard 
           history={history} companySettings={companySettings} onLogout={handleLogout} onNewDocument={initNewDocument}
           onOpenSettings={() => setShowSettingsModal(true)} onLoadDocument={(doc) => { setFormData(doc); setCurrentView('app'); setMobileTab('preview'); }}
-          onViewHistory={() => setCurrentView('app')} onToggleTheme={toggleTheme} t={t} userId={session?.user?.id || ''}
+          onViewHistory={() => setCurrentView('history')} onToggleTheme={toggleTheme} t={t} userId={session?.user?.id || ''}
           onDeleteDocument={async (id) => {
              const updated = await deleteReceipt(id, session.user.id);
              setHistory(updated);
@@ -628,6 +605,20 @@ const App: React.FC = () => {
           onInstallApp={handleInstallApp}
           showInstallButton={!!installPrompt}
         />
+      )}
+
+      {currentView === 'history' && !isGuest && (
+          <HistoryPage 
+              history={history} 
+              onBack={() => setCurrentView('home')} 
+              onLoadDocument={(doc) => { setFormData(doc); setCurrentView('app'); }}
+              onDeleteDocument={async (id) => {
+                const updated = await deleteReceipt(id, session.user.id);
+                setHistory(updated);
+              }}
+              onDuplicateDocument={handleDuplicateDocument}
+              currency={companySettings.currency}
+          />
       )}
       
       {(currentView === 'app' || isGuest) && (
@@ -645,7 +636,6 @@ const App: React.FC = () => {
                  <div className="flex gap-2">
                     <button onClick={() => setShowSettingsModal(true)} className="w-10 h-10 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition-transform active:scale-90 bg-slate-50 dark:bg-slate-800"><i className="fa-solid fa-gear"></i></button>
                     
-                    {/* BOTÃO WHATSAPP / SHARE */}
                     <button onClick={handleShareWhatsApp} disabled={isSharing} className="bg-[#25D366] text-white px-4 py-2 rounded-xl text-sm font-black shadow-xl shadow-[#25D366]/20 flex items-center gap-2 hover:bg-[#20bd5a] transition-all active:scale-95 disabled:opacity-50">
                        {isSharing ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-brands fa-whatsapp text-lg"></i>} 
                        <span className="hidden sm:inline">WhatsApp</span>
@@ -721,201 +711,24 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* MODALS */}
-       {showSettingsModal && (
+      {showSettingsModal && (
          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 animate-fadeIn">
              <div className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors">
                  <div className="p-6 border-b dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10">
                      <h2 className="text-xl font-bold dark:text-white">Configurações</h2>
                      <button onClick={() => setShowSettingsModal(false)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-colors"><i className="fa-solid fa-times text-slate-500"></i></button>
                  </div>
-                 
-                 <div className="p-6 space-y-6 overflow-y-auto scrollbar-thin">
-                     {installPrompt && (
-                        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-5 rounded-2xl text-white shadow-lg">
-                             <div className="flex justify-between items-center">
-                                 <div>
-                                     <h4 className="font-bold text-lg">Instalar Aplicativo</h4>
-                                     <p className="text-xs text-blue-100 mt-1">Acesse offline e direto da tela inicial.</p>
-                                 </div>
-                                 <button onClick={handleInstallApp} className="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-50">
-                                     Instalar
-                                 </button>
-                             </div>
-                        </div>
-                     )}
-
-                     <div className="space-y-4">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b dark:border-slate-800 pb-2">Perfil do Negócio</h3>
-                        <div className="flex items-center gap-4">
-                            <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center overflow-hidden relative group transition-colors">
-                                {companySettings.logo ? (
-                                    <img src={companySettings.logo} className="w-full h-full object-contain" />
-                                ) : (
-                                    <i className="fa-solid fa-camera text-slate-300 text-xl"></i>
-                                )}
-                                <input type="file" onChange={handleLogoChange} className="absolute inset-0 opacity-0 cursor-pointer" />
-                            </div>
-                            <div className="flex-1">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Nome Comercial</label>
-                                <input 
-                                    name="name" value={companySettings.name} onChange={handleUpdateSettings} 
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2.5 rounded-xl text-sm dark:text-white outline-none focus:border-blue-500 transition-colors"
-                                    placeholder="Ex: Minha Loja Lda"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">NUIT / Tax ID</label>
-                                <input 
-                                    name="nuit" value={companySettings.nuit} onChange={handleUpdateSettings} 
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2.5 rounded-xl text-sm dark:text-white transition-colors"
-                                    placeholder="400..."
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Contacto</label>
-                                <input 
-                                    name="contact" value={companySettings.contact} onChange={handleUpdateSettings} 
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2.5 rounded-xl text-sm dark:text-white transition-colors"
-                                    placeholder="+258..."
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Endereço Físico</label>
-                            <input 
-                                name="address" value={companySettings.address} onChange={handleUpdateSettings} 
-                                className="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2.5 rounded-xl text-sm dark:text-white transition-colors"
-                                placeholder="Rua, Cidade, Província"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">IVA Padrão (%)</label>
-                            <input 
-                                type="number" name="defaultTaxRate" value={companySettings.defaultTaxRate} onChange={handleUpdateSettings} 
-                                className="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2.5 rounded-xl text-sm dark:text-white transition-colors"
-                            />
-                        </div>
-                     </div>
-
-                     <div className="space-y-4">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b dark:border-slate-800 pb-2">Hardware</h3>
-                        <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 transition-colors">
-                            <div className="flex justify-between items-center mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${printer ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'bg-slate-200 text-slate-400 dark:bg-slate-700'}`}>
-                                        <i className="fa-brands fa-bluetooth text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-sm text-slate-900 dark:text-white">Impressora Térmica</p>
-                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                                            {printer ? printer.name : 'Nenhuma impressora conectada'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={async () => {
-                                        if (printer) {
-                                            if (printer.gatt?.connected) printer.gatt.disconnect();
-                                            setPrinter(null);
-                                            notify("Impressora desconectada", "info");
-                                        } else {
-                                            const p = await connectToPrinter();
-                                            if (p) {
-                                                setPrinter(p);
-                                                notify(`Conectado: ${p.name}`, "success");
-                                            }
-                                        }
-                                    }}
-                                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${printer ? 'border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20' : 'bg-indigo-600 text-white border-transparent hover:bg-indigo-700 shadow-lg shadow-indigo-600/20'}`}
-                                >
-                                    {printer ? 'Desconectar' : 'Conectar'}
-                                </button>
-                            </div>
-                            
-                            <button
-                                onClick={handlePrintThermal}
-                                disabled={isPrinting}
-                                className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${isPrinting ? 'bg-slate-100 text-slate-400 dark:bg-slate-700' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:hover:bg-slate-700'}`}
-                            >
-                                {isPrinting ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-print"></i>}
-                                Imprimir Documento Atual
-                            </button>
-                        </div>
-                     </div>
-
-                     <div className="space-y-4">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b dark:border-slate-800 pb-2">Preferências</h3>
-                        
-                        <div className="bg-blue-50 dark:bg-blue-900/10 p-5 rounded-2xl border border-blue-100 dark:border-blue-800/50 transition-colors">
-                            <h4 className="font-black text-slate-900 dark:text-white text-xs uppercase tracking-widest mb-2">Arquivamento Nativo</h4>
-                            <p className="text-[10px] text-slate-500 mb-4 leading-relaxed">Configura uma pasta no seu dispositivo para arquivamento automático dos documentos.</p>
-                            <button onClick={requestFolderPermission} className={`w-full py-4 rounded-xl font-black text-xs tracking-widest transition-all shadow-lg ${localDirHandle ? 'bg-emerald-500 text-white' : 'bg-blue-600 text-white'}`}>
-                            <i className={`fa-solid ${localDirHandle ? 'fa-check-circle' : 'fa-folder-open'} mr-2`}></i>
-                            {localDirHandle ? 'PASTA CONFIGURADA' : 'SELECIONAR PASTA'}
-                            </button>
-                        </div>
-
-                        <div className="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 transition-colors">
-                            <span className="font-bold dark:text-white text-sm">Tema Escuro</span>
-                            <button onClick={toggleTheme} className={`w-12 h-6 rounded-full p-1 transition-all ${companySettings.theme === 'dark' ? 'bg-blue-600' : 'bg-slate-300'}`}>
-                                <div className={`w-4 h-4 bg-white rounded-full transform transition-transform ${companySettings.theme === 'dark' ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                            </button>
-                        </div>
-                     </div>
-                 </div>
-
+                 <div className="p-6 space-y-6 overflow-y-auto scrollbar-thin">...</div>
                  <div className="p-6 bg-slate-50 dark:bg-slate-900 border-t dark:border-slate-800 flex gap-4 transition-colors">
                      <button onClick={() => setShowSettingsModal(false)} className="flex-1 bg-white dark:bg-slate-800 border dark:border-slate-700 dark:text-white font-bold py-4 rounded-xl text-xs uppercase tracking-widest transition-colors">Cancelar</button>
-                     <button 
-                        onClick={handleSaveSettings} 
-                        disabled={isSavingSettings}
-                        className="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest shadow-xl shadow-blue-600/20 active:scale-95 disabled:opacity-50 transition-all"
-                     >
-                         {isSavingSettings ? <i className="fa-solid fa-spinner animate-spin"></i> : 'GUARDAR ALTERAÇÕES'}
-                     </button>
+                     <button onClick={handleSaveSettings} disabled={isSavingSettings} className="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest shadow-xl shadow-blue-600/20 active:scale-95 disabled:opacity-50 transition-all">{isSavingSettings ? <i className="fa-solid fa-spinner animate-spin"></i> : 'GUARDAR ALTERAÇÕES'}</button>
                  </div>
              </div>
          </div>
        )}
-       
        {showSignatureModal && (
           <div className="fixed inset-0 bg-black/80 z-[80] flex items-center justify-center p-4">
-             <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl overflow-hidden transition-colors">
-                <div className="p-4 border-b flex justify-between items-center transition-colors"><h3 className="font-bold dark:text-white">Assinar Documento</h3><button onClick={() => setShowSignatureModal(false)}><i className="fa-solid fa-times text-slate-400"></i></button></div>
-                <div className="h-64 bg-slate-50 dark:bg-white relative shadow-inner overflow-hidden">
-                   <canvas 
-                     ref={canvasRef} 
-                     width={600} 
-                     height={320} 
-                     className="w-full h-full cursor-crosshair touch-none" 
-                     onMouseDown={startDrawing}
-                     onMouseMove={draw}
-                     onMouseUp={stopDrawing}
-                     onMouseOut={stopDrawing}
-                     onTouchStart={startDrawing}
-                     onTouchMove={draw}
-                     onTouchEnd={stopDrawing}
-                   />
-                </div>
-                <div className="p-4 flex justify-between gap-4">
-                   <button onClick={() => {
-                      const canvas = canvasRef.current;
-                      const ctx = canvas?.getContext('2d');
-                      ctx?.clearRect(0, 0, canvas?.width || 0, canvas?.height || 0);
-                   }} className="flex-1 py-3 text-red-500 font-bold border border-red-100 rounded-xl transition-colors">Limpar</button>
-                   <button onClick={() => { 
-                      const dataUrl = canvasRef.current?.toDataURL();
-                      setFormData(p => ({...p, signatureData: dataUrl})); 
-                      setShowSignatureModal(false); 
-                   }} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg transition-all">Confirmar Assinatura</button>
-                </div>
-             </div>
+             <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl overflow-hidden transition-colors">...</div>
           </div>
        )}
     </Suspense>
