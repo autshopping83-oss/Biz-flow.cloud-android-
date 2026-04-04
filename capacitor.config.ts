@@ -17,8 +17,10 @@ const config: CapacitorConfig = {
     }
   },
   android: {
-    icon: 'logo.png',
-    splash: 'splash.png'
+    adaptiveIcon: {
+      foreground: "logo.svg",
+      background: "#FFFFFF"
+    }
   }
 };
 
