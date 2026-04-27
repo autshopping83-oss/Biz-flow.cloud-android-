@@ -33,6 +33,10 @@ jobs:
       - name: Capacitor Sync
         run: npx cap sync android
 
+      - name: Update Android Package Name
+        # Garante que o applicationId no build.gradle seja 'com.bizflow.cloud'
+        run: sed -i 's/applicationId "com.bizflow.app"/applicationId "com.bizflow.cloud"/' android/app/build.gradle
+
       - name: Build and sign AAB
         env:
           ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
