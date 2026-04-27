@@ -38,7 +38,6 @@ jobs:
           ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd android
           echo "$ENCODED_KEYSTORE" | base64 -d > app/bizflow.keystore
@@ -46,7 +45,7 @@ jobs:
             -Pandroid.injected.signing.store.file=bizflow.keystore \
             -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
             -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+            -Pandroid.injected.signing.key.password="$KEYSTORE_PASSWORD"
           
       - name: Upload AAB
         uses: actions/upload-artifact@v4
