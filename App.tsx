@@ -100,7 +100,7 @@ const App: React.FC = () => {
   const { notify } = useToast(); 
 
   const t = (key: any) => getTranslation(companySettings.language, key);
-  const fMoney = (val: number) => formatMoney(val, companySettings.currency);
+  const fMoney = (val: number) => formatMoney(val, companySettings.currency, companySettings.language);
 
   useEffect(() => {
     const subtotal = formData.items.reduce((acc, item) => acc + (Number(item.total) || 0), 0);
@@ -714,6 +714,7 @@ const App: React.FC = () => {
               }}
               onDuplicateDocument={handleDuplicateDocument}
               currency={companySettings.currency}
+              lang={companySettings.language}
           />
       )}
       

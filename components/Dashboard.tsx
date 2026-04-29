@@ -164,7 +164,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
          {activeTab === 'COMMUNITY' ? (
             <CommunityFeed currentUser={companySettings} t={t} />
          ) : activeTab === 'FINANCE' ? (
-            <FinanceManager currency={companySettings.currency} t={t} userId={userId} />
+            <FinanceManager currency={companySettings.currency} t={t} userId={userId} lang={companySettings.language} />
          ) : (
             <div className="animate-fadeIn">
                  {/* Overview Header */}
@@ -179,7 +179,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                         <div>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receita Mensal</p>
-                          <p className="font-black text-slate-900 dark:text-white text-2xl leading-none tracking-tight">{formatMoney(monthlyRevenue, companySettings.currency)}</p>
+                          <p className="font-black text-slate-900 dark:text-white text-2xl leading-none tracking-tight">{formatMoney(monthlyRevenue, companySettings.currency, companySettings.language)}</p>
                         </div>
                     </div>
                  </div>

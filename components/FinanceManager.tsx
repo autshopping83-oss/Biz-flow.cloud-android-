@@ -10,6 +10,7 @@ interface Props {
   currency: string;
   t: (key: any) => string;
   userId: string;
+  lang: string;
 }
 
 type TimeRange = 'WEEK' | 'MONTH' | 'YEAR';
@@ -21,7 +22,7 @@ const getCoordinatesForPercent = (percent: number) => {
     return [x, y];
 };
 
-const PieChart: React.FC<{ data: { labels: string[], data: number[], total: number }, currency: string }> = ({ data, currency }) => {
+const PieChart: React.FC<{ data: { labels: string[], data: number[], total: number }, currency: string, lang: string }> = ({ data, currency, lang }) => {
     if (!data || data.data.length === 0 || data.total <= 0) {
         return (
             <div className="flex items-center justify-center h-full text-slate-500 text-sm p-10">
@@ -63,7 +64,7 @@ const PieChart: React.FC<{ data: { labels: string[], data: number[], total: numb
                     <span className="text-slate-600 dark:text-slate-300 capitalize truncate">{label}</span>
                 </div>
                 <div className="flex items-baseline gap-2 flex-shrink-0">
-                  <span className="font-bold text-slate-500 dark:text-slate-400 text-[10px]">{formatMoney(data.data[index], currency)}</span>
+                  <span className="font-bold text-slate-500 dark:text-slate-400 text-[10px]">{formatMoney(data.data[index], currency, lang)}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 w-10 text-right">{percentage.toFixed(0)}%</span>
                 </div>
             </div>
@@ -85,7 +86,7 @@ const PieChart: React.FC<{ data: { labels: string[], data: number[], total: numb
 };
 
 
-export const FinanceManager: React.FC<Props> = ({ currency, t, userId }) => {
+export const FinanceManager: React.FC<Props> = ({ currency, t, userId, lang }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [timeRange, setTimeRange] = useState<TimeRange>('WEEK');
@@ -312,7 +313,7 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId }) => {
            {isLoading ? (
              <div className="h-8 w-32 bg-slate-200 dark:bg-slate-800 animate-pulse rounded mt-2"></div>
            ) : (
-             <p className={`text-3xl font-black mt-2 ${balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-500'}`}>{formatMoney(balance, currency)}</p>
+             <p className={`text-3xl font-black mt-2 ${balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-500'}`}>{formatMoney(balance, currency, lang)}</p>
            )}
         </div>
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 relative overflow-hidden">
@@ -321,7 +322,7 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId }) => {
            {isLoading ? (
              <div className="h-8 w-32 bg-slate-200 dark:bg-slate-800 animate-pulse rounded mt-2"></div>
            ) : (
-             <p className="text-3xl font-black mt-2 text-emerald-600">{formatMoney(totalIncome, currency)}</p>
+             <p className="text-3xl font-black mt-2 text-emerald-600">{formatMoney(totalIncome, currency, lang)}</p>
            )}
         </div>
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 relative overflow-hidden">
@@ -330,7 +331,7 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId }) => {
            {isLoading ? (
              <div className="h-8 w-32 bg-slate-200 dark:bg-slate-800 animate-pulse rounded mt-2"></div>
            ) : (
-             <p className="text-3xl font-black mt-2 text-rose-500">{formatMoney(totalExpense, currency)}</p>
+             <p className="text-3xl font-black mt-2 text-rose-500">{formatMoney(totalExpense, currency, lang)}</p>
            )}
         </div>
       </div>
@@ -391,8 +392,8 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId }) => {
                   {hoveredData && (
                       <div className="absolute top-0 right-0 bg-slate-900/90 text-white p-3 rounded-lg shadow-lg pointer-events-none backdrop-blur-sm z-10 text-sm">
                           <p className="font-bold mb-1 text-slate-300 border-b border-slate-700 pb-1">{hoveredData.label}</p>
-                          <div className="flex justify-between gap-4 text-emerald-400"><span>Entrada:</span><span className="font-mono">{formatMoney(hoveredData.income, currency)}</span></div>
-                          <div className="flex justify-between gap-4 text-rose-400"><span>Saída:</span><span className="font-mono">{formatMoney(hoveredData.expense, currency)}</span></div>
+                          <div className="flex justify-between gap-4 text-emerald-400"><span>Entrada:</span><span className="font-mono">{formatMoney(hoveredData.income, currency, lang)}</span></div>
+                          <div className="flex justify-between gap-4 text-rose-400"><span>Saída:</span><span className="font-mono">{formatMoney(hoveredData.expense, currency, lang)}</span></div>
                       </div>
                   )}
               </div>
@@ -401,7 +402,7 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId }) => {
 
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
             <h3 className="font-bold text-slate-900 dark:text-white mb-6">Despesas por Categoria</h3>
-            <PieChart data={expenseByCategory} currency={currency} />
+            <PieChart data={expenseByCategory} currency={currency} lang={lang} />
         </div>
       </div>
 
@@ -425,7 +426,7 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId }) => {
                     <div className="sm:hidden text-xs text-slate-400">{t.date} • {t.category}</div>
                 </td>
                 <td className={`p-4 text-right font-bold ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-rose-500'}`}>
-                  {t.type === 'INCOME' ? '+' : '-'} {formatMoney(t.amount, currency)}
+                  {t.type === 'INCOME' ? '+' : '-'} {formatMoney(t.amount, currency, lang)}
                 </td>
                 <td className="p-4 text-center">
                    <button onClick={() => handleDelete(t.id)} className="text-slate-300 hover:text-rose-500 transition p-2"><i className="fa-solid fa-trash"></i></button>

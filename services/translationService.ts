@@ -225,11 +225,20 @@ export const CURRENCIES = [
 ];
 
 export const LANGUAGES = [
-  { code: 'pt', name: 'Português', flag: '🇵🇹' },
   { code: 'en', name: 'English', flag: '🇺🇸' },
   { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'de', name: 'Deutsche', flag: '🇩🇪' },
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'pt', name: 'Português', flag: '🇵🇹' },
+  { code: 'id', name: 'Indonesia', flag: '🇮🇩' },
+  { code: 'ms', name: 'Malaysia', flag: '🇲🇾' },
+  { code: 'ja', name: '日本語', flag: '🇯🇵' },
+  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+  { code: 'ko', name: '한국어', flag: '🇰🇷' },
+  { code: 'jv', name: 'Jawa', flag: '🇮🇩' },
+  { code: 'zu', name: 'Zulu', flag: '🇿🇦' },
 ];
 
 type TranslationKey = 
@@ -458,9 +467,9 @@ export const getTranslation = (lang: string, key: TranslationKey): string => {
   return dict[key] || key;
 };
 
-export const formatMoney = (amount: number, currencyCode: string) => {
+export const formatMoney = (amount: number, currencyCode: string, lang?: string) => {
   try {
-    return new Intl.NumberFormat(undefined, { // undefined uses browser locale for formatting style
+    return new Intl.NumberFormat(lang, {
       style: 'currency',
       currency: currencyCode,
     }).format(amount);

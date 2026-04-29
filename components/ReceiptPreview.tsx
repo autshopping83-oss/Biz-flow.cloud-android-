@@ -116,8 +116,8 @@ const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, captureId = "
                         <p className="font-bold text-slate-900">{item.description}</p>
                       </td>
                       <td className="py-5 text-center align-top text-slate-600">{item.quantity}</td>
-                      <td className="py-5 text-right align-top text-slate-600 font-mono">{formatMoney(item.unitPrice, currency)}</td>
-                      <td className="py-5 text-right align-top font-bold text-slate-900 font-mono">{formatMoney(item.total, currency)}</td>
+                      <td className="py-5 text-right align-top text-slate-600 font-mono">{formatMoney(item.unitPrice, currency, lang)}</td>
+                      <td className="py-5 text-right align-top font-bold text-slate-900 font-mono">{formatMoney(item.total, currency, lang)}</td>
                     </tr>
                 ))
             ) : (
@@ -135,24 +135,24 @@ const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, captureId = "
           <div className="w-[300px] space-y-3">
              <div className="flex justify-between text-[13px] text-slate-500">
                  <span>{t('subtotal')}</span>
-                 <span className="font-mono">{formatMoney(data.subtotal, currency)}</span>
+                 <span className="font-mono">{formatMoney(data.subtotal, currency, lang)}</span>
              </div>
              {data.discount > 0 && (
                  <div className="flex justify-between text-[13px] text-emerald-600">
                      <span>{t('discount')}</span>
-                     <span className="font-mono">- {formatMoney(data.discount, currency)}</span>
+                     <span className="font-mono">- {formatMoney(data.discount, currency, lang)}</span>
                  </div>
              )}
              {data.taxRate > 0 && (
                  <div className="flex justify-between text-[13px] text-slate-500">
                      <span>{t('tax')} ({data.taxRate}%)</span>
-                     <span className="font-mono">{formatMoney(data.taxAmount, currency)}</span>
+                     <span className="font-mono">{formatMoney(data.taxAmount, currency, lang)}</span>
                  </div>
              )}
              <div className="flex justify-between pt-6 items-center">
                  <span className="text-[11px] font-black uppercase tracking-[0.2em]">{t('finalTotal')}</span>
                  <div className="bg-slate-900 text-white px-5 py-3 rounded-lg text-2xl font-black font-mono shadow-xl">
-                     {formatMoney(data.total, currency)}
+                     {formatMoney(data.total, currency, lang)}
                  </div>
              </div>
           </div>

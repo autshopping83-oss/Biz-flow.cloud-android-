@@ -10,9 +10,10 @@ interface Props {
   onDeleteDocument: (id: string) => void;
   onDuplicateDocument: (doc: ReceiptData) => void;
   currency: string;
+  lang: string;
 }
 
-export const HistoryPage: React.FC<Props> = ({ history, onBack, onLoadDocument, onDeleteDocument, onDuplicateDocument, currency }) => {
+export const HistoryPage: React.FC<Props> = ({ history, onBack, onLoadDocument, onDeleteDocument, onDuplicateDocument, currency, lang }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'ALL' | 'INVOICE' | 'RECEIPT' | 'QUOTE'>('ALL');
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'total-desc' | 'total-asc'>('date-desc');
@@ -68,7 +69,7 @@ export const HistoryPage: React.FC<Props> = ({ history, onBack, onLoadDocument, 
       </div>
       <div className="flex items-center gap-4 w-full sm:w-auto">
         <p className="font-extrabold text-slate-800 dark:text-slate-100 text-lg tabular-nums flex-1 sm:flex-none">
-          {formatMoney(doc.total, doc.currency)}
+          {formatMoney(doc.total, doc.currency, lang)}
         </p>
         <div className="flex items-center gap-1">
           <button onClick={() => onDuplicateDocument(doc)} title="Duplicar" className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-blue-600 transition-colors">
