@@ -15,6 +15,7 @@ import { getTranslation, formatMoney } from './services/translationService';
 import { supabase } from './services/supabaseClient';
 import { connectToPrinter, printTicket } from './services/printerService';
 import { syncService } from './services/syncService';
+import { productService } from './services/productService';
 import { BleClient } from '@capacitor-community/bluetooth-le';
 
 // --- LAZY COMPONENTS (Code Splitting) ---
@@ -91,10 +92,12 @@ const App: React.FC = () => {
   
   const [printer, setPrinter] = useState<BluetoothPrinter | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [showPrintModeModal, setShowPrintModeModal] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
 
   const receiptRef = useRef<HTMLDivElement>(null);
   const ghostReceiptRef = useRef<HTMLDivElement>(null); 
+  const thermalReceiptRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const settingsSignatureCanvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
@@ -281,6 +284,7 @@ const App: React.FC = () => {
       fetchProfile(userId);
       await loadLocalData(userId);
       await syncService.pullFromSupabase(userId);
+      await productService.syncFromSupabase(userId); // Sync catalog products
       await loadLocalData(userId); // Reload after pull
       if(currentView !== 'history') setCurrentView('home');
   };
@@ -561,9 +565,9 @@ const App: React.FC = () => {
 
   const handlePrintThermal = async () => {
     if (isPrinting) return;
-    const targetRef = ghostReceiptRef.current;
+    const targetRef = thermalReceiptRef.current;
     if (!targetRef) {
-        notify("Erro: Recibo não encontrado.", "error");
+        notify("Erro: Recibo térmico não encontrado.", "error");
         return;
     }
 
@@ -593,6 +597,19 @@ const App: React.FC = () => {
         setPrinter(null);
     } finally {
         setIsPrinting(false);
+    }
+  };
+
+  const openPrintModeModal = () => {
+    setShowPrintModeModal(true);
+  };
+
+  const handleSelectPrintMode = async (mode: 'a4' | 'thermal') => {
+    setShowPrintModeModal(false);
+    if (mode === 'a4') {
+      await handleGeneratePDF();
+    } else {
+      await handlePrintThermal();
     }
   };
 
@@ -797,14 +814,14 @@ const App: React.FC = () => {
                        <span className="hidden sm:inline">WhatsApp</span>
                     </button>
 
-                    <button onClick={handlePrintThermal} disabled={isPrinting} className="bg-slate-900 dark:bg-slate-700 text-white px-4 py-2 rounded-xl text-sm font-black shadow-xl shadow-slate-900/10 flex items-center gap-2 hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50">
-                       {isPrinting ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-print"></i>} 
-                       <span className="hidden lg:inline">Térmica</span>
+                    <button onClick={openPrintModeModal} disabled={isPrinting || isGeneratingPdf} className="bg-slate-900 dark:bg-slate-700 text-white px-4 py-2 rounded-xl text-sm font-black shadow-xl shadow-slate-900/10 flex items-center gap-2 hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50">
+                       <i className="fa-solid fa-print"></i>
+                       <span className="hidden lg:inline">Finalizar</span>
                     </button>
 
-                    <button onClick={handleGeneratePDF} disabled={isGeneratingPdf} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-black shadow-xl shadow-blue-600/20 flex items-center gap-2 hover:bg-blue-700 transition-all active:scale-95">
-                       {isGeneratingPdf ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-file-pdf"></i>} 
-                       <span className="hidden lg:inline">PDF</span>
+                    <button onClick={openPrintModeModal} disabled={isPrinting || isGeneratingPdf} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-black shadow-xl shadow-blue-600/20 flex items-center gap-2 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50">
+                       {(isPrinting || isGeneratingPdf) ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-print"></i>} 
+                       <span className="hidden lg:inline">Finalizar</span>
                     </button>
                  </div>
               </div>
@@ -849,6 +866,7 @@ const App: React.FC = () => {
                        statusOptions={['PAGO', 'EMITIDO', 'PENDENTE', 'ANULADO']}
                        onClearClient={() => setFormData(p => ({...p, clientName:'', clientContact:'', clientLocation:'', clientNuit:''}))}
                        savedClients={savedClients} savedProducts={savedProducts}
+                       userId={session?.user?.id}
                     />
                  </div>
               </div>
@@ -861,7 +879,10 @@ const App: React.FC = () => {
 
            <div className="fixed top-0 left-0 pointer-events-none opacity-0" style={{ zIndex: -100 }}>
              <div style={{ position: 'absolute', top: 0, left: '-9999px' }}>
-                <DocumentPreview data={formData} companySettings={companySettings} ref={ghostReceiptRef} captureId="receipt-capture-ghost" />
+                <DocumentPreview data={formData} companySettings={companySettings} ref={ghostReceiptRef} captureId="receipt-capture-ghost" layout="a4" />
+             </div>
+             <div style={{ position: 'absolute', top: 0, left: '-9999px' }}>
+                <DocumentPreview data={formData} companySettings={companySettings} ref={thermalReceiptRef} captureId="receipt-thermal-ghost" layout="thermal" />
              </div>
            </div>
         </div>
@@ -978,6 +999,28 @@ const App: React.FC = () => {
              </div>
          </div>
        )}
+
+      {showPrintModeModal && (
+        <div className="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden">
+            <div className="p-6 border-b dark:border-slate-800">
+              <h2 className="text-xl font-bold dark:text-white">Escolha o formato</h2>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Selecione o formato que deseja gerar: PDF A4 para documento digital ou Talão Térmico para impressão Bluetooth.</p>
+            </div>
+            <div className="p-6 space-y-4">
+              <button onClick={() => handleSelectPrintMode('a4')} className="w-full bg-blue-600 text-white rounded-2xl px-5 py-4 text-left shadow-lg shadow-blue-600/10 hover:bg-blue-700 transition">
+                <div className="font-black text-base">PDF A4</div>
+                <div className="text-sm text-blue-100 mt-1">Documento digital profissional para guardar, enviar por WhatsApp ou email.</div>
+              </button>
+              <button onClick={() => handleSelectPrintMode('thermal')} className="w-full bg-slate-900 text-white rounded-2xl px-5 py-4 text-left shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition">
+                <div className="font-black text-base">Talão Térmico</div>
+                <div className="text-sm text-slate-100 mt-1">Recibo estreito para bobinas 58/80mm, ideal para impressoras Bluetooth.</div>
+              </button>
+              <button onClick={() => setShowPrintModeModal(false)} className="w-full border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showSignatureModal && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[80] flex items-center justify-center p-4 animate-fadeIn">

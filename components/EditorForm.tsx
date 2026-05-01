@@ -1,6 +1,9 @@
 
 import React from 'react';
-import { ReceiptData, LineItem, DocumentType, SavedClient, SavedProduct } from '../types';
+import { ReceiptData, LineItem, DocumentType, SavedClient, SavedProduct, Product } from '../types';
+import { ProductSearch } from './ProductSearch';
+import { productService } from '../services/productService';
+import { useToast } from './ToastContext';
 
 interface EditorFormProps {
   formData: ReceiptData;
@@ -20,6 +23,7 @@ interface EditorFormProps {
   savedClients: SavedClient[];
   savedProducts: SavedProduct[];
   onConvertQuote?: () => void;
+  userId?: string;
 }
 
 // --- HELPER COMPONENTS (Moved outside to prevent re-render focus loss) ---
@@ -63,12 +67,84 @@ const Input = ({ label, icon, ...props }: any) => (
 export const EditorForm: React.FC<EditorFormProps> = ({
   formData, onChange, newItem, onNewItemChange, onAddItem, onRemoveItem,
   onEnhanceDescription, isEnhancing, t, fMoney, onInitNew, onSign, statusOptions, onClearClient,
-  savedClients, savedProducts, onConvertQuote
+  savedClients, savedProducts, onConvertQuote, userId
 }) => {
 
   // State for new product save modal
   const [showSaveProductModal, setShowSaveProductModal] = React.useState(false);
   const [pendingItem, setPendingItem] = React.useState<Partial<LineItem> | null>(null);
+  const [isSavingProduct, setIsSavingProduct] = React.useState(false);
+  const [selectedCatalogProduct, setSelectedCatalogProduct] = React.useState<Product | null>(null);
+  const { showToast } = useToast();
+
+  const handleProductSelect = (product: Product) => {
+    // When a product is selected from catalog, set its details in the new item
+    const event = {
+      target: {
+        name: 'description',
+        value: product.name
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    onNewItemChange(event);
+    
+    const priceEvent = {
+      target: {
+        name: 'unitPrice',
+        value: product.price.toString()
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    onNewItemChange(priceEvent);
+    
+    setSelectedCatalogProduct(product);
+  };
+
+  const handleProductSearch = (value: string) => {
+    const event = {
+      target: {
+        name: 'description',
+        value
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    onNewItemChange(event);
+  };
+
+  const handleShowNewProductModal = (productName: string) => {
+    setPendingItem({
+      ...newItem,
+      description: productName
+    });
+    setShowSaveProductModal(true);
+  };
+
+  const handleSaveProductAndAdd = async () => {
+    if (!pendingItem || !userId) return;
+
+    setIsSavingProduct(true);
+    try {
+      const newProduct = await productService.createProduct(
+        pendingItem.description || '',
+        pendingItem.unitPrice || 0,
+        userId,
+        ''  // No category for now
+      );
+
+      showToast(`Produto "${newProduct.name}" salvo no catálogo`, 'success');
+      setShowSaveProductModal(false);
+      setPendingItem(null);
+      onAddItem();
+    } catch (error) {
+      console.error('Error saving product:', error);
+      showToast('Erro ao salvar produto', 'error');
+    } finally {
+      setIsSavingProduct(false);
+    }
+  };
+
+  const handleAddWithoutSaving = () => {
+    setShowSaveProductModal(false);
+    setPendingItem(null);
+    onAddItem();
+  };
 
   const handleAddItem = () => {
     if (!newItem.description?.trim()) return;
@@ -86,20 +162,6 @@ export const EditorForm: React.FC<EditorFormProps> = ({
       // Product exists, add directly
       onAddItem();
     }
-  };
-
-  const handleSaveProductAndAdd = () => {
-    // TODO: Implement save to catalog
-    console.log('Saving product to catalog:', pendingItem);
-    setShowSaveProductModal(false);
-    setPendingItem(null);
-    onAddItem();
-  };
-
-  const handleAddWithoutSaving = () => {
-    setShowSaveProductModal(false);
-    setPendingItem(null);
-    onAddItem();
   };
 
   return (
@@ -209,53 +271,30 @@ export const EditorForm: React.FC<EditorFormProps> = ({
           {/* Add New Item */}
           <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mt-4 shadow-sm">
               <div className="flex gap-2 mb-3">
-                 <div className="flex-1 relative">
-                   <input
-                      name="description"
-                      value={newItem.description}
-                      onChange={onNewItemChange}
-                      placeholder="Digite o nome do produto..."
-                      className="w-full bg-white dark:bg-slate-700 dark:text-white border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 pl-3 pr-10 text-sm outline-none focus:border-blue-500 transition-colors"
-                      autoComplete="off"
-                   />
-
-                   {/* Product Suggestions Dropdown */}
-                   {newItem.description && savedProducts.length > 0 && (
-                     <div className="absolute top-full left-0 right-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto mt-1">
-                       {savedProducts
-                         .filter(p => p.description.toLowerCase().includes(newItem.description.toLowerCase()))
-                         .slice(0, 5)
-                         .map((product, index) => (
-                           <button
-                             key={index}
-                             type="button"
-                             onClick={() => {
-                               setNewItem(prev => ({
-                                 ...prev,
-                                 description: product.description,
-                                 unitPrice: product.unitPrice
-                               }));
-                             }}
-                             className="w-full text-left px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors flex justify-between items-center"
-                           >
-                             <span className="text-sm">{product.description}</span>
-                             <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                               {fMoney(product.unitPrice)}
-                             </span>
-                           </button>
-                         ))}
-                       {savedProducts.filter(p => p.description.toLowerCase().includes(newItem.description.toLowerCase())).length === 0 && (
-                         <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400 text-center">
-                           Nenhum produto encontrado
-                         </div>
-                       )}
-                     </div>
+                 <div className="flex-1">
+                   {userId ? (
+                     <ProductSearch
+                       value={newItem.description || ''}
+                       onChange={handleProductSearch}
+                       onSelect={handleProductSelect}
+                       onNewProduct={handleShowNewProductModal}
+                       userId={userId}
+                       placeholder="Digite o nome do produto..."
+                       icon="fa-search"
+                       currency={formData.currency}
+                       allowCreate={true}
+                       showNewProductModal={handleShowNewProductModal}
+                     />
+                   ) : (
+                     <input
+                       name="description"
+                       value={newItem.description}
+                       onChange={onNewItemChange}
+                       placeholder="Digite o nome do produto..."
+                       className="w-full bg-white dark:bg-slate-700 dark:text-white border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 pl-3 pr-10 text-sm outline-none focus:border-blue-500 transition-colors"
+                       autoComplete="off"
+                     />
                    )}
-
-                   {/* Search Icon */}
-                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm pointer-events-none">
-                     <i className="fa-solid fa-search"></i>
-                   </div>
                  </div>
                  <button
                    onClick={onEnhanceDescription}
@@ -355,8 +394,8 @@ export const EditorForm: React.FC<EditorFormProps> = ({
 
        {/* Save New Product Modal */}
        {showSaveProductModal && pendingItem && (
-         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-center justify-center p-4">
-           <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 animate-fadeIn">
+           <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-slideUp">
              <div className="p-6">
                <div className="text-center mb-6">
                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -366,35 +405,50 @@ export const EditorForm: React.FC<EditorFormProps> = ({
                    Produto Novo Detectado
                  </h3>
                  <p className="text-slate-600 dark:text-slate-400 text-sm">
-                   "{pendingItem.description}" não está no seu catálogo. Deseja salvá-lo para facilitar futuras vendas?
+                   "{pendingItem.description}" não está no seu catálogo. Salvá-lo facilitará futuras vendas!
                  </p>
                </div>
 
-               <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 mb-6">
-                 <div className="flex justify-between items-center text-sm">
-                   <span className="text-slate-600 dark:text-slate-400">Produto:</span>
-                   <span className="font-medium text-slate-900 dark:text-white">{pendingItem.description}</span>
+               <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 mb-6 space-y-3">
+                 <div>
+                   <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Produto</span>
+                   <div className="text-sm font-medium text-slate-900 dark:text-white mt-1 p-2 bg-white dark:bg-slate-700 rounded-lg">
+                     {pendingItem.description}
+                   </div>
                  </div>
-                 <div className="flex justify-between items-center text-sm mt-2">
-                   <span className="text-slate-600 dark:text-slate-400">Preço:</span>
-                   <span className="font-medium text-blue-600 dark:text-blue-400">{fMoney(pendingItem.unitPrice || 0)}</span>
+                 <div>
+                   <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Preço Base</span>
+                   <div className="text-sm font-bold text-blue-600 dark:text-blue-400 mt-1 p-2 bg-white dark:bg-slate-700 rounded-lg">
+                     {fMoney(pendingItem.unitPrice || 0)}
+                   </div>
                  </div>
                </div>
 
                <div className="flex gap-3">
                  <button
                    onClick={handleSaveProductAndAdd}
-                   className="flex-1 bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition-colors font-medium"
+                   disabled={isSavingProduct}
+                   className="flex-1 bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
                  >
-                   Salvar e Adicionar
+                   {isSavingProduct ? (
+                     <><i className="fa-solid fa-spinner animate-spin"></i> Salvando...</>
+                   ) : (
+                     <><i className="fa-solid fa-save"></i> Salvar e Adicionar</>
+                   )}
                  </button>
                  <button
                    onClick={handleAddWithoutSaving}
-                   className="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-3 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                   className="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-3 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors font-medium"
                  >
                    Apenas Adicionar
                  </button>
                </div>
+               <button
+                 onClick={() => setShowSaveProductModal(false)}
+                 className="w-full text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mt-3 py-2 transition-colors"
+               >
+                 Cancelar
+               </button>
              </div>
            </div>
          </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
-import { formatMoney } from '../services/translationService';
+import { productService } from '../services/productService';
+import { useToast } from './ToastContext';
 
 interface ProductCatalogProps {
   userId: string;
@@ -14,10 +15,13 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [categories, setCategories] = useState<string[]>([]);
+  const { showToast } = useToast();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -26,53 +30,78 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
     category: ''
   });
 
-  // Load products
+  // Load products and categories
   useEffect(() => {
     loadProducts();
+    loadCategories();
   }, [userId]);
 
   const loadProducts = async () => {
     try {
       setLoading(true);
-      // TODO: Implement getProducts from storageService
-      const loadedProducts: Product[] = [];
+      const loadedProducts = await productService.getProducts(userId);
       setProducts(loadedProducts);
     } catch (error) {
       console.error('Error loading products:', error);
+      showToast('Erro ao carregar produtos', 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      const cats = await productService.getCategories(userId);
+      setCategories(cats);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim() || formData.price <= 0) return;
+    if (!formData.name.trim()) {
+      showToast('Nome do produto é obrigatório', 'error');
+      return;
+    }
+    if (formData.price < 0) {
+      showToast('Preço deve ser um valor positivo', 'error');
+      return;
+    }
 
+    setIsCreating(true);
     try {
-      const productData = {
-        ...formData,
-        userId,
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-      };
-
       if (editingProduct) {
         // Update existing product
-        // TODO: Implement updateProduct
-        console.log('Updating product:', editingProduct.id, productData);
+        const updated = await productService.updateProduct(editingProduct.id, {
+          name: formData.name,
+          price: formData.price,
+          category: formData.category,
+        });
+        setProducts(products.map(p => (p.id === updated.id ? updated : p)));
+        showToast(`Produto "${updated.name}" atualizado com sucesso`, 'success');
       } else {
-        // Add new product
-        // TODO: Implement addProduct
-        console.log('Adding new product:', productData);
+        // Create new product
+        const newProduct = await productService.createProduct(
+          formData.name,
+          formData.price,
+          userId,
+          formData.category
+        );
+        setProducts([...products, newProduct]);
+        showToast(`Produto "${newProduct.name}" criado com sucesso`, 'success');
       }
 
-      // Reset form and reload
+      // Reset form and reload categories
       setFormData({ name: '', price: 0, category: '' });
       setShowAddForm(false);
       setEditingProduct(null);
-      await loadProducts();
+      await loadCategories();
     } catch (error) {
       console.error('Error saving product:', error);
+      showToast('Erro ao salvar produto', 'error');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -87,14 +116,15 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
   };
 
   const handleDelete = async (productId: string) => {
-    if (!confirm(t('confirmDelete'))) return;
+    if (!confirm('Tem certeza que deseja eliminar este produto?')) return;
 
     try {
-      // TODO: Implement deleteProduct
-      console.log('Deleting product:', productId);
-      await loadProducts();
+      await productService.deleteProduct(productId);
+      setProducts(products.filter(p => p.id !== productId));
+      showToast('Produto eliminado com sucesso', 'success');
     } catch (error) {
       console.error('Error deleting product:', error);
+      showToast('Erro ao eliminar produto', 'error');
     }
   };
 
@@ -104,6 +134,23 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
     setEditingProduct(null);
   };
 
+  const handleExport = async () => {
+    try {
+      const csv = await productService.exportProductsCSV(userId);
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `produtos_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Produtos exportados com sucesso', 'success');
+    } catch (error) {
+      console.error('Error exporting products:', error);
+      showToast('Erro ao exportar produtos', 'error');
+    }
+  };
+
   // Filter products
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -111,9 +158,6 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
     const matchesCategory = !selectedCategory || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
-
-  // Get unique categories
-  const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
 
   if (loading) {
     return (
@@ -140,15 +184,15 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
               {products.length} produto{products.length !== 1 ? 's' : ''} cadastrado{products.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-colors">
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-colors hover:bg-slate-200 dark:hover:bg-slate-700">
             <i className="fa-solid fa-times text-slate-500"></i>
           </button>
         </div>
 
         {/* Search and Filters */}
-        <div className="p-6 border-b dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-          <div className="flex gap-4 items-center">
-            <div className="flex-1">
+        <div className="p-6 border-b dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 space-y-3">
+          <div className="flex gap-4 items-center flex-col sm:flex-row">
+            <div className="flex-1 w-full">
               <input
                 type="text"
                 placeholder="Buscar produtos..."
@@ -160,20 +204,32 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl p-3 text-sm dark:text-white outline-none focus:border-blue-500 transition-colors min-w-[150px]"
+              className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl p-3 text-sm dark:text-white outline-none focus:border-blue-500 transition-colors min-w-[150px] w-full sm:w-auto"
             >
               <option value="">Todas as categorias</option>
               {categories.map(category => (
                 <option key={category} value={category}>{category}</option>
               ))}
             </select>
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="bg-blue-600 text-white px-4 py-3 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
-            >
-              <i className="fa-solid fa-plus"></i>
-              Novo Produto
-            </button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="flex-1 sm:flex-none bg-blue-600 text-white px-4 py-3 rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium"
+              >
+                <i className="fa-solid fa-plus"></i>
+                Novo
+              </button>
+              <button
+                onClick={handleExport}
+                className="flex-1 sm:flex-none bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-4 py-3 rounded-xl border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors flex items-center justify-center gap-2 font-medium"
+              >
+                <i className="fa-solid fa-download"></i>
+                CSV
+              </button>
+            </div>
+          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">
+            Mostrando {filteredProducts.length} de {products.length} produto(s)
           </div>
         </div>
 

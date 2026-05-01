@@ -4,6 +4,7 @@ import { ReceiptData, CompanySettings, DocumentType } from '../types';
 import { formatMoney } from '../services/translationService';
 import { CommunityFeed } from './CommunityFeed';
 import { FinanceManager } from './FinanceManager';
+import { ProductCatalog } from './ProductCatalog';
 import { Logo } from './Logo';
 
 interface DashboardProps {
@@ -22,7 +23,7 @@ interface DashboardProps {
   showInstallButton?: boolean;
 }
 
-type DashTab = 'OVERVIEW' | 'COMMUNITY' | 'HISTORY' | 'FINANCE';
+type DashTab = 'OVERVIEW' | 'COMMUNITY' | 'HISTORY' | 'FINANCE' | 'CATALOG';
 
 export const Dashboard: React.FC<DashboardProps> = ({
   history, companySettings, onLogout, onNewDocument, onOpenSettings, onLoadDocument, onViewHistory, onToggleTheme, t, userId, onDeleteDocument, onInstallApp, showInstallButton
@@ -30,11 +31,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<DashTab>('OVERVIEW');
+  const [showCatalog, setShowCatalog] = useState(false);
   const recentHistory = history.slice(0, 5);
 
   const handleNav = (tab: DashTab) => {
     setActiveTab(tab);
     setIsMenuOpen(false);
+    if (tab === 'CATALOG') {
+      setShowCatalog(true);
+    }
   };
 
   // Calculate Monthly Revenue
@@ -108,6 +113,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             <button onClick={() => handleNav('FINANCE')} className={`w-full text-left px-5 py-3.5 rounded-xl font-bold flex items-center gap-4 border transition-all ${activeTab === 'FINANCE' ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white shadow-sm' : 'bg-transparent border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
                  <i className={`fa-solid fa-chart-pie w-5 text-center ${activeTab === 'FINANCE' ? 'text-blue-600' : 'text-slate-400'}`}></i> {t('finance')}
+            </button>
+
+            <button onClick={() => handleNav('CATALOG')} className={`w-full text-left px-5 py-3.5 rounded-xl font-bold flex items-center gap-4 border transition-all ${activeTab === 'CATALOG' ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white shadow-sm' : 'bg-transparent border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                 <i className={`fa-solid fa-boxes-stacked w-5 text-center ${activeTab === 'CATALOG' ? 'text-blue-600' : 'text-slate-400'}`}></i> Catálogo
             </button>
 
             <button onClick={() => handleNav('COMMUNITY')} className={`w-full text-left px-5 py-3.5 rounded-xl font-bold flex items-center gap-4 border transition-all ${activeTab === 'COMMUNITY' ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white shadow-sm' : 'bg-transparent border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
@@ -335,6 +344,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                  )}
             </div>
          )}
+
+      {/* Product Catalog Modal */}
+      {showCatalog && (
+        <ProductCatalog
+          userId={userId}
+          t={t}
+          fMoney={formatMoney}
+          onClose={() => setShowCatalog(false)}
+        />
+      )}
       </main>
     </div>
   );

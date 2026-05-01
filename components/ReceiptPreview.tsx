@@ -7,9 +7,10 @@ interface Props {
   data: ReceiptData;
   companySettings?: CompanySettings;
   captureId?: string;
+  layout?: 'a4' | 'thermal';
 }
 
-const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, companySettings, captureId = "receipt-capture-area" }, ref) => {
+const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, companySettings, captureId = "receipt-capture-area", layout = 'a4' }, ref) => {
   const lang = data.language || 'pt';
   const currency = data.currency || 'MZN';
 
@@ -32,20 +33,105 @@ const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, companySettin
   // Fallback para nome da empresa caso esteja vazio
   const displayCompanyName = data.companyName || 'BIZ-FLOW';
 
+  const a4Style: React.CSSProperties = {
+    width: '210mm',
+    minHeight: '297mm',
+    padding: '25mm',
+    boxSizing: 'border-box',
+    backgroundColor: '#ffffff',
+    display: 'flex',
+    flexDirection: 'column'
+  };
+
+  const thermalStyle: React.CSSProperties = {
+    width: '384px',
+    minHeight: 'auto',
+    padding: '16px',
+    boxSizing: 'border-box',
+    backgroundColor: '#ffffff',
+    color: '#000000',
+    display: 'flex',
+    flexDirection: 'column',
+    fontFamily: 'monospace',
+    lineHeight: 1.4
+  };
+
+  if (layout === 'thermal') {
+    return (
+      <div ref={ref} id={captureId} style={thermalStyle}>
+        <div className="flex flex-col items-center text-center mb-4">
+          <div className="text-xl font-black uppercase tracking-[0.2em] mb-2">{displayCompanyName}</div>
+          {data.companyContact && <div className="text-[12px] font-medium mb-1">{data.companyContact}</div>}
+          {data.companyAddress && <div className="text-[12px] font-medium mb-1">{data.companyAddress}</div>}
+          {data.companyNuit && <div className="text-[11px] uppercase tracking-[0.15em]">{t('taxId')}: {data.companyNuit}</div>}
+        </div>
+
+        <div className="border-t border-slate-300 my-2"></div>
+        <div className="mb-3">
+          <div className="text-sm font-black uppercase tracking-[0.2em] mb-1">{title}</div>
+          <div className="text-[13px]">#{data.number || '0000'}</div>
+          <div className="text-[12px] text-slate-700">{t('date')}: {data.date}</div>
+        </div>
+
+        <div className="border-t border-slate-300 my-2"></div>
+        <div className="mb-3 text-[12px]">
+          <div className="font-black uppercase tracking-[0.2em] mb-1">{t('billedTo')}</div>
+          <div>{data.clientName || '---'}</div>
+          {data.clientLocation && <div>{data.clientLocation}</div>}
+          {data.clientContact && <div>{data.clientContact}</div>}
+          {data.clientNuit && <div>{t('taxId')}: {data.clientNuit}</div>}
+        </div>
+
+        <div className="border-t border-slate-300 my-2"></div>
+        <div className="space-y-3 text-[12px]">
+          {data.items && data.items.length > 0 ? (
+            data.items.map((item) => (
+              <div key={item.id} className="space-y-1">
+                <div className="font-bold">{item.description}</div>
+                <div className="flex justify-between">
+                  <span>{item.quantity} x {formatMoney(item.unitPrice, currency, lang)}</span>
+                  <span>{formatMoney(item.total, currency, lang)}</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="italic text-slate-500">{t('noItems')}</div>
+          )}
+        </div>
+
+        <div className="border-t border-slate-300 my-3"></div>
+        <div className="space-y-2 text-[12px]">
+          <div className="flex justify-between"><span>{t('subtotal')}</span><span>{formatMoney(data.subtotal, currency, lang)}</span></div>
+          {data.discount > 0 && <div className="flex justify-between"><span>{t('discount')}</span><span>-{formatMoney(data.discount, currency, lang)}</span></div>}
+          {data.taxRate > 0 && <div className="flex justify-between"><span>{t('tax')} ({data.taxRate}%)</span><span>{formatMoney(data.taxAmount, currency, lang)}</span></div>}
+          <div className="flex justify-between font-black text-[13px]"><span>{t('finalTotal')}</span><span>{formatMoney(data.total, currency, lang)}</span></div>
+        </div>
+
+        {companySettings?.customStamp || data.stampText ? (
+          <div className="border-t border-slate-300 my-4 pt-3 text-center text-[13px] font-black uppercase">
+            {companySettings?.customStamp ? data.stampText || t('paid') : data.stampText}
+          </div>
+        ) : null}
+
+        {(data.signatureData || companySettings?.signature) && (
+          <div className="mt-3 text-center">
+            <img src={data.signatureData || companySettings.signature} alt="Signature" className="mx-auto max-h-16 object-contain" />
+            <div className="text-[10px] uppercase tracking-[0.2em] mt-1">{t('signature')}</div>
+          </div>
+        )}
+
+        <div className="border-t border-slate-300 my-4"></div>
+        <div className="text-[10px] text-center uppercase tracking-[0.2em]">{t('generatedBy')} • Biz-flow.cloud</div>
+      </div>
+    );
+  }
+
   return (
     <div 
       ref={ref} 
       id={captureId}
       className="relative bg-white text-slate-900 font-sans leading-relaxed overflow-hidden"
-      style={{ 
-        width: '210mm', 
-        minHeight: '297mm', 
-        padding: '25mm',
-        boxSizing: 'border-box',
-        backgroundColor: '#ffffff',
-        display: 'flex',
-        flexDirection: 'column'
-      }}
+      style={a4Style}
     >
       {/* Top Decoration */}
       <div className="h-3 bg-slate-900 w-full mb-12 flex-none"></div>
