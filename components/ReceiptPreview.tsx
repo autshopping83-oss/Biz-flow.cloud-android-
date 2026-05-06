@@ -62,6 +62,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, companySettin
 
   let title = t('receipt');
   if (data.type === 'INVOICE') title = t('invoice');
+  if (data.type === 'INVOICE_RECEIPT') title = t('invoiceReceipt');
   if (data.type === 'QUOTE') title = t('quote');
 
   const displayCompanyName = data.companyName || 'BIZ-FLOW';

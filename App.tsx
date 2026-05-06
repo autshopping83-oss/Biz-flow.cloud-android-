@@ -546,7 +546,7 @@ const App: React.FC = () => {
         try {
           const permission = await dirHandle.queryPermission({ mode: 'readwrite' });
           if (permission !== 'granted') await dirHandle.requestPermission({ mode: 'readwrite' });
-          const subfolderName = formData.type === 'INVOICE' ? 'Faturas' : formData.type === 'QUOTE' ? 'Orcamentos' : 'Recibos';
+          const subfolderName = formData.type === 'INVOICE' ? 'Faturas' : formData.type === 'INVOICE_RECEIPT' ? 'Faturas-Recibos' : formData.type === 'QUOTE' ? 'Orcamentos' : 'Recibos';
           const subDir = await dirHandle.getDirectoryHandle(subfolderName, { create: true });
           const fileHandle = await subDir.getFileHandle(fileName, { create: true });
           const writable = await fileHandle.createWritable();
@@ -590,7 +590,7 @@ const App: React.FC = () => {
             await navigator.share({
                 files: [file],
                 title: fileName,
-                text: `Envio de ${formData.type === 'INVOICE' ? 'Fatura' : 'Documento'} - ${formData.number}`,
+                text: `Envio de ${formData.type === 'INVOICE' ? 'Fatura' : formData.type === 'INVOICE_RECEIPT' ? 'Fatura-Recibo' : 'Documento'} - ${formData.number}`,
             });
             notify("Partilha concluída!", "success");
         } else {
@@ -956,6 +956,7 @@ const App: React.FC = () => {
                        statusOptions={['PAGO', 'EMITIDO', 'PENDENTE', 'ANULADO']}
                        onClearClient={() => setFormData(p => ({...p, clientName:'', clientContact:'', clientLocation:'', clientNuit:''}))}
                        savedClients={savedClients} savedProducts={savedProducts}
+                       onThemeChange={(theme) => setFormData(p => ({ ...p, documentTheme: theme }))}
                        userId={session?.user?.id}
                     />
                  </div>
