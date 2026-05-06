@@ -13,7 +13,7 @@ import { saveReceipt, getHistory, generateNextReceiptNumber, saveCompanySettings
 import { improveDescription } from './services/geminiService';
 import { getTranslation, formatMoney, CURRENCIES, LANGUAGES } from './services/translationService';
 import { supabase } from './services/supabaseClient';
-import validators from './utils/validators';
+import validators from './src/utils/validators';
 import { connectToPrinter, printTicket } from './services/printerService';
 import { syncService } from './services/syncService';
 import { productService } from './services/productService';

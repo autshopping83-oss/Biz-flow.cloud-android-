@@ -3,7 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ToastProvider } from './components/ToastContext';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 
 // --- INITIALIZATION ---
 

@@ -68,7 +68,7 @@ const Input = ({ label, icon, ...props }: any) => (
 export const EditorForm: React.FC<EditorFormProps> = ({
   formData, onChange, newItem, onNewItemChange, onAddItem, onRemoveItem,
   onEnhanceDescription, isEnhancing, t, fMoney, onInitNew, onSign, statusOptions, onClearClient,
-  savedClients, savedProducts, onConvertQuote, userId
+  savedClients, savedProducts, onConvertQuote, userId, onThemeChange
 }) => {
 
   // State for new product save modal
