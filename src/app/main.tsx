@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { ToastProvider } from './components/ToastContext';
-import { ErrorBoundary } from './src/components/ErrorBoundary';
+import { ToastProvider } from '../components/ToastContext';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 // --- GLOBAL TYPES ---
 declare global {

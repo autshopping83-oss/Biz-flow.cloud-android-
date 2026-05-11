@@ -56,9 +56,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': '/src',
-      '@components': '/components',
-      '@services': '/services',
-      '@pages': '/pages',
+      '@components': '/src/components',
+      '@services': '/src/services',
+      '@pages': '/src/pages',
     },
   },
 });
