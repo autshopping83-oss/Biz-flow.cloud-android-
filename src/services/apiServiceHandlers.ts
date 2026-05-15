@@ -61,7 +61,7 @@ export async function createDocument(req: ApiRequest): Promise<ApiResponse> {
     id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     type: ((data.type as string) || 'RECEIPT') as DocumentType,
     number: (data.number as string) || `API-${Date.now()}`,
-    date: ((data.date as string) || new Date().toISOString().split('T')[0] ?? '') as string,
+    date: ((data.date as string) || (new Date().toISOString().split('T')[0] ?? '')) as string,
     currency: (data.currency as string) || 'MZN',
     language: (data.language as string) || 'pt',
     clientName: (data.clientName as string) || '',
