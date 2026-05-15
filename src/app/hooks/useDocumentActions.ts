@@ -11,9 +11,9 @@ import { ReceiptData, BluetoothPrinter } from '../../types';
 interface UseDocumentActionsParams {
   formData: ReceiptData;
   sessionUserId?: string;
-  receiptRef: React.RefObject<HTMLDivElement>;
-  ghostReceiptRef: React.RefObject<HTMLDivElement>;
-  thermalReceiptRef: React.RefObject<HTMLDivElement>;
+  receiptRef: React.RefObject<HTMLDivElement | null>;
+  ghostReceiptRef: React.RefObject<HTMLDivElement | null>;
+  thermalReceiptRef: React.RefObject<HTMLDivElement | null>;
   notify: (message: string, type: 'success' | 'error' | 'info') => void;
   handleSave: (silent?: boolean) => Promise<void>;
 }
@@ -31,7 +31,7 @@ export const useDocumentActions = ({
   const [isSharing, setIsSharing] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const [printer, setPrinter] = useState<BluetoothPrinter | null>(null);
-  const [localDirHandle, setLocalDirHandle] = useState<any>(null);
+  const [localDirHandle, setLocalDirHandle] = useState<FileSystemDirectoryHandle | null>(null);
 
   const requestFolderPermission = useCallback(async () => {
     if (!window.showDirectoryPicker) return null;
@@ -86,7 +86,7 @@ export const useDocumentActions = ({
         ? `${sanitizedNumber}_${sanitizedClientName}.pdf`
         : `${sanitizedNumber}_documento.pdf`;
 
-      return { blob: pdf.output('blob'), fileName, base64: pdf.output('datauristring').split(',')[1] };
+      return { blob: pdf.output('blob'), fileName, base64: pdf.output('datauristring').split(',')[1] ?? '' };
     } catch (error) {
       console.error(error);
       return null;
@@ -126,8 +126,8 @@ export const useDocumentActions = ({
 
       if (dirHandle) {
         try {
-          const permission = await dirHandle.queryPermission({ mode: 'readwrite' });
-          if (permission !== 'granted') await dirHandle.requestPermission({ mode: 'readwrite' });
+          const permission = await (dirHandle as FileSystemDirectoryHandle & { queryPermission(opts: { mode: 'read' | 'readwrite' }): Promise<PermissionState> }).queryPermission({ mode: 'readwrite' });
+          if (permission !== 'granted') await (dirHandle as FileSystemDirectoryHandle & { requestPermission(opts: { mode: 'read' | 'readwrite' }): Promise<PermissionState> }).requestPermission({ mode: 'readwrite' });
           const subfolderName = formData.type === 'INVOICE' ? 'Faturas' : formData.type === 'INVOICE_RECEIPT' ? 'Faturas-Recibos' : formData.type === 'QUOTE' ? 'Orcamentos' : 'Recibos';
           const subDir = await dirHandle.getDirectoryHandle(subfolderName, { create: true });
           const fileHandle = await subDir.getFileHandle(fileName, { create: true });

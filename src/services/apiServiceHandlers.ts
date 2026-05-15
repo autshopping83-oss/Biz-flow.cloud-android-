@@ -4,7 +4,7 @@ import { n8nWebhookService } from './n8nWebhookService';
 import { productService } from './productService';
 import { orgService } from './orgService';
 import { ApiRequest, ApiResponse } from './apiService';
-import type { Transaction } from '../types';
+import type { Transaction, DocumentType, LineItem } from '../types';
 
 function success(data: unknown, pagination?: ApiResponse['pagination'], message?: string): ApiResponse {
   return { status: 200, success: true, data, message, timestamp: Date.now(), pagination };
@@ -59,27 +59,28 @@ export async function createDocument(req: ApiRequest): Promise<ApiResponse> {
 
   const document = {
     id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    type: (data.type as string) || 'RECEIPT',
+    type: ((data.type as string) || 'RECEIPT') as DocumentType,
     number: (data.number as string) || `API-${Date.now()}`,
-    date: (data.date as string) || new Date().toISOString().split('T')[0],
+    date: ((data.date as string) || new Date().toISOString().split('T')[0] ?? '') as string,
     currency: (data.currency as string) || 'MZN',
     language: (data.language as string) || 'pt',
     clientName: (data.clientName as string) || '',
     clientContact: (data.clientContact as string) || '',
     clientLocation: (data.clientLocation as string) || '',
     clientNuit: (data.clientNuit as string) || '',
-    items: (data.items as unknown[]) || [],
+    items: (data.items as LineItem[]) || [],
     subtotal: (data.subtotal as number) || 0,
     taxRate: (data.taxRate as number) || 0,
     taxAmount: (data.taxAmount as number) || 0,
     discount: (data.discount as number) || 0,
     total: (data.total as number) || 0,
     createdAt: Date.now(),
+    type: (data.type as DocumentType) || 'RECEIPT',
   };
 
   await db.receipts.put(document);
   await syncService.addToQueue('receipts', 'INSERT', { ...document, userId } as Record<string, unknown>);
-  n8nWebhookService.notifyDocumentCreated(document, userId).catch(() => {});
+  n8nWebhookService.notifyDocumentCreated(document as unknown as { id: string; number: string; type: string; clientName: string; total: number; currency: string; date: string }, userId).catch(() => {});
 
   return success(document, undefined, 'Documento criado com sucesso');
 }
@@ -119,7 +120,7 @@ export async function createProduct(req: ApiRequest): Promise<ApiResponse> {
   if (!name || price === undefined) return error(400, 'name e price são obrigatórios');
 
   const product = await productService.createProduct(
-    name as string, price as number, userId, category as string | undefined
+    name as string, price as number, userId, (category as string) || undefined
   );
   return success(product, undefined, 'Produto criado com sucesso');
 }
@@ -169,9 +170,9 @@ export async function createTransaction(req: ApiRequest): Promise<ApiResponse> {
   const transaction: Transaction = {
     id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     userId,
-    type: data.type as 'INCOME' | 'EXPENSE',
-    amount: data.amount as number,
-    description: data.description as string,
+    type: (data.type as 'INCOME' | 'EXPENSE') || 'EXPENSE',
+    amount: (data.amount as number) || 0,
+    description: (data.description as string) || '',
     category: (data.category as string) || 'Outros',
     date: (data.date as string) || new Date().toISOString().split('T')[0],
     timestamp: Date.now(),

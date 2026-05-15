@@ -56,7 +56,7 @@ const PieChart: React.FC<{ data: { labels: string[], data: number[], total: numb
 
     const legend = data.labels.map((label, index) => {
         if(data.data[index] === 0) return null;
-        const percentage = (data.data[index] / data.total) * 100;
+        const percentage = ((data.data[index] ?? 0) / data.total) * 100;
         return (
             <div key={label} className="flex items-center justify-between gap-4 text-xs w-full">
                 <div className="flex items-center gap-2 overflow-hidden">
@@ -64,7 +64,7 @@ const PieChart: React.FC<{ data: { labels: string[], data: number[], total: numb
                     <span className="text-slate-600 dark:text-slate-300 capitalize truncate">{label}</span>
                 </div>
                 <div className="flex items-baseline gap-2 flex-shrink-0">
-                  <span className="font-bold text-slate-500 dark:text-slate-400 text-[10px]">{formatMoney(data.data[index], currency, lang)}</span>
+                  <span className="font-bold text-slate-500 dark:text-slate-400 text-[10px]">{formatMoney(data.data[index] ?? 0, currency, lang)}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 w-10 text-right">{percentage.toFixed(0)}%</span>
                 </div>
             </div>
@@ -103,7 +103,7 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId, lang }) =
     amount: '',
     description: '',
     category: '',
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0] ?? ''
   });
 
   useEffect(() => {
@@ -136,7 +136,7 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId, lang }) =
         amount: parseFloat(newTrans.amount),
         description: newTrans.description,
         category: newTrans.category || 'Geral',
-        date: newTrans.date,
+        date: newTrans.date ?? new Date().toISOString().split('T')[0] ?? '',
         timestamp: Date.now()
       };
 
@@ -206,8 +206,8 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId, lang }) =
        for (let i = 6; i >= 0; i--) {
          const d = new Date();
          d.setDate(today.getDate() - i);
-         const key = d.toISOString().split('T')[0];
-         const label = `${d.getDate()}/${d.getMonth()+1}`;
+          const key = d.toISOString().split('T')[0] ?? '';
+          const label = `${d.getDate()}/${d.getMonth()+1}`;
          groupingMap.set(key, { income: 0, expense: 0, label, dateFull: key });
        }
     } else if (timeRange === 'MONTH') {
@@ -224,7 +224,7 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId, lang }) =
        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
        for (let i = 0; i < 12; i++) {
          const key = `${year}-${String(i+1).padStart(2,'0')}`;
-         groupingMap.set(key, { income: 0, expense: 0, label: monthNames[i], dateFull: key });
+          groupingMap.set(key, { income: 0, expense: 0, label: monthNames[i] ?? '', dateFull: key });
        }
     }
 

@@ -13,7 +13,7 @@ import { useSignatureCanvas } from '../../../app/hooks/useSignatureCanvas';
 import { useDocumentActions } from '../../../app/hooks/useDocumentActions';
 
 const InitialReceipt: ReceiptData = {
-  id: '', type: 'RECEIPT', number: '', date: new Date().toISOString().split('T')[0],
+  id: '', type: 'RECEIPT', number: '', date: new Date().toISOString().split('T')[0] ?? '',
   currency: 'MZN', language: 'pt', clientName: '', clientContact: '', clientLocation: '', clientNuit: '',
   items: [], subtotal: 0, taxRate: 0, taxAmount: 0, discount: 0, total: 0,
   stampText: 'PAGO', signatureData: '', documentTheme: 'color', createdAt: Date.now(),
@@ -40,9 +40,9 @@ export function useDocumentEditor({
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
-  const receiptRef = useRef<HTMLDivElement | null>(null);
-  const ghostReceiptRef = useRef<HTMLDivElement | null>(null);
-  const thermalReceiptRef = useRef<HTMLDivElement | null>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const ghostReceiptRef = useRef<HTMLDivElement>(null);
+  const thermalReceiptRef = useRef<HTMLDivElement>(null);
 
   const { canvasRef, clearCanvas, getCanvasDataUrl } = useSignatureCanvas(showSignatureModal);
 
@@ -64,7 +64,7 @@ export function useDocumentEditor({
 
   const initNewDocument = (type: DocumentType) => {
     if (!sessionUserId && !isGuest) return;
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0] ?? '';
     setFormData({
       ...InitialReceipt,
       id: crypto.randomUUID(),
@@ -159,7 +159,7 @@ export function useDocumentEditor({
   };
 
   const handleDeleteDocument = async (id: string) => {
-    const updated = await deleteReceipt(id, sessionUserId);
+    const updated = await deleteReceipt(id, sessionUserId ?? '');
     setHistory(updated);
   };
 

@@ -129,12 +129,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               width={400}
               height={128}
               className="w-full h-full"
-              onMouseDown={handleSettingsSignatureStartDrawing}
-              onMouseMove={handleSettingsSignatureDraw}
+              onMouseDown={handleSettingsSignatureStartDrawing as unknown as React.MouseEventHandler<HTMLCanvasElement>}
+              onMouseMove={handleSettingsSignatureDraw as unknown as React.MouseEventHandler<HTMLCanvasElement>}
               onMouseUp={handleSettingsSignatureStopDrawing}
               onMouseLeave={handleSettingsSignatureStopDrawing}
-              onTouchStart={handleSettingsSignatureStartDrawing}
-              onTouchMove={handleSettingsSignatureDraw}
+              onTouchStart={handleSettingsSignatureStartDrawing as unknown as React.TouchEventHandler<HTMLCanvasElement>}
+              onTouchMove={handleSettingsSignatureDraw as unknown as React.TouchEventHandler<HTMLCanvasElement>}
               onTouchEnd={handleSettingsSignatureStopDrawing}
             />
           </div>

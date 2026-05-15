@@ -370,7 +370,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <ProductCatalog
           userId={userId}
           t={t}
-          fMoney={formatMoney}
+          fMoney={(v: number) => formatMoney(v, companySettings.currency, companySettings.language)}
           onClose={() => setShowCatalog(false)}
         />
       )}

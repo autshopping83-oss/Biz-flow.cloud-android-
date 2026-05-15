@@ -492,9 +492,10 @@ const TRANSLATIONS: Record<string, Record<TranslationKey, string>> = {
   }
 };
 
-export const getTranslation = (lang: string, key: TranslationKey): string => {
-  const dict = TRANSLATIONS[lang] || TRANSLATIONS['pt'];
-  return dict[key] || key;
+export const getTranslation = (lang: string, key: string): string => {
+  const translations = TRANSLATIONS[lang];
+  if (!translations) return key;
+  return (translations as Record<string, string>)[key] || key;
 };
 
 export const formatMoney = (amount: number, currencyCode: string, lang?: string) => {

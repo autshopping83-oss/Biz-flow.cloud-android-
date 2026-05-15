@@ -162,7 +162,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, companySettin
         {/* Signature */}
         {(data.signatureData || companySettings?.signature) && (
           <div className="mt-2 text-center">
-            <img src={data.signatureData || companySettings.signature} alt="Signature" className="mx-auto max-h-12 object-contain" />
+            <img src={data.signatureData || companySettings?.signature || ''} alt="Signature" className="mx-auto max-h-12 object-contain" />
             <div className="text-[9px] uppercase tracking-[0.15em] mt-1">{t('signature')}</div>
           </div>
         )}

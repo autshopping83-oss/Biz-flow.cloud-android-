@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef } from 'react';
 
 const getCoords = (e: MouseEvent | TouchEvent, canvas: HTMLCanvasElement) => {
   const rect = canvas.getBoundingClientRect();
-  const clientX = e instanceof MouseEvent ? e.clientX : e.touches[0].clientX;
-  const clientY = e instanceof MouseEvent ? e.clientY : e.touches[0].clientY;
+  const clientX = e instanceof MouseEvent ? e.clientX : (e.touches[0]?.clientX ?? 0);
+  const clientY = e instanceof MouseEvent ? e.clientY : (e.touches[0]?.clientY ?? 0);
   return { x: clientX - rect.left, y: clientY - rect.top };
 };
 

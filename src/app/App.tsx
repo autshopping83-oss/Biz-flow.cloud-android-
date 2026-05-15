@@ -29,7 +29,7 @@ const ApiDashboard = lazy(() => import('../components/ApiDashboard').then(m => (
 
 declare global {
   interface Window {
-    showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
+    showDirectoryPicker?: (options?: { mode?: 'read' | 'readwrite' }) => Promise<FileSystemDirectoryHandle>;
     deferredPrompt?: { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> } | null;
   }
 }
@@ -69,14 +69,14 @@ const App: React.FC<{ onReady?: () => void }> = ({ onReady }) => {
   const { authLoading, handleLogin, handleRegister, handleLogout, handleGoogleLogin } = useAuth(notify);
 
   useAppLifecycle({
-    currentView, isGuest, setCurrentView, setIsGuest, setSession,
+    currentView, isGuest, setCurrentView: (v: string) => setCurrentView(v as AppView), setIsGuest, setSession,
     setHistory, setSavedClients, setSavedProducts, setCompanySettings,
     setIsOnline, setSyncing, setLocalDirHandle: () => {}, onReady,
   });
 
   const editor = useDocumentEditor({
     sessionUserId: session?.user?.id, isGuest, history, companySettings,
-    setHistory, setCurrentView, notify,
+    setHistory, setCurrentView: (v: string) => setCurrentView(v as AppView), notify,
   });
 
   const toggleTheme = () => {
@@ -94,7 +94,7 @@ const App: React.FC<{ onReady?: () => void }> = ({ onReady }) => {
       {currentView === 'loading' && <PageLoader />}
       {currentView === 'deleteAccount' && <DeleteAccount onBack={() => { window.location.href = '/'; }} />}
       {['login', 'register', 'forgotPassword', 'updatePassword'].includes(currentView) && (
-        <AuthScreens view={currentView} setView={setCurrentView}
+        <AuthScreens view={currentView as 'login' | 'register' | 'forgotPassword' | 'updatePassword'} setView={setCurrentView}
           onLogin={(e, p) => handleLogin(e, p)} onRegister={(e, p, d) => handleRegister(e, p, d)}
           onGoogleLogin={handleGoogleLogin} isLoading={authLoading}
           onInstall={handleInstallApp} showInstallButton={!!installPrompt} />
@@ -140,7 +140,7 @@ const App: React.FC<{ onReady?: () => void }> = ({ onReady }) => {
           onUpdate={(e) => { const { name, value } = e.target; setCompanySettings(p => ({ ...p, [name]: value })); }}
           onLogoChange={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onloadend = () => setCompanySettings(p => ({ ...p, logo: r.result as string })); r.readAsDataURL(f); }}
           onStampUpload={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onloadend = () => setCompanySettings(p => ({ ...p, customStamp: r.result as string })); r.readAsDataURL(f); }}
-          onRequestFolderPermission={editor.requestFolderPermission}
+          onRequestFolderPermission={async () => { await editor.requestFolderPermission(); }}
           onSaveSettings={async () => { if (!session?.user?.id) return; const { saveCompanySettings } = await import('../services/storageService'); await saveCompanySettings(companySettings, session.user.id); notify('Definições guardadas!', 'success'); setShowSettingsModal(false); }}
           isSavingSettings={false} localDirHandle={editor.localDirHandle}
           onSaveSignature={() => {}} onClearSignature={() => {}} settingsSignatureCanvasRef={null as unknown as React.RefObject<HTMLCanvasElement | null>}

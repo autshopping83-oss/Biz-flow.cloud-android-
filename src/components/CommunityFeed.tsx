@@ -15,7 +15,7 @@ export const CommunityFeed: React.FC<Props> = ({ currentUser, t }) => {
   const { notify } = useToast();
 
   useEffect(() => {
-    setComments(getComments());
+    getComments().then(setComments);
   }, []);
 
   const handlePost = (e: React.FormEvent) => {
@@ -32,8 +32,7 @@ export const CommunityFeed: React.FC<Props> = ({ currentUser, t }) => {
       likes: 0
     };
 
-    const updated = saveComment(newComment);
-    setComments(updated);
+    saveComment(newComment).then(setComments);
     setNewContent('');
   };
 
@@ -55,8 +54,7 @@ export const CommunityFeed: React.FC<Props> = ({ currentUser, t }) => {
     }
     
     if (confirm('Tem a certeza que deseja eliminar este comentário?')) {
-      const updated = deleteComment(commentId);
-      setComments(updated);
+      deleteComment(commentId).then(setComments);
       notify('Comentário eliminado com sucesso!', 'success');
     }
   };

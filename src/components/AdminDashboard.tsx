@@ -22,11 +22,11 @@ export const AdminDashboard: React.FC<Props> = ({ onClose }) => {
     loadData();
   }, []);
 
-  const handleApprove = async () => {
+  const handleApprove = async (_req?: PaymentRequest) => {
     notify('O serviço de pagamento atual foi removido. Atualize para um novo provedor.', 'info');
   };
 
-  const handleReject = async () => {
+  const handleReject = async (_id?: string) => {
     notify('O serviço de pagamento atual foi removido. Atualize para um novo provedor.', 'info');
   };
 

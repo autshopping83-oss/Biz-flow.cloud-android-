@@ -159,6 +159,8 @@ export interface PurchaseDetails {
 export interface BluetoothGattService {
   uuid: string;
   characteristics: BluetoothGattCharacteristic[];
+  getCharacteristic: (uuid: string) => Promise<BluetoothGattCharacteristic>;
+  getCharacteristics: (uuid?: string) => Promise<BluetoothGattCharacteristic[]>;
 }
 
 export interface BluetoothGattCharacteristic {

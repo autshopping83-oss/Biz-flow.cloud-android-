@@ -16,7 +16,7 @@ interface UseAppLifecycleParams {
   setHistory: (history: ReceiptData[]) => void;
   setSavedClients: (clients: SavedClient[]) => void;
   setSavedProducts: (products: SavedProduct[]) => void;
-  setCompanySettings: (settings: CompanySettings) => void;
+  setCompanySettings: React.Dispatch<React.SetStateAction<CompanySettings>>;
   setIsOnline: (online: boolean) => void;
   setSyncing: (syncing: boolean) => void;
   setLocalDirHandle: (handle: FileSystemDirectoryHandle | null) => void;

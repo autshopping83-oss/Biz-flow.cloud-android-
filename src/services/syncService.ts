@@ -91,8 +91,8 @@ class SyncService {
       
       if (table === 'receipt_transaction_bundle') {
         const { receipt, transaction } = data;
-        const receiptPayload = { ...receipt };
-        const transactionPayload = { ...transaction };
+        const receiptPayload = { ...(receipt as Record<string, unknown>) };
+        const transactionPayload = { ...(transaction as Record<string, unknown>) };
 
         if (receiptPayload.userId) {
           receiptPayload.user_id = receiptPayload.userId;
@@ -152,10 +152,10 @@ class SyncService {
         }
       }
 
-      if (action === 'INSERT' || action === 'UPDATE') {
+        if (action === 'INSERT' || action === 'UPDATE') {
         const { error } = await supabase
-          .from(supabaseTable)
-          .upsert(payload);
+          .from(supabaseTable as string)
+          .upsert(payload as Record<string, unknown>);
         
         if (error) {
           console.error(`Error syncing ${table}:`, error);
@@ -205,7 +205,7 @@ class SyncService {
       const tables = ['documents', 'transactions', 'saved_clients', 'saved_products', 'settings'] as const;
       
       for (const table of tables) {
-        let supabaseTable = table;
+        let supabaseTable: string = table;
         if (table === 'settings') supabaseTable = 'profiles';
 
         const { data, error } = await supabase
@@ -227,7 +227,7 @@ class SyncService {
             settings: 'settings'
           };
           const localTableName = tableMap[table] || table;
-          const localTable = (db as Record<string, { bulkPut: (items: Record<string, unknown>[]) => Promise<unknown> }>)[localTableName];
+          const localTable = (db as unknown as Record<string, { bulkPut: (items: Record<string, unknown>[]) => Promise<unknown> }>)[localTableName];
           if (localTable) {
             const mappedData = data.map((d: Record<string, unknown>) => {
               const item = { ...d };

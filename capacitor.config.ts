@@ -17,10 +17,7 @@ const config: CapacitorConfig = {
     }
   },
   android: {
-    adaptiveIcon: {
-      foreground: "public/pwa-512.png",
-      background: "#FFFFFF"
-    }
+    backgroundColor: "#FFFFFF"
   }
 };
 
