@@ -84,7 +84,7 @@ export const useSignatureCanvas = (showSignatureModal: boolean) => {
     };
   }, [showSignatureModal]);
 
-  const handleSettingsSignatureStartDrawing = useCallback((e: any) => {
+  const handleSettingsSignatureStartDrawing = useCallback((e: MouseEvent | TouchEvent) => {
     const canvas = settingsSignatureCanvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (!ctx || !canvas) return;
@@ -94,7 +94,7 @@ export const useSignatureCanvas = (showSignatureModal: boolean) => {
     ctx.moveTo(x, y);
   }, []);
 
-  const handleSettingsSignatureDraw = useCallback((e: any) => {
+  const handleSettingsSignatureDraw = useCallback((e: MouseEvent | TouchEvent) => {
     if (!isDrawing.current) return;
     const canvas = settingsSignatureCanvasRef.current;
     const ctx = canvas?.getContext('2d');

@@ -65,8 +65,8 @@ export const ApiDashboard: React.FC<ApiDashboardProps> = ({ userId, onBack, onOp
         userId,
       });
       setTestResult(JSON.stringify(result, null, 2));
-    } catch (e: any) {
-      setTestResult(`Erro: ${e.message}`);
+    } catch (e: unknown) {
+      setTestResult(`Erro: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setTestLoading(false);
     }

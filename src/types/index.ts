@@ -156,15 +156,27 @@ export interface PurchaseDetails {
   purchaseState: 'purchased' | 'pending';
 }
 
+export interface BluetoothGattService {
+  uuid: string;
+  characteristics: BluetoothGattCharacteristic[];
+}
+
+export interface BluetoothGattCharacteristic {
+  uuid: string;
+  properties: { write: boolean; writeWithoutResponse: boolean };
+  value: DataView | null;
+  writeValue: (value: ArrayBuffer) => Promise<void>;
+}
+
 export interface BluetoothPrinter {
   id: string;
   name: string;
   gatt?: {
-    connect: () => Promise<any>;
+    connect: () => Promise<void>;
     connected: boolean;
     disconnect: () => void;
-    getPrimaryService: (uuid: string) => Promise<any>;
-    getPrimaryServices: (uuid?: string) => Promise<any[]>;
+    getPrimaryService: (uuid: string) => Promise<BluetoothGattService>;
+    getPrimaryServices: (uuid?: string) => Promise<BluetoothGattService[]>;
   };
 }
 

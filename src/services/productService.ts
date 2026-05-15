@@ -198,7 +198,7 @@ class ProductService {
       }
 
       if (data && data.length > 0) {
-        const productsToSync = data.map((item: any) => ({
+        const productsToSync = data.map((item: Record<string, unknown>) => ({
           id: item.id,
           name: item.name,
           price: item.price,

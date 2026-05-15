@@ -28,14 +28,14 @@ export interface N8nWebhookPayload {
   event: string;
   timestamp: number;
   userId?: string;
-  data: Record<string, any>;
-  metadata?: Record<string, any>;
+  data: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface N8nWebhookResponse {
   success: boolean;
   message?: string;
-  data?: any;
+  data?: unknown;
   error?: string;
 }
 

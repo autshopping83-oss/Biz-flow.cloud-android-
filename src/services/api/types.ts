@@ -6,7 +6,7 @@ export interface ApiRequest {
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   path: string;
   headers?: Record<string, string>;
-  body?: any;
+  body?: unknown;
   query?: Record<string, string>;
   userId?: string;
   params?: Record<string, string>;
@@ -15,7 +15,7 @@ export interface ApiRequest {
 export interface ApiResponse {
   status: number;
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
   message?: string;
   timestamp: number;

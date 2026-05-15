@@ -5,9 +5,18 @@ import { Logo } from './Logo';
 import { useToast } from './ToastContext';
 import { supabase } from '../services/supabaseClient'; // Import supabase client
 
+interface AuthRegisterData {
+  name?: string;
+  companyName?: string;
+  address?: string;
+  currency?: string;
+  language?: string;
+  logo?: string | null;
+}
+
 interface AuthProps {
   onLogin: (email: string, pass: string) => void;
-  onRegister: (email: string, pass: string, data: any) => void;
+  onRegister: (email: string, pass: string, data: AuthRegisterData) => void;
   onGoogleLogin: () => void;
   view: 'login' | 'register' | 'forgotPassword' | 'updatePassword';
   setView: (view: 'login' | 'register' | 'forgotPassword' | 'updatePassword') => void;
@@ -16,8 +25,13 @@ interface AuthProps {
   showInstallButton?: boolean;
 }
 
-// --- Shared Layout (Moved Outside) ---
-const AuthLayout = ({ children, title, subtitle }: any) => (
+interface AuthLayoutProps {
+  children: React.ReactNode;
+  title: string;
+  subtitle: string;
+}
+
+const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4 transition-colors duration-300">
     <div className="bg-white dark:bg-slate-900 p-8 md:p-10 rounded-3xl shadow-2xl shadow-slate-200/50 dark:shadow-black/50 w-full max-w-md border border-slate-100 dark:border-slate-800 transition-all duration-300 animate-scaleIn">
       <div className="text-center mb-8">

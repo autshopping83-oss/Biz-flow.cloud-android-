@@ -18,7 +18,7 @@ interface DashboardProps {
   onLoadDocument: (doc: ReceiptData) => void;
   onViewHistory: () => void;
   onToggleTheme: () => void;
-  t: (key: any) => string;
+  t: (key: string) => string;
   userId: string;
   onDeleteDocument?: (id: string) => void;
   onInstallApp?: () => void;

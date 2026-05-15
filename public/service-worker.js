@@ -1,36 +1,28 @@
-const CACHE_NAME = 'bizflow-static-v36';
+
+const CACHE_NAME = 'bizflow-simple-v36';
 const DYNAMIC_CACHE = 'bizflow-dynamic-v36';
-const ASSET_CACHE = 'bizflow-assets-v36';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './manifest.json',
-  './android-launchericon-192-192.png',
-  './android-launchericon-512-512.png',
-  './pwa-192.png',
-  './pwa-512.png'
+  './manifest.json'
 ];
 
-// Instalação: cacheia assets estáticos
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch(err => {
-        console.warn('[SW] Cache install warning:', err);
-      });
+      return cache.addAll(STATIC_ASSETS).catch(err => console.warn("Cache install warning:", err));
     })
   );
 });
 
-// Ativação: limpa caches antigos
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME && key !== DYNAMIC_CACHE && key !== ASSET_CACHE) {
+          if (key !== CACHE_NAME && key !== DYNAMIC_CACHE) {
             return caches.delete(key);
           }
         })
@@ -40,7 +32,6 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// Intercepta fetch
 self.addEventListener('fetch', (event) => {
   let url;
   try {
@@ -51,24 +42,19 @@ self.addEventListener('fetch', (event) => {
 
   if (!url || !url.pathname) return;
 
-  // Ignorar requisições não-GET e Supabase
+  // Ignorar requisições de API/Supabase para não cachear dados dinâmicos
   if (event.request.method !== 'GET' || url.hostname.includes('supabase.co')) {
     return;
   }
 
-  // Estratégia para navegação (HTML): Network First -> Cache
+  // Estratégia de Navegação (HTML): Network First -> Fallback para Cache
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
         .then((networkResponse) => {
           if (!networkResponse || networkResponse.status === 404 || networkResponse.status >= 500) {
-            return caches.match('./index.html').then(cacheRes => cacheRes || networkResponse);
+              return caches.match('./index.html').then(cacheRes => cacheRes || networkResponse);
           }
-          // Cacheia a resposta HTML para navegação offline
-          const responseToCache = networkResponse.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
           return networkResponse;
         })
         .catch(() => {
@@ -78,54 +64,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Estratégia para assets estáticos (JS, CSS, imagens): Cache First
-  if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot)$/)) {
-    event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          // Atualiza cache em background (stale-while-revalidate)
-          fetch(event.request).then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              const responseToCache = networkResponse.clone();
-              caches.open(ASSET_CACHE).then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-            }
-          }).catch(() => {});
-          return cachedResponse;
-        }
-        return fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
+  // Estratégia Stale-While-Revalidate para Assets e Imagens Externas
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
+          // Cachear respostas válidas (200) ou opacas (external images)
+          if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
             const responseToCache = networkResponse.clone();
-            caches.open(ASSET_CACHE).then((cache) => {
+            caches.open(DYNAMIC_CACHE).then((cache) => {
               cache.put(event.request, responseToCache);
             });
           }
           return networkResponse;
-        }).catch(() => {
-          return new Response('', { status: 408, statusText: 'Offline' });
-        });
-      })
-    );
-    return;
-  }
+        })
+        .catch(() => {});
 
-  // Estratégia para outros (API externa, etc): Network First com fallback
-  event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        return caches.match(event.request).then(cached => {
-          return cached || new Response('Offline', { status: 503 });
-        });
-      })
+      return cachedResponse || fetchPromise;
+    })
   );
 });

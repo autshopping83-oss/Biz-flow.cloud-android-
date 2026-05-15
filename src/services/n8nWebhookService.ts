@@ -17,14 +17,14 @@ export interface N8nWebhookPayload {
   event: string;
   timestamp: number;
   userId?: string;
-  data: Record<string, any>;
-  metadata?: Record<string, any>;
+  data: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface N8nWebhookResponse {
   success: boolean;
   message?: string;
-  data?: any;
+  data?: unknown;
   error?: string;
 }
 
@@ -65,7 +65,7 @@ class N8nWebhookService {
   /**
    * Enviar payload para o webhook do n8n
    */
-  async send(event: WebhookEventType, data: Record<string, any>, userId?: string, metadata?: Record<string, any>): Promise<N8nWebhookResponse> {
+  async send(event: WebhookEventType, data: Record<string, unknown>, userId?: string, metadata?: Record<string, unknown>): Promise<N8nWebhookResponse> {
     const payload: N8nWebhookPayload = {
       event,
       timestamp: Date.now(),
@@ -74,7 +74,7 @@ class N8nWebhookService {
       metadata: {
         source: 'biz-flowcloud',
         version: '1.0.0',
-        platform: typeof window !== 'undefined' ? (window.navigator as any)?.userAgent || 'web' : 'server',
+        platform: typeof navigator !== 'undefined' ? navigator.userAgent || 'web' : 'server',
         ...metadata
       }
     };
@@ -111,13 +111,13 @@ class N8nWebhookService {
           data: result,
         };
 
-      } catch (error: any) {
-        lastError = error;
+      } catch (error: unknown) {
+        lastError = error instanceof Error ? error : new Error(String(error));
         
-        if (error.name === 'AbortError') {
+        if (error instanceof DOMException && error.name === 'AbortError') {
           console.warn(`[N8nWebhook] Tentativa ${attempt}/${this.retryAttempts} - Timeout`);
         } else {
-          console.warn(`[N8nWebhook] Tentativa ${attempt}/${this.retryAttempts} - Erro:`, error.message);
+          console.warn(`[N8nWebhook] Tentativa ${attempt}/${this.retryAttempts} - Erro:`, error instanceof Error ? error.message : error);
         }
 
         if (attempt < this.retryAttempts) {
@@ -171,7 +171,7 @@ class N8nWebhookService {
   /**
    * Notificar criação de documento
    */
-  async notifyDocumentCreated(document: any, userId?: string) {
+  async notifyDocumentCreated(document: { id: string; number: string; type: string; clientName: string; total: number; currency: string; date: string }, userId?: string) {
     return this.send('document.created', {
       documentId: document.id,
       documentNumber: document.number,
@@ -186,7 +186,7 @@ class N8nWebhookService {
   /**
    * Notificar pagamento recebido
    */
-  async notifyPaymentReceived(payment: any, userId?: string) {
+  async notifyPaymentReceived(payment: { id: string; amount: number; currency: string; payerName: string; method: string }, userId?: string) {
     return this.send('payment.received', {
       paymentId: payment.id,
       amount: payment.amount,
@@ -212,7 +212,7 @@ class N8nWebhookService {
   /**
    * Enviar documento compartilhado via WhatsApp/Email
    */
-  async shareDocument(document: any, method: 'whatsapp' | 'email', recipient: string, userId?: string) {
+  async shareDocument(document: { id: string; number: string; type: string; clientName: string; total: number; currency: string; pdfUrl?: string }, method: 'whatsapp' | 'email', recipient: string, userId?: string) {
     const eventType = method === 'whatsapp' ? 'notification.whatsapp' : 'notification.email';
     
     return this.send(eventType, {

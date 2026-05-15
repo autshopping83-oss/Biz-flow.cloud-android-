@@ -46,7 +46,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, companySettin
   const currency = data.currency || 'MZN';
   const theme = data.documentTheme || 'color';
 
-  const t = (key: any) => getTranslation(lang, key);
+  const t = (key: string) => getTranslation(lang, key);
 
   const getStampStyle = (text: string, isBw: boolean) => {
     if (isBw) {

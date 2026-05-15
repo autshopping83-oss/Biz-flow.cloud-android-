@@ -19,7 +19,7 @@ class SyncService {
     this.onStatusChange = callback;
   }
 
-  async addToQueue(table: string, action: 'INSERT' | 'UPDATE' | 'DELETE', data: any) {
+  async addToQueue(table: string, action: 'INSERT' | 'UPDATE' | 'DELETE', data: Record<string, unknown>) {
     await db.syncQueue.add({
       table,
       action,
@@ -202,7 +202,7 @@ class SyncService {
     if (!userId || !navigator.onLine) return;
 
     try {
-      const tables = ['receipts', 'transactions', 'clients', 'products', 'settings'];
+      const tables = ['receipts', 'transactions', 'clients', 'products', 'settings'] as const;
       
       for (const table of tables) {
         let supabaseTable = table;
@@ -219,9 +219,10 @@ class SyncService {
         }
 
         if (data) {
-          const localTable = (db as any)[table];
+          // biome-ignore lint/suspicious/noExplicitAny: Dexie dynamic table access pattern
+          const localTable = (db as Record<string, { bulkPut: (items: Record<string, unknown>[]) => Promise<unknown> }>)[table];
           if (localTable) {
-            const mappedData = data.map((d: any) => {
+            const mappedData = data.map((d: Record<string, unknown>) => {
               const item = { ...d };
               // Map user_id back to userId
               if (item.user_id) {

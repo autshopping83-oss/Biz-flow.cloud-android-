@@ -28,9 +28,9 @@ class WebhookService {
 
   async send(
     event: WebhookEventType,
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     userId?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<N8nWebhookResponse> {
     const payload: N8nWebhookPayload = {
       event,
@@ -76,13 +76,13 @@ class WebhookService {
           message: `Evento "${event}" enviado com sucesso`,
           data: result,
         };
-      } catch (error: any) {
-        lastError = error;
+      } catch (error: unknown) {
+        lastError = error instanceof Error ? error : new Error(String(error));
 
-        if (error.name === 'AbortError') {
+        if (error instanceof DOMException && error.name === 'AbortError') {
           console.warn(`[Webhook] Tentativa ${attempt}/${this.retryAttempts} - Timeout`);
         } else {
-          console.warn(`[Webhook] Tentativa ${attempt}/${this.retryAttempts} - Erro:`, error.message);
+          console.warn(`[Webhook] Tentativa ${attempt}/${this.retryAttempts} - Erro:`, error instanceof Error ? error.message : error);
         }
 
         if (attempt < this.retryAttempts) {

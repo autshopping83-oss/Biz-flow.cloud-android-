@@ -27,8 +27,8 @@ export const ApiKeyManager: React.FC = () => {
     try {
       const data = await ApiKeyService.list();
       setKeys(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar chaves');
     }
     setLoading(false);
   };
@@ -45,8 +45,8 @@ export const ApiKeyManager: React.FC = () => {
       setNewKeyName('');
       setShowNewForm(false);
       await loadKeys();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao criar chave');
     }
   };
 
@@ -55,8 +55,8 @@ export const ApiKeyManager: React.FC = () => {
     try {
       await ApiKeyService.delete(id);
       await loadKeys();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao remover chave');
     }
   };
 
@@ -64,8 +64,8 @@ export const ApiKeyManager: React.FC = () => {
     try {
       await ApiKeyService.toggleActive(key.id, !key.is_active);
       await loadKeys();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao alterar estado da chave');
     }
   };
 

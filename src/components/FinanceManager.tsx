@@ -8,7 +8,7 @@ import { getTransactions, addTransaction, deleteTransaction } from '../services/
 
 interface Props {
   currency: string;
-  t: (key: any) => string;
+  t: (key: string) => string;
   userId: string;
   lang: string;
 }

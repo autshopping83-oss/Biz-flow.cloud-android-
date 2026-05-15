@@ -4,13 +4,46 @@ import { BluetoothPrinter } from "../types";
 import { BleClient, numbersToDataView, numberToUUID } from '@capacitor-community/bluetooth-le';
 import { Capacitor } from '@capacitor/core';
 
+interface WebBluetoothDevice {
+  id: string;
+  name?: string;
+  gatt?: {
+    connect: () => Promise<void>;
+    connected: boolean;
+    disconnect: () => void;
+    getPrimaryService: (uuid: string) => Promise<WebBluetoothService>;
+    getPrimaryServices: (uuid?: string) => Promise<WebBluetoothService[]>;
+  };
+}
+
+interface WebBluetoothService {
+  uuid: string;
+  characteristics: WebBluetoothCharacteristic[];
+  getCharacteristic: (uuid: string) => Promise<WebBluetoothCharacteristic>;
+  getCharacteristics: (uuid?: string) => Promise<WebBluetoothCharacteristic[]>;
+}
+
+interface WebBluetoothCharacteristic {
+  uuid: string;
+  properties: { write: boolean; writeWithoutResponse: boolean; [key: string]: boolean };
+  writeValue: (value: Uint8Array) => Promise<void>;
+}
+
+interface WebBluetooth {
+  requestDevice: (options: {
+    acceptAllDevices?: boolean;
+    optionalServices?: string[];
+    filters?: Array<{ services: string[] }>;
+  }) => Promise<WebBluetoothDevice>;
+}
+
 declare global {
   interface Navigator {
-    bluetooth: any;
+    bluetooth?: WebBluetooth;
   }
   interface Window {
-    showDirectoryPicker?: any;
-    deferredPrompt?: any; 
+    showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
+    deferredPrompt?: { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> } | null;
   }
 }
 
@@ -32,7 +65,7 @@ export const connectToPrinter = async (): Promise<BluetoothPrinter | null> => {
         id: device.deviceId, 
         name: device.name || 'Impressora Bluetooth',
         isNative: true 
-      } as any;
+      } as unknown as BluetoothPrinter;
     }
 
     // --- WEB PLATFORM ---
@@ -51,8 +84,8 @@ export const connectToPrinter = async (): Promise<BluetoothPrinter | null> => {
       return device as unknown as BluetoothPrinter;
     }
     return null;
-  } catch (error: any) {
-    if (error.name === 'AbortError' || error.message?.includes('aborted')) return null;
+  } catch (error: unknown) {
+    if (error instanceof DOMException && (error.name === 'AbortError' || error.message?.includes('aborted'))) return null;
     console.error("Erro Bluetooth:", error);
     return null;
   }
@@ -71,8 +104,8 @@ export const printTicket = async (device: BluetoothPrinter, element: HTMLElement
         useCORS: true,
         logging: false
       });
-  } catch (e: any) {
-      throw new Error("Erro ao renderizar recibo: " + (e.message || "Falha desconhecida"));
+  } catch (e: unknown) {
+      throw new Error("Erro ao renderizar recibo: " + (e instanceof Error ? e.message : "Falha desconhecida"));
   }
 
   if (!canvas) throw new Error("Canvas vazio.");
@@ -94,8 +127,9 @@ export const printTicket = async (device: BluetoothPrinter, element: HTMLElement
   const commands = encodeEscPos(imgData);
 
   // --- NATIVE PRINTING ---
-  if ((device as any).isNative) {
-    const deviceId = (device as any).id;
+  const nativeDevice = device as BluetoothPrinter & { isNative?: boolean };
+  if (nativeDevice.isNative) {
+    const deviceId = nativeDevice.id;
     try {
       // Find service and characteristic
       const services = await BleClient.getServices(deviceId);
@@ -146,7 +180,7 @@ export const printTicket = async (device: BluetoothPrinter, element: HTMLElement
   } catch (e) {
       try {
           const characteristics = await service.getCharacteristics();
-          characteristic = characteristics.find((c: any) => c.properties.write || c.properties.writeWithoutResponse);
+          characteristic = characteristics.find((c) => c.properties.write || c.properties.writeWithoutResponse);
       } catch (e2) {}
   }
 

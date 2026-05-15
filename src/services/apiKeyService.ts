@@ -1,10 +1,3 @@
-/**
- * API Key Service
- * 
- * Gerencia chaves de API para usuários acessarem serviços externos.
- * Cada usuário pode criar múltiplas chaves com diferentes permissões.
- */
-
 import { supabase } from './supabaseClient';
 
 export interface ApiKey {
@@ -26,72 +19,97 @@ export interface CreateApiKeyParams {
 }
 
 export class ApiKeyService {
-  /**
-   * Lista todas as chaves do usuário (sem mostrar o valor completo)
-   */
   static async list(): Promise<ApiKey[]> {
-    const { data, error } = await supabase
-      .from('api_keys')
-      .select('*')
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('api_keys')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data || [];
+      if (error) {
+        console.error('[apiKeyService.list]', error);
+        throw error;
+      }
+      return data ?? [];
+    } catch (err) {
+      console.error('[apiKeyService.list] unexpected error:', err);
+      throw new Error('Falha ao listar chaves de API');
+    }
   }
 
-  /**
-   * Cria uma nova chave de API
-   */
   static async create(params: CreateApiKeyParams): Promise<{ id: string; key: string }> {
-    const { data, error } = await supabase
-      .rpc('create_api_key', {
-        key_name: params.name,
-        key_permissions: params.permissions || ['read'],
-        key_expires_at: params.expires_at || null
-      });
+    try {
+      const { data, error } = await supabase
+        .rpc('create_api_key', {
+          key_name: params.name,
+          key_permissions: params.permissions ?? ['read'],
+          key_expires_at: params.expires_at ?? null
+        });
 
-    if (error) throw error;
-    return data;
+      if (error) {
+        console.error('[apiKeyService.create]', error);
+        throw error;
+      }
+      return data as { id: string; key: string };
+    } catch (err) {
+      console.error('[apiKeyService.create] unexpected error:', err);
+      throw new Error('Falha ao criar chave de API');
+    }
   }
 
-  /**
-   * Atualiza uma chave (nome, permissões, status)
-   */
   static async update(id: string, updates: Partial<ApiKey>): Promise<void> {
-    const { error } = await supabase
-      .from('api_keys')
-      .update({
-        name: updates.name,
-        permissions: updates.permissions,
-        is_active: updates.is_active,
-        expires_at: updates.expires_at
-      })
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('api_keys')
+        .update({
+          name: updates.name,
+          permissions: updates.permissions,
+          is_active: updates.is_active,
+          expires_at: updates.expires_at
+        })
+        .eq('id', id);
 
-    if (error) throw error;
+      if (error) {
+        console.error('[apiKeyService.update]', error);
+        throw error;
+      }
+    } catch (err) {
+      console.error('[apiKeyService.update] unexpected error:', err);
+      throw new Error('Falha ao atualizar chave de API');
+    }
   }
 
-  /**
-   * Remove uma chave
-   */
   static async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('api_keys')
-      .delete()
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('api_keys')
+        .delete()
+        .eq('id', id);
 
-    if (error) throw error;
+      if (error) {
+        console.error('[apiKeyService.delete]', error);
+        throw error;
+      }
+    } catch (err) {
+      console.error('[apiKeyService.delete] unexpected error:', err);
+      throw new Error('Falha ao remover chave de API');
+    }
   }
 
-  /**
-   * Alterna status ativo/inativo
-   */
   static async toggleActive(id: string, isActive: boolean): Promise<void> {
-    const { error } = await supabase
-      .from('api_keys')
-      .update({ is_active: isActive })
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('api_keys')
+        .update({ is_active: isActive })
+        .eq('id', id);
 
-    if (error) throw error;
+      if (error) {
+        console.error('[apiKeyService.toggleActive]', error);
+        throw error;
+      }
+    } catch (err) {
+      console.error('[apiKeyService.toggleActive] unexpected error:', err);
+      throw new Error('Falha ao alternar estado da chave de API');
+    }
   }
 }

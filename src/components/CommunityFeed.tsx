@@ -6,7 +6,7 @@ import { useToast } from './ToastContext';
 
 interface Props {
   currentUser: CompanySettings;
-  t: (key: any) => string;
+  t: (key: string) => string;
 }
 
 export const CommunityFeed: React.FC<Props> = ({ currentUser, t }) => {

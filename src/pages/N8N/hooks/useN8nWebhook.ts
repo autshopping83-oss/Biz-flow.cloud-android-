@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { N8nWebhookResponse, N8nIntegrationStatus } from '../types/n8n';
+import { N8nWebhookResponse, N8nIntegrationStatus, WebhookEventType } from '../types/n8n';
 import { webhookService } from '../services/webhookService';
 
 interface UseN8nWebhookReturn {
@@ -12,7 +12,7 @@ interface UseN8nWebhookReturn {
   lastResult: N8nWebhookResponse | null;
   integrationStatus: Record<string, N8nIntegrationStatus>;
   testConnection: () => Promise<void>;
-  sendEvent: (event: string, data: Record<string, any>) => Promise<N8nWebhookResponse | null>;
+  sendEvent: (event: string, data: Record<string, unknown>) => Promise<N8nWebhookResponse | null>;
   setIntegrationStatus: (id: string, status: N8nIntegrationStatus) => void;
   resetResult: () => void;
 }
@@ -35,8 +35,9 @@ export const useN8nWebhook = (userId?: string): UseN8nWebhookReturn => {
       const result = await webhookService.testConnection();
       setLastResult(result);
       setIntegrationStatus('webhook', result.success ? 'connected' : 'error');
-    } catch (error: any) {
-      setLastResult({ success: false, error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      setLastResult({ success: false, error: message });
       setIntegrationStatus('webhook', 'error');
     } finally {
       setIsTesting(false);
@@ -45,15 +46,16 @@ export const useN8nWebhook = (userId?: string): UseN8nWebhookReturn => {
 
   const sendEvent = useCallback(async (
     event: string,
-    data: Record<string, any>
+    data: Record<string, unknown>
   ): Promise<N8nWebhookResponse | null> => {
     setIsTesting(true);
     try {
-      const result = await webhookService.send(event as any, data, userId);
+      const result = await webhookService.send(event as WebhookEventType, data, userId);
       setLastResult(result);
       return result;
-    } catch (error: any) {
-      const result = { success: false, error: error.message };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      const result = { success: false, error: message };
       setLastResult(result);
       return result;
     } finally {

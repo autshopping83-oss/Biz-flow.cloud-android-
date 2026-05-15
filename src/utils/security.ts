@@ -53,11 +53,11 @@ export const security = {
   },
 
   /**
-   * Sanitiza objeto para JSON
+   * Sanitiza objeto para JSON (deep clone seguro)
    */
-  sanitizeJSON: (obj: any): any => {
+  sanitizeJSON: <T>(obj: T): T | Record<string, never> => {
     try {
-      return JSON.parse(JSON.stringify(obj));
+      return JSON.parse(JSON.stringify(obj)) as T;
     } catch {
       return {};
     }

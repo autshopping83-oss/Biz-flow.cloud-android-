@@ -72,9 +72,10 @@ class ApiService {
       }
 
       return await endpoint.handler({ ...req, params });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[API] Erro interno:', error);
-      return { status: 500, success: false, error: `Erro interno: ${error.message}`, timestamp: Date.now() };
+      const message = error instanceof Error ? error.message : String(error);
+      return { status: 500, success: false, error: `Erro interno: ${message}`, timestamp: Date.now() };
     }
   }
 
@@ -89,8 +90,8 @@ class ApiService {
     return this.router.listEndpoints();
   }
 
-  getOpenApiDocs(): any {
-    const paths: Record<string, any> = {};
+  getOpenApiDocs(): Record<string, unknown> {
+    const paths: Record<string, Record<string, unknown>> = {};
     this.router.listEndpoints().forEach(ep => {
       const cleanPath = ep.path.replace(/:([^/]+)/g, '{$1}');
       if (!paths[cleanPath]) paths[cleanPath] = {};

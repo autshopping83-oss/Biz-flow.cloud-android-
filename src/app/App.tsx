@@ -17,6 +17,7 @@ import { AppEditorView } from './views/AppEditorView';
 import { SignatureModal } from '../features/documents/components/SignatureModal';
 import { DocumentShareModal } from '../components/DocumentShareModal';
 import { SettingsModal } from '../components/SettingsModal';
+import type { Session } from '@supabase/supabase-js';
 
 const Dashboard = lazy(() => import('../components/Dashboard').then(m => ({ default: m.Dashboard })));
 const AuthScreens = lazy(() => import('../components/AuthScreens').then(m => ({ default: m.AuthScreens })));
@@ -27,7 +28,10 @@ const ApiDocs = lazy(() => import('../components/ApiDocs').then(m => ({ default:
 const ApiDashboard = lazy(() => import('../components/ApiDashboard').then(m => ({ default: m.ApiDashboard })));
 
 declare global {
-  interface Window { showDirectoryPicker?: any; deferredPrompt?: any; }
+  interface Window {
+    showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
+    deferredPrompt?: { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> } | null;
+  }
 }
 
 const PageLoader = () => (
@@ -44,21 +48,23 @@ const DefaultSettings: CompanySettings = {
   theme: 'light', plan: 'PRO', isAdmin: false,
 };
 
+type AppView = 'loading' | 'login' | 'register' | 'forgotPassword' | 'updatePassword' | 'home' | 'history' | 'app' | 'apiDocs' | 'apiDashboard' | 'deleteAccount';
+
 const App: React.FC<{ onReady?: () => void }> = ({ onReady }) => {
-  const [currentView, setCurrentView] = useState<any>('loading');
+  const [currentView, setCurrentView] = useState<AppView>('loading');
   const [isGuest, setIsGuest] = useState(false);
   const [history, setHistory] = useState<ReceiptData[]>([]);
   const [companySettings, setCompanySettings] = useState<CompanySettings>(DefaultSettings);
   const [savedClients, setSavedClients] = useState<SavedClient[]>([]);
   const [savedProducts, setSavedProducts] = useState<SavedProduct[]>([]);
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [syncing, setSyncing] = useState(false);
-  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [installPrompt, setInstallPrompt] = useState<Window['deferredPrompt']>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const { notify } = useToast();
-  const t = (key: any) => getTranslation(companySettings.language, key);
+  const t = (key: string) => getTranslation(companySettings.language, key);
   const fMoney = (val: number) => formatMoney(val, companySettings.currency, companySettings.language);
   const { authLoading, handleLogin, handleRegister, handleLogout, handleGoogleLogin } = useAuth(notify);
 
@@ -137,7 +143,7 @@ const App: React.FC<{ onReady?: () => void }> = ({ onReady }) => {
           onRequestFolderPermission={editor.requestFolderPermission}
           onSaveSettings={async () => { if (!session?.user?.id) return; const { saveCompanySettings } = await import('../services/storageService'); await saveCompanySettings(companySettings, session.user.id); notify('Definições guardadas!', 'success'); setShowSettingsModal(false); }}
           isSavingSettings={false} localDirHandle={editor.localDirHandle}
-          onSaveSignature={() => {}} onClearSignature={() => {}} settingsSignatureCanvasRef={undefined as any}
+          onSaveSignature={() => {}} onClearSignature={() => {}} settingsSignatureCanvasRef={null as unknown as React.RefObject<HTMLCanvasElement | null>}
           handleSettingsSignatureStartDrawing={() => {}} handleSettingsSignatureDraw={() => {}} handleSettingsSignatureStopDrawing={() => {}} />
       )}
       {editor.showShareModal && (

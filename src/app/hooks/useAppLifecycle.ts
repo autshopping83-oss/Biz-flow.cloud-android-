@@ -5,20 +5,21 @@ import { syncService } from '../../services/syncService';
 import { productService } from '../../services/productService';
 import { getDirectoryHandle, getHistory, getSavedClients, getSavedProducts, getCompanySettings } from '../../services/storageService';
 import { CompanySettings, ReceiptData, SavedClient, SavedProduct } from '../../types';
+import type { Session } from '@supabase/supabase-js';
 
 interface UseAppLifecycleParams {
   currentView: string;
   isGuest: boolean;
   setCurrentView: (view: string) => void;
   setIsGuest: (guest: boolean) => void;
-  setSession: (session: any) => void;
+  setSession: (session: Session | null) => void;
   setHistory: (history: ReceiptData[]) => void;
   setSavedClients: (clients: SavedClient[]) => void;
   setSavedProducts: (products: SavedProduct[]) => void;
   setCompanySettings: (settings: CompanySettings) => void;
   setIsOnline: (online: boolean) => void;
   setSyncing: (syncing: boolean) => void;
-  setLocalDirHandle: (handle: any) => void;
+  setLocalDirHandle: (handle: FileSystemDirectoryHandle | null) => void;
   onReady?: () => void;
 }
 

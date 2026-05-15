@@ -8,15 +8,15 @@ interface SettingsModalProps {
   onUpdate: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   onLogoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onStampUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onRequestFolderPermission: () => Promise<any>;
+  onRequestFolderPermission: () => Promise<void>;
   onSaveSettings: () => Promise<void>;
   isSavingSettings: boolean;
-  localDirHandle: any;
+  localDirHandle: FileSystemDirectoryHandle | null;
   onSaveSignature: () => void;
   onClearSignature: () => void;
-  settingsSignatureCanvasRef: React.RefObject<HTMLCanvasElement>;
-  handleSettingsSignatureStartDrawing: (e: any) => void;
-  handleSettingsSignatureDraw: (e: any) => void;
+  settingsSignatureCanvasRef: React.RefObject<HTMLCanvasElement | null>;
+  handleSettingsSignatureStartDrawing: (e: MouseEvent | TouchEvent) => void;
+  handleSettingsSignatureDraw: (e: MouseEvent | TouchEvent) => void;
   handleSettingsSignatureStopDrawing: () => void;
 }
 

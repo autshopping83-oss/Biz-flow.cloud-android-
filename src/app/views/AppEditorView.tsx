@@ -6,7 +6,7 @@
  */
 
 import React, { RefObject } from 'react';
-import { ReceiptData, CompanySettings, LineItem, SavedClient, SavedProduct } from '../../types';
+import { ReceiptData, CompanySettings, LineItem, SavedClient, SavedProduct, DocumentType } from '../../types';
 import DocumentPreview from '../../components/ReceiptPreview';
 import { EditorForm } from '../../components/EditorForm';
 
@@ -27,7 +27,7 @@ interface AppEditorViewProps {
   receiptRef: RefObject<HTMLDivElement | null>;
   ghostReceiptRef: RefObject<HTMLDivElement | null>;
   thermalReceiptRef: RefObject<HTMLDivElement | null>;
-  t: (key: any) => string;
+  t: (key: string) => string;
   fMoney: (val: number) => string;
   onBack: () => void;
   onOpenSettings: () => void;
@@ -39,7 +39,7 @@ interface AppEditorViewProps {
   onAddItem: () => void;
   onRemoveItem: (id: string) => void;
   onEnhanceDescription: () => void;
-  onInitNew: (type: any) => void;
+  onInitNew: (type: DocumentType) => void;
   onSign: () => void;
   onClearClient: () => void;
   onThemeChange: (theme: 'color' | 'bw') => void;

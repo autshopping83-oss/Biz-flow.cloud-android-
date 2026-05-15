@@ -6,7 +6,7 @@ export interface SyncQueueItem {
   id?: number;
   table: string;
   action: 'INSERT' | 'UPDATE' | 'DELETE';
-  data: any;
+  data: Record<string, unknown>;
   timestamp: number;
   retries?: number;
 }

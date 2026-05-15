@@ -28,20 +28,20 @@ migrateCommentsToDexie();
 
 // --- GESTÃO DE DIRETÓRIOS LOCAIS (File System Access API) ---
 
-export const saveDirectoryHandle = async (handle: any) => {
+export const saveDirectoryHandle = async (handle: FileSystemDirectoryHandle) => {
   try {
-    const tx = db.transaction('rw', db.settings, () => {
-       db.settings.put({ id: 'default_dir', handle } as any);
+    await db.transaction('rw', db.settings, () => {
+      db.settings.put({ id: 'default_dir', handle } as CompanySettings & { id: string; handle: FileSystemDirectoryHandle });
     });
   } catch (e) {
     console.error("Erro ao guardar handle da pasta", e);
   }
 };
 
-export const getDirectoryHandle = async () => {
+export const getDirectoryHandle = async (): Promise<FileSystemDirectoryHandle | null> => {
   try {
     const item = await db.settings.get('default_dir');
-    return item ? (item as any).handle : null;
+    return item ? (item as Record<string, unknown> & { handle?: FileSystemDirectoryHandle }).handle ?? null : null;
   } catch (e) {
     return null;
   }

@@ -48,8 +48,9 @@ export function useAuth(notify: (msg: string, type: 'success' | 'error' | 'info'
       if (error) throw error;
       notify('Login bem-sucedido!', 'success');
       return { success: true, message: 'Login bem-sucedido' };
-    } catch (e: any) {
-      const msg = e.message?.includes('Invalid login credentials')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : '';
+      const msg = message.includes('Invalid login credentials')
         ? 'Email ou senha incorretos'
         : 'Erro ao fazer login. Tente novamente.';
       notify(msg, 'error');
@@ -99,8 +100,9 @@ export function useAuth(notify: (msg: string, type: 'success' | 'error' | 'info'
 
       notify('Conta criada! Verifique seu email para confirmar.', 'success');
       return { success: true, message: 'Conta criada com sucesso' };
-    } catch (e: any) {
-      const msg = e.message?.includes('already registered')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : '';
+      const msg = message.includes('already registered')
         ? 'Este email já está registado'
         : 'Erro no registo. Tente novamente mais tarde.';
       notify(msg, 'error');

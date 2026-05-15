@@ -5,7 +5,7 @@ import { useToast } from './ToastContext';
 
 interface ProductCatalogProps {
   userId: string;
-  t: (key: any) => string;
+  t: (key: string) => string;
   fMoney: (val: number) => string;
   onClose: () => void;
 }

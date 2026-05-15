@@ -210,8 +210,9 @@ class OrgService {
           message: `Convite enviado para ${email}. O utilizador precisa criar uma conta com este email.`
         };
       }
-    } catch (e: any) {
-      return { success: false, message: 'Erro ao convidar membro: ' + e.message };
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, message: 'Erro ao convidar membro: ' + message };
     }
   }
 
