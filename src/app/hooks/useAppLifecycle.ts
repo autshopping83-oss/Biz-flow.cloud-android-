@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { BleClient } from '@capacitor-community/bluetooth-le';
 import { supabase } from '../../services/supabaseClient';
 import { syncService } from '../../services/syncService';
@@ -38,6 +38,8 @@ export const useAppLifecycle = ({
   setLocalDirHandle,
   onReady,
 }: UseAppLifecycleParams) => {
+  const initializingRef = useRef(false);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const action = params.get('action');
@@ -70,9 +72,7 @@ export const useAppLifecycle = ({
         return;
       }
       if (session) {
-        if (currentView !== 'history') {
-          initializeUserData(session.user.id);
-        }
+        initializeUserData(session.user.id);
       } else if (!isGuest && action !== 'delete_account') {
         const allowedViews = ['register', 'forgotPassword', 'updatePassword'];
         if (!allowedViews.includes(currentView)) {
@@ -114,27 +114,48 @@ export const useAppLifecycle = ({
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('navigate', handleNavigate);
     };
-  }, [currentView, isGuest, setCurrentView, setIsGuest, setSession, setHistory, setSavedClients, setSavedProducts, setCompanySettings, setIsOnline, setSyncing, setLocalDirHandle, onReady]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const initializeUserData = async (userId: string) => {
-    setIsGuest(false);
-    fetchProfile(userId);
-    await loadLocalData(userId);
-    await syncService.pullFromSupabase(userId);
-    await productService.syncFromSupabase(userId);
-    await loadLocalData(userId);
-    if (currentView !== 'history') setCurrentView('home');
+    if (initializingRef.current) return;
+    initializingRef.current = true;
+
+    try {
+      setIsGuest(false);
+      fetchProfile(userId);
+      await loadLocalData(userId);
+      await syncService.pullFromSupabase(userId);
+      await productService.syncFromSupabase(userId);
+      await loadLocalData(userId);
+
+      // Só navega se ainda estiver num ecrã de carregamento/auth
+      if (['loading', 'login', 'register', 'forgotPassword'].includes(currentView)) {
+        setCurrentView('home');
+      }
+    } catch (error) {
+      console.error('initializeUserData error:', error);
+      // Fallback seguro: tenta mostrar o home mesmo com erro
+      if (['loading', 'login', 'register', 'forgotPassword'].includes(currentView)) {
+        setCurrentView('home');
+      }
+    } finally {
+      initializingRef.current = false;
+    }
   };
 
   const loadLocalData = async (userId: string) => {
     if (!userId) return;
-    const hist = await getHistory(userId);
-    setHistory(hist);
-    setSavedClients(await getSavedClients(userId));
-    setSavedProducts(await getSavedProducts(userId));
-    const localSettings = await getCompanySettings(userId);
-    if (localSettings) {
-      setCompanySettings(prev => ({ ...prev, ...localSettings, plan: 'PRO' }));
+    try {
+      const hist = await getHistory(userId);
+      setHistory(hist);
+      setSavedClients(await getSavedClients(userId));
+      setSavedProducts(await getSavedProducts(userId));
+      const localSettings = await getCompanySettings(userId);
+      if (localSettings) {
+        setCompanySettings(prev => ({ ...prev, ...localSettings, plan: 'PRO' }));
+      }
+    } catch (error) {
+      console.error('loadLocalData error:', error);
     }
   };
 
