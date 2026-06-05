@@ -30,7 +30,7 @@ export const getSubscriptionDetails = async (): Promise<ItemDetails | null> => {
     const service = await (window as any).getDigitalGoodsService('https://play.google.com/billing') as DigitalGoodsService;
     const details = await service.getDetails([SUBSCRIPTION_ID]);
     
-    return details.length > 0 ? details[0] : null;
+    return details.length > 0 ? details[0] ?? null : null;
   } catch (error) {
     console.error("Erro ao buscar detalhes da assinatura. Verifique se o ID 'pro_monthly' existe na Play Console e se o app está assinado/publicado em teste fechado.", error);
     return null;

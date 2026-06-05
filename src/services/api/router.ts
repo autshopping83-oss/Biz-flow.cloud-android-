@@ -25,9 +25,11 @@ export class ApiRouter {
       let match = true;
 
       for (let i = 0; i < endpointParts.length; i++) {
-        if (endpointParts[i].startsWith(':')) {
-          params[endpointParts[i].slice(1)] = requestParts[i];
-        } else if (endpointParts[i] !== requestParts[i]) {
+        const ep = endpointParts[i]!;
+        const rp = requestParts[i]!;
+        if (ep.startsWith(':')) {
+          params[ep.slice(1)] = rp;
+        } else if (ep !== rp) {
           match = false;
           break;
         }

@@ -41,11 +41,12 @@ export async function getDocument(req: ApiRequest): Promise<ApiResponse> {
 
 export async function createDocument(req: ApiRequest): Promise<ApiResponse> {
   const userId = req.userId!;
-  const doc = req.body;
+  const doc = req.body as Record<string, unknown> | undefined;
+  if (!doc) return { status: 400, success: false, error: 'Body é obrigatório', timestamp: Date.now() };
 
   const id = await db.receipts.add({
     ...doc, userId, createdAt: Date.now(), synced: false,
-  });
+  } as any);
 
   return { status: 201, success: true, data: { id }, message: 'Documento criado', timestamp: Date.now() };
 }

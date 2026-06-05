@@ -643,7 +643,7 @@ interface ActionCardProps {
   loading?: boolean;
 }
 
-const colorMap: Record<string, { bg: string; hover: string; icon: string }> = {
+const colorMap: Record<ActionCardProps['color'], { bg: string; hover: string; icon: string }> = {
   rose: { bg: 'bg-rose-50 dark:bg-rose-900/20', hover: 'hover:bg-rose-100 dark:hover:bg-rose-900/30', icon: 'text-rose-500' },
   blue: { bg: 'bg-blue-50 dark:bg-blue-900/20', hover: 'hover:bg-blue-100 dark:hover:bg-blue-900/30', icon: 'text-blue-500' },
   red: { bg: 'bg-red-50 dark:bg-red-900/20', hover: 'hover:bg-red-100 dark:hover:bg-red-900/30', icon: 'text-red-500' },
@@ -686,7 +686,7 @@ const ResultDisplay: React.FC<{ result: N8nWebhookResponse }> = ({ result }) => 
       )}
     </div>
     <p className="text-xs opacity-80">{result.message || result.error}</p>
-    {result.data && (
+    {!!result.data && (
       <pre className="mt-2 text-[10px] opacity-60 overflow-x-auto">
         {JSON.stringify(result.data, null, 2)}
       </pre>

@@ -26,3 +26,6 @@ logs
 # Environment variables
 .env
 .env.local
+.vercel
+
+/src/generated/prisma

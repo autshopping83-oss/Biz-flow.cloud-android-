@@ -41,7 +41,7 @@ export const saveDirectoryHandle = async (handle: FileSystemDirectoryHandle) => 
 export const getDirectoryHandle = async (): Promise<FileSystemDirectoryHandle | null> => {
   try {
     const item = await db.settings.get('default_dir');
-    return item ? (item as Record<string, unknown> & { handle?: FileSystemDirectoryHandle }).handle ?? null : null;
+    return item ? (item as unknown as { handle?: FileSystemDirectoryHandle }).handle ?? null : null;
   } catch (e) {
     return null;
   }
@@ -88,7 +88,7 @@ export const addProduct = async (product: Omit<Product, 'id' | 'createdAt' | 'up
     };
 
     await db.catalog.add(newProduct);
-    await syncService.addToQueue('catalog', 'INSERT', newProduct);
+    await syncService.addToQueue('catalog', 'INSERT', newProduct as unknown as Record<string, unknown>);
 
     return newProduct;
   } catch (e) {
@@ -105,7 +105,7 @@ export const updateProduct = async (productId: string, updates: Partial<Pick<Pro
 
     const updatedProduct = await db.catalog.get(productId);
     if (updatedProduct) {
-      await syncService.addToQueue('catalog', 'UPDATE', updatedProduct);
+      await syncService.addToQueue('catalog', 'UPDATE', updatedProduct as unknown as Record<string, unknown>);
     }
   } catch (e) {
     throw new Error('Erro ao atualizar produto');
@@ -220,10 +220,10 @@ export const generateNextReceiptNumber = (history: ReceiptData[], type: Document
   let prefix = type === 'INVOICE' ? 'FAT' : type === 'INVOICE_RECEIPT' ? 'FAT-REC' : type === 'QUOTE' ? 'COT' : 'REC';
   const typeHistory = history.filter(h => (h.type || 'RECEIPT') === type);
   if (typeHistory.length === 0) return `${prefix}-0001`;
-  const latest = typeHistory[0].number; 
+  const latest = typeHistory[0]!.number;
   const parts = latest.split('-');
   if (parts.length === 2) {
-    const num = parseInt(parts[1], 10);
+    const num = parseInt(parts[1]!, 10);
     if (!isNaN(num)) return `${prefix}-${(num + 1).toString().padStart(4, '0')}`;
   }
   return `${prefix}-${(typeHistory.length + 1).toString().padStart(4, '0')}`;

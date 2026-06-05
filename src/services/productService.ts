@@ -199,14 +199,14 @@ class ProductService {
 
       if (data && data.length > 0) {
         const productsToSync = data.map((item: Record<string, unknown>) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          category: item.category,
+          id: item.id as string,
+          name: item.name as string,
+          price: item.price as number,
+          category: item.category as string,
           userId,
-          createdAt: new Date(item.created_at).getTime(),
-          updatedAt: new Date(item.updated_at).getTime(),
-        }));
+          createdAt: new Date(item.created_at as string).getTime(),
+          updatedAt: new Date(item.updated_at as string).getTime(),
+        } as Product));
 
         // Clear existing and repopulate
         const existing = await db.catalog.where('userId').equals(userId).toArray();

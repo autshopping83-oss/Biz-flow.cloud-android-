@@ -125,7 +125,7 @@ export async function createProduct(req: ApiRequest): Promise<ApiResponse> {
 }
 
 export async function updateProduct(req: ApiRequest): Promise<ApiResponse> {
-  const { id } = req.params!;
+  const id = req.params!.id!;
   const updates = req.body;
   if (!updates) return error(400, 'Body é obrigatório');
 
@@ -134,7 +134,7 @@ export async function updateProduct(req: ApiRequest): Promise<ApiResponse> {
 }
 
 export async function deleteProductApi(req: ApiRequest): Promise<ApiResponse> {
-  const { id } = req.params!;
+  const id = req.params!.id!;
   await productService.deleteProduct(id);
   return success(null, undefined, 'Produto eliminado com sucesso');
 }
@@ -173,7 +173,7 @@ export async function createTransaction(req: ApiRequest): Promise<ApiResponse> {
     amount: (data.amount as number) || 0,
     description: (data.description as string) || '',
     category: (data.category as string) || 'Outros',
-    date: (data.date as string) || new Date().toISOString().split('T')[0],
+    date: ((data.date as string) || new Date().toISOString().split('T')[0]) ?? '',
     timestamp: Date.now(),
   };
 

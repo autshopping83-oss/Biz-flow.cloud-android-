@@ -19,11 +19,11 @@ class SyncService {
     this.onStatusChange = callback;
   }
 
-  async addToQueue(table: string, action: 'INSERT' | 'UPDATE' | 'DELETE', data: Record<string, unknown>) {
+  async addToQueue(table: string, action: 'INSERT' | 'UPDATE' | 'DELETE', data: unknown) {
     await db.syncQueue.add({
       table,
       action,
-      data,
+      data: data as Record<string, unknown>,
       timestamp: Date.now()
     });
     

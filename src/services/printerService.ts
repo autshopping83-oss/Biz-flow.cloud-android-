@@ -135,9 +135,11 @@ export const printTicket = async (device: BluetoothPrinter, element: HTMLElement
       const services = await BleClient.getServices(deviceId);
       let targetService = services.find(s => s.uuid === PRINT_SERVICE_UUID || s.uuid === '0000ae00-0000-1000-8000-00805f9b34fb');
       if (!targetService) targetService = services[0];
+      if (!targetService) throw new Error('Service Bluetooth não encontrado');
 
       let targetChar = targetService.characteristics.find(c => c.uuid === WRITE_CHARACTERISTIC_UUID || c.properties.write || c.properties.writeWithoutResponse);
       if (!targetChar) targetChar = targetService.characteristics[0];
+      if (!targetChar) throw new Error('Characteristic Bluetooth não encontrada');
 
       const CHUNK_SIZE = 512;
       for (let i = 0; i < commands.length; i += CHUNK_SIZE) {
@@ -225,9 +227,9 @@ const encodeEscPos = (imgData: ImageData): Uint8Array => {
         if (pixelX < width) {
           const offset = (y * width + pixelX) * 4;
           // RGB to Grayscale
-          const r = data[offset];
-          const g = data[offset + 1];
-          const b = data[offset + 2];
+          const r = data[offset]!;
+          const g = data[offset + 1]!;
+          const b = data[offset + 2]!;
           const luminance = (r * 0.299 + g * 0.587 + b * 0.114);
           
           // Thresholding
