@@ -8,6 +8,7 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { ReceiptData, CompanySettings, SavedClient, SavedProduct } from '../types';
 import { Logo } from '../components/Logo';
+import { V } from '../_cachebuster/version';
 import { useToast } from '../components/ToastContext';
 import { useAppLifecycle } from './hooks/useAppLifecycle';
 import { useAuth } from '../features/auth/hooks/useAuth';
