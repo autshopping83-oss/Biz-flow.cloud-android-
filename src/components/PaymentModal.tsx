@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from './ToastContext';
 
@@ -9,35 +8,65 @@ interface Props {
   userId?: string;
 }
 
+const PLANS = [
+  {
+    id: 'Pro',
+    name: 'Pro',
+    price: '250 MT/mês',
+    features: ['Negócios ilimitados', 'Clientes ilimitados', 'Relatórios avançados', 'Multi-moeda', 'Suporte prioritário'],
+    popular: true,
+  },
+  {
+    id: 'Empresarial',
+    name: 'Empresarial',
+    price: '500 MT/mês',
+    features: ['Tudo do Pro', 'Acesso para equipa (3 users)', 'Contabilidade simplificada', 'Suporte prioritário 24h'],
+    popular: false,
+  },
+];
+
+const EDGE_FUNCTION_URL = import.meta.env.VITE_PAYSUITE_CREATE_PAYMENT_URL
+  || 'https://ilukexelmihfdezbgcrp.supabase.co/functions/v1/create-payment';
+
 export const PaymentModal: React.FC<Props> = ({ onClose, userEmail = '', userName = '', userId = '' }) => {
   const [loading, setLoading] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string>('Pro');
   const { notify } = useToast();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
-
-  const handleValidate = async () => {
-    if (!file) {
-      notify("Por favor, anexe o comprovativo antes de validar.", "error");
-      return;
-    }
-
+  const handleSubscribe = async () => {
     if (!userId) {
-       notify("Erro de identificação do usuário. Faça login novamente.", "error");
-       return;
+      notify('Erro de identificação. Faça login novamente.', 'error');
+      return;
     }
 
     setLoading(true);
 
     try {
-        notify("O serviço de pagamento atual foi removido. Em breve haverá integração com um novo provedor.", "info");
+      const response = await fetch(EDGE_FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan_name: selectedPlan,
+          user_id: userId,
+          return_url: 'https://biz-flow.cloud',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.status === 'success' && data.data?.checkout_url) {
+        // Open PaySuite checkout in new tab
+        window.open(data.data.checkout_url, '_blank');
+        notify('Redirecionando para o pagamento...', 'info');
         onClose();
+      } else {
+        notify(data.message || 'Erro ao criar pagamento. Tente novamente.', 'error');
+      }
+    } catch (err) {
+      console.error('Payment error:', err);
+      notify('Erro de conexão. Tente novamente.', 'error');
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -47,66 +76,80 @@ export const PaymentModal: React.FC<Props> = ({ onClose, userEmail = '', userNam
         
         {/* Header */}
         <div className="bg-slate-50 dark:bg-slate-800 p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-            <div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-lg">Ativação PRO</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Plano PRO: <span className="font-black text-slate-900 dark:text-white">2.00 USD (130 MT)</span></p>
-            </div>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white">
-                <i className="fa-solid fa-times text-xl"></i>
-            </button>
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-white text-lg">Planos BizFlow</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Escolha o plano ideal para o seu negócio</p>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+            <i className="fa-solid fa-times text-xl"></i>
+          </button>
         </div>
 
-        <div className="p-6 space-y-8">
-            
-            {/* Info Box instead of Link */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
-                <h4 className="font-bold text-blue-800 dark:text-blue-300 text-sm mb-1">Pagamento Manual</h4>
-                <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
-                    Realize o pagamento através dos canais oficiais (M-Pesa, Transferência Bancária). Após o pagamento, anexe o comprovativo abaixo para ativação pela nossa equipe.
-                </p>
-            </div>
-
-            {/* Upload de Comprovativo */}
-            <div className="space-y-3">
-                <h4 className="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase">Anexar Comprovativo</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Envie o recibo ou captura de tela da transferência.
-                </p>
-                
-                <div className="relative group">
-                    <input 
-                        type="file" 
-                        accept="image/*,application/pdf"
-                        onChange={handleFileChange}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                    />
-                    <div className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center transition-colors ${file ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500'}`}>
-                        {file ? (
-                            <>
-                                <i className="fa-solid fa-check-circle text-2xl text-emerald-500 mb-2"></i>
-                                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 truncate max-w-[200px]">{file.name}</span>
-                                <span className="text-[10px] text-emerald-600/70">Clique para alterar</span>
-                            </>
-                        ) : (
-                            <>
-                                <i className="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-3 group-hover:text-blue-500 transition-colors"></i>
-                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Toque para enviar comprovativo</span>
-                                <span className="text-[10px] text-slate-400">PDF, JPG ou PNG</span>
-                            </>
-                        )}
-                    </div>
+        <div className="p-6 space-y-4">
+          {/* Plan Selection */}
+          <div className="grid gap-3">
+            {PLANS.map((plan) => (
+              <button
+                key={plan.id}
+                onClick={() => setSelectedPlan(plan.id)}
+                className={`relative w-full text-left p-4 rounded-xl border-2 transition-all ${
+                  selectedPlan === plan.id
+                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                    : 'border-slate-200 dark:border-slate-700 hover:border-blue-300'
+                }`}
+              >
+                {plan.popular && (
+                  <span className="absolute -top-2.5 right-4 bg-emerald-500 text-white text-[10px] font-bold px-3 py-0.5 rounded-full">
+                    Mais popular
+                  </span>
+                )}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-bold text-slate-900 dark:text-white">{plan.name}</h4>
+                    <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">{plan.price}</p>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    selectedPlan === plan.id 
+                      ? 'border-emerald-500 bg-emerald-500' 
+                      : 'border-slate-300'
+                  }`}>
+                    {selectedPlan === plan.id && (
+                      <i className="fa-solid fa-check text-white text-[10px]"></i>
+                    )}
+                  </div>
                 </div>
+                <ul className="mt-3 space-y-1">
+                  {plan.features.map((f, i) => (
+                    <li key={i} className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                      <i className="fa-solid fa-check text-emerald-500 text-[10px]"></i>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </button>
+            ))}
+          </div>
 
-                <button 
-                    onClick={handleValidate}
-                    disabled={loading || !file}
-                    className="w-full bg-slate-900 dark:bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-800 dark:hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
-                >
-                    {loading ? <i className="fa-solid fa-circle-notch animate-spin"></i> : <i className="fa-solid fa-check"></i>}
-                    {loading ? 'Enviando...' : 'Enviar e Validar'}
-                </button>
-            </div>
+          {/* Pay Button */}
+          <button
+            onClick={handleSubscribe}
+            disabled={loading || !userId}
+            className="w-full bg-slate-900 dark:bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-800 dark:hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <i className="fa-solid fa-circle-notch animate-spin"></i>
+            ) : (
+              <i className="fa-solid fa-lock"></i>
+            )}
+            {loading ? 'A criar pagamento...' : `Assinar ${selectedPlan} — ${selectedPlan === 'Pro' ? '250 MT' : '500 MT'}`}
+          </button>
 
+          {/* Payment methods */}
+          <div className="text-center">
+            <p className="text-[10px] text-slate-400">
+              Pagamento via M-Pesa, EMola ou Cartão • Pagamento seguro via PaySuite
+            </p>
+          </div>
         </div>
       </div>
     </div>
