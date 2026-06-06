@@ -64,6 +64,9 @@ const App: React.FC<{ onReady?: () => void }> = ({ onReady }) => {
   const [syncing, setSyncing] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<Window['deferredPrompt']>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  
+  // Version tracking - force rebuild
+  console.debug('BizFlow version:', V);
 
   const { notify } = useToast();
   const t = (key: string) => getTranslation(companySettings.language, key);
