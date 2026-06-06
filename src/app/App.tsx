@@ -2,6 +2,7 @@
  * App - Componente principal orquestrador
  * Refatorado: views e hooks extraídos para módulos separados.
  * Fluxo: App → useAppLifecycle + useAuth + useDocumentEditor → Views
+ * v3: Payment via supabase.functions.invoke() - auth automática
  */
 
 import React, { useState, lazy, Suspense } from 'react';
