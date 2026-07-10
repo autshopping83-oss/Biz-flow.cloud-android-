@@ -144,9 +144,19 @@ const App: React.FC<{ onReady?: () => void }> = ({ onReady }) => {
     } catch {} // Silencioso — servico pode nao estar rodando
   };
 
-  const handleConectarGmail = () => {
-    window.open(`/api/auth/url?userId=${userId}`, '_blank');
-    notify('Aguardando autorizacao do Gmail... Apos autorizar, volte a esta pagina.', 'info');
+  const handleConectarGmail = async () => {
+    notify('A preparar autenticacao Gmail...', 'info');
+    try {
+      const res = await fetch(`/api/auth/url?userId=${userId}`);
+      const data = await res.json();
+      if (data.sucesso && data.url) {
+        window.location.href = data.url;
+      } else {
+        notify('Erro ao obter URL de autenticacao.', 'error');
+      }
+    } catch {
+      notify('Erro de conexao ao servico.', 'error');
+    }
   };
 
   // Verificar Gmail ao montar
