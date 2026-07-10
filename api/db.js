@@ -1,14 +1,31 @@
 // api/db.js — Conexao PostgreSQL via Supabase
 import pg from 'pg';
 
+// Forcar SSL para Supabase
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 const connectionString = process.env.bizflowcloud_POSTGRES_URL
   || process.env.DATABASE_URL
   || process.env.POSTGRES_URL;
 
 const pool = new pg.Pool({
   connectionString,
-  ssl: { rejectUnauthorized: false },
+  ssl: { rejectUnauthorized: false, require: true },
 });
+
+// Criar tabela user_tokens se nao existir
+pool.query(`
+  CREATE TABLE IF NOT EXISTS user_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    provider TEXT NOT NULL DEFAULT 'gmail',
+    refresh_token TEXT NOT NULL,
+    email TEXT,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(user_id, provider)
+  );
+`).catch(e => console.error('Erro init tabela:', e.message));
 
 export async function obterRefreshToken(userId) {
   const result = await pool.query(
