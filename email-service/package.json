@@ -1,0 +1,16 @@
+{
+  "name": "bizflow-email-service",
+  "version": "1.0.0",
+  "description": "Servico de envio de email via Gmail OAuth2 com suporte multi-utilizador",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "googleapis": "^148.0.0",
+    "nodemailer": "^6.10.0",
+    "express": "^4.21.2",
+    "cors": "^2.8.5"
+  }
+}
