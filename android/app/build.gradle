@@ -20,7 +20,7 @@ android {
         release {
             storeFile file('bizflow-android.keystore')
             storePassword '012244'
-            keyAlias 'key0'
+            keyAlias 'bizflow_alias'
             keyPassword '012244'
         }
     }
