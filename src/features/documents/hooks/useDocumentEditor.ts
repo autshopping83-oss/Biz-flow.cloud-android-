@@ -13,14 +13,13 @@ import { useSignatureCanvas } from '../../../app/hooks/useSignatureCanvas';
 import { useDocumentActions } from '../../../app/hooks/useDocumentActions';
 
 const InitialReceipt: ReceiptData = {
-  id: '', type: 'RECEIPT', number: '', date: new Date().toISOString().split('T')[0] ?? '',
+  id: '', type: 'RECEIPT', number: '', date: new Date().toISOString().slice(0, 10),
   currency: 'MZN', language: 'pt', clientName: '', clientContact: '', clientLocation: '', clientNuit: '',
   items: [], subtotal: 0, taxRate: 0, taxAmount: 0, discount: 0, total: 0,
   stampText: 'PAGO', signatureData: '', documentTheme: 'color', createdAt: Date.now(),
 };
 
 interface UseDocumentEditorProps {
-  isGuest: boolean;
   history: ReceiptData[];
   companySettings: CompanySettings;
   setHistory: (h: ReceiptData[]) => void;
@@ -29,7 +28,7 @@ interface UseDocumentEditorProps {
 }
 
 export function useDocumentEditor({
-  isGuest, history, companySettings,
+  history, companySettings,
   setHistory, setCurrentView, notify,
 }: UseDocumentEditorProps) {
   const [formData, setFormData] = useState<ReceiptData>(InitialReceipt);
@@ -44,17 +43,17 @@ export function useDocumentEditor({
   const thermalReceiptRef = useRef<HTMLDivElement>(null);
 
   // --- AUTO-SAVE RASCUNHO (Dexie) ---
-  const autoSaveRef = useRef<ReturnType<typeof setTimeout>>();
+  const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const DRAFT_ID = 'editor_draft';
 
   // Restaurar rascunho ao abrir o editor
   useEffect(() => {
     db.settings.get(DRAFT_ID).then((entry) => {
       if (!entry) return;
-      const saved = entry as CompanySettings & { id: string; draftData?: string };
-      if (saved.draftData) {
+      const draftData = (entry as { draftData?: string }).draftData;
+      if (draftData) {
         try {
-          const parsed = JSON.parse(saved.draftData) as ReceiptData;
+          const parsed = JSON.parse(draftData) as ReceiptData;
           if (parsed.clientName || parsed.items.length > 0) {
             setFormData(parsed);
           }
@@ -68,7 +67,7 @@ export function useDocumentEditor({
     if (!formData.clientName && formData.items.length === 0) return;
     if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
     autoSaveRef.current = setTimeout(() => {
-      db.settings.put({ id: DRAFT_ID, draftData: JSON.stringify(formData) } as CompanySettings & { id: string });
+      db.settings.put({ id: DRAFT_ID, draftData: JSON.stringify(formData) });
     }, 3000);
     return () => {
       if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
@@ -79,9 +78,6 @@ export function useDocumentEditor({
 
   const { isGeneratingPdf, isSharing, isPrinting, handleGeneratePDF, handleShareWhatsApp, handlePrintThermal, generatePDFBlob } = useDocumentActions({
     formData,
-    receiptRef,
-    ghostReceiptRef,
-    thermalReceiptRef,
     notify,
     handleSave: async (silent = false) => {
       if (!formData.clientName || formData.items.length === 0) return;
@@ -93,7 +89,7 @@ export function useDocumentEditor({
   });
 
   const initNewDocument = (type: DocumentType) => {
-    const today = new Date().toISOString().split('T')[0] ?? '';
+    const today = new Date().toISOString().slice(0, 10);
     setFormData({
       ...InitialReceipt,
       id: crypto.randomUUID(),

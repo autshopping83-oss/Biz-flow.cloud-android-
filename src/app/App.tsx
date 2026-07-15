@@ -76,8 +76,6 @@ const App: React.FC = () => {
   });
 
   const editor = useDocumentEditor({
-    userId,
-    isGuest: !isConnected,
     history, companySettings,
     setHistory, setCurrentView: (v: string) => setCurrentView(v as AppView), notify,
   });

@@ -5,14 +5,11 @@ import { ReceiptData } from '../../types';
 
 interface UseDocumentActionsParams {
   formData: ReceiptData;
-  receiptRef: React.RefObject<HTMLDivElement | null>;
-  ghostReceiptRef: React.RefObject<HTMLDivElement | null>;
-  thermalReceiptRef: React.RefObject<HTMLDivElement | null>;
   notify: (message: string, type: 'success' | 'error' | 'info') => void;
   handleSave: (silent?: boolean) => Promise<void>;
 }
 
-const isCapacitor = !!(window as any).Capacitor?.isNativePlatform?.();
+const isCapacitor = !!(window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
 
 // --- Geração de PDF via jsPDF puro (confiável, sem html2canvas) ---
 function generatePdfJsPDF(formData: ReceiptData, fMoney: (val: number) => string): { blob: Blob; fileName: string } {
@@ -177,7 +174,7 @@ export const useDocumentActions = ({
       console.error('jsPDF generation error:', e);
       return null;
     }
-  }, [formData]);
+  }, [formData, fMoney]);
 
   const handleGeneratePDF = useCallback(async () => {
     setIsGeneratingPdf(true);

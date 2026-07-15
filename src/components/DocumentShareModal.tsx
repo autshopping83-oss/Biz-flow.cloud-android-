@@ -104,7 +104,7 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<{ success: boolean; message: string } | null>(null);
 
-  const isNative = typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.();
+  const isNative = typeof window !== 'undefined' && !!(window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
 
   // Gera PDF (html2canvas → jsPDF fallback)
   const getPdf = async () => getPdfData(onGetPdfBlob, fMoney, formData);
@@ -184,12 +184,13 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
         await Share.share({
           title: `Documento ${formData.number}`,
           text: `Olá ${recipientName}, segue o documento ${formData.number}`,
-          url: cacheUri || uri,
+          url: cacheUri || uri || undefined,
           dialogTitle: 'Enviar via WhatsApp',
         });
         setSendResult({ success: true, message: `Documento partilhado com ${recipientName}!` });
-      } catch {
-        setSendResult({ success: true, message: `Partilha cancelada.` });
+      } catch (e: any) {
+        const isCancel = e?.message === 'canceled' || e?.message?.includes('cancel');
+        setSendResult({ success: false, message: isCancel ? 'Partilha cancelada.' : 'Erro ao abrir WhatsApp.' });
       }
     } else {
       // Web: wa.me com texto
@@ -222,8 +223,9 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
           dialogTitle: 'Enviar documento por',
         });
         setSendResult({ success: true, message: `Documento partilhado com ${recipientName}!` });
-      } catch {
-        setSendResult({ success: false, message: 'Partilha cancelada.' });
+      } catch (e: any) {
+        const isCancel = e?.message === 'canceled' || e?.message?.includes('cancel');
+        setSendResult({ success: false, message: isCancel ? 'Partilha cancelada.' : 'Erro ao abrir email.' });
       }
     } else {
       // Web: mailto:
