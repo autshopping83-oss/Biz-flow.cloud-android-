@@ -23,9 +23,13 @@ const initCapacitor = async () => {
       const { StatusBar, Style } = await import('@capacitor/status-bar');
       await StatusBar.setStyle({ style: Style.Light });
       await StatusBar.setBackgroundColor({ color: '#ffffff' });
-    } catch {
-      // Silencioso — pode não estar disponível
-    }
+    } catch {}
+
+    // Criar pasta Biz-flow no dispositivo (primeira execução)
+    try {
+      const { Filesystem, Directory } = await import('@capacitor/filesystem');
+      await Filesystem.mkdir({ path: 'Biz-flow', directory: Directory.Documents, recursive: true });
+    } catch {}
 
     // Safe area CSS
     document.documentElement.style.setProperty('--safe-area-bottom', 'env(safe-area-inset-bottom, 0px)');

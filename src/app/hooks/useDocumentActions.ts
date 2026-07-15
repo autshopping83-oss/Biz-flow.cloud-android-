@@ -13,8 +13,120 @@ interface UseDocumentActionsParams {
   handleSave: (silent?: boolean) => Promise<void>;
 }
 
-// Detecta ambiente Capacitor nativo
 const isCapacitor = !!(window as any).Capacitor?.isNativePlatform?.();
+
+// --- Geração de PDF via jsPDF puro (confiável, sem html2canvas) ---
+function generatePdfJsPDF(formData: ReceiptData, fMoney: (val: number) => string): { blob: Blob; fileName: string } {
+  const doc = formData;
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const tipo = { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type;
+  let y = 20;
+
+  // Cabeçalho
+  pdf.setFontSize(18);
+  pdf.text(doc.companyName || 'Biz-flow', 105, y, { align: 'center' }); y += 10;
+  if (doc.companyAddress) { pdf.setFontSize(8); pdf.text(doc.companyAddress, 105, y, { align: 'center' }); y += 6; }
+  if (doc.companyNuit) { pdf.setFontSize(8); pdf.text('NUIT: ' + doc.companyNuit, 105, y, { align: 'center' }); y += 6; }
+  y += 4;
+
+  // Tipo e número
+  pdf.setFontSize(14);
+  pdf.text(tipo + ' Nº ' + doc.number, 105, y, { align: 'center' }); y += 10;
+
+  // Data e cliente
+  pdf.setFontSize(10);
+  pdf.text('Data: ' + doc.date, 20, y);
+  if (doc.dueDate) { pdf.text('Vencimento: ' + doc.dueDate, 130, y); }
+  y += 8;
+
+  if (doc.clientName) { pdf.text('Cliente: ' + doc.clientName, 20, y); y += 6; }
+  if (doc.clientNuit) { pdf.text('NUIT: ' + doc.clientNuit, 20, y); y += 6; }
+  if (doc.clientContact) { pdf.text('Contato: ' + doc.clientContact, 20, y); y += 6; }
+  if (doc.clientLocation) { pdf.text('Local: ' + doc.clientLocation, 20, y); y += 6; }
+  y += 4;
+
+  // Separador
+  pdf.setDrawColor(200);
+  pdf.line(20, y, 190, y); y += 6;
+
+  // Itens
+  pdf.setFontSize(9);
+  pdf.text('Descrição', 20, y);
+  pdf.text('Qtd', 115, y);
+  pdf.text('Preço', 140, y);
+  pdf.text('Total', 175, y);
+  y += 6;
+
+  pdf.line(20, y, 190, y); y += 4;
+
+  pdf.setFontSize(8);
+  for (const item of doc.items) {
+    if (y > 270) { pdf.addPage(); y = 20; }
+    pdf.text(item.description.substring(0, 55), 20, y);
+    pdf.text(String(item.quantity), 115, y, { align: 'right' });
+    pdf.text(fMoney(item.unitPrice), 140, y, { align: 'right' });
+    pdf.text(fMoney(item.total), 175, y, { align: 'right' });
+    y += 5;
+  }
+
+  y += 3;
+  pdf.line(20, y, 190, y); y += 6;
+
+  // Totais
+  pdf.setFontSize(10);
+  pdf.text('Subtotal:', 120, y);
+  pdf.text(fMoney(doc.subtotal), 175, y, { align: 'right' }); y += 6;
+
+  if (doc.taxRate > 0) {
+    pdf.text('IVA (' + doc.taxRate + '%):', 120, y);
+    pdf.text(fMoney(doc.taxAmount), 175, y, { align: 'right' }); y += 6;
+  }
+
+  if (doc.discount > 0) {
+    pdf.text('Desconto:', 120, y);
+    pdf.text('-' + fMoney(doc.discount), 175, y, { align: 'right' }); y += 6;
+  }
+
+  pdf.setFontSize(14);
+  pdf.setTextColor(37, 99, 235);
+  pdf.text('TOTAL: ' + fMoney(doc.total), 175, y + 4, { align: 'right' });
+
+  // Selo
+  if (doc.stampText) {
+    pdf.setTextColor(200, 50, 50);
+    pdf.setFontSize(20);
+    pdf.text(doc.stampText, 105, 120, { align: 'center', angle: -15 });
+    pdf.setTextColor(0, 0, 0);
+  }
+
+  // Rodapé
+  const pageCount = pdf.getNumberOfPages();
+  pdf.setFontSize(7);
+  pdf.setTextColor(128);
+  pdf.text('Gerado por Biz-flow.cloud', 105, 290, { align: 'center' });
+  pdf.text(`Página 1/${pageCount}`, 190, 290, { align: 'right' });
+
+  const sanitizedNumber = validators.fileName(formData.number);
+  const sanitizedClientName = validators.fileName(formData.clientName);
+  const fileName = sanitizedClientName
+    ? `${sanitizedNumber}_${sanitizedClientName}.pdf`
+    : `${sanitizedNumber}_documento.pdf`;
+
+  return { blob: pdf.output('blob'), fileName };
+}
+
+// --- Blob → Base64 ---
+async function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string).split(',')[1] ?? '');
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+// Constante: path da pasta Biz-flow no dispositivo
+const APP_FOLDER = 'Biz-flow';
 
 export const useDocumentActions = ({
   formData,
@@ -28,73 +140,102 @@ export const useDocumentActions = ({
   const [isSharing, setIsSharing] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
 
-  // Helper: salvar Blob via Capacitor Filesystem
-  const saveBlobNative = async (blob: Blob, fileName: string, directory: 'Documents' | 'Cache' = 'Documents'): Promise<string | null> => {
+  // Helper: formatar dinheiro
+  const fMoney = (val: number) => `${val.toLocaleString()} ${formData.currency || 'MZN'}`;
+
+  // Helper: Guardar no dispositivo (pastas Biz-flow/)
+  const saveToDevice = async (blob: Blob, fileName: string): Promise<string | null> => {
+    if (!isCapacitor) return null;
     try {
       const { Filesystem, Directory } = await import('@capacitor/filesystem');
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(',')[1] ?? '');
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-      const dir = directory === 'Documents' ? Directory.Documents : Directory.Cache;
-      const path = `${directory === 'Documents' ? 'Documents' : 'temp'}/${fileName}`;
-      await Filesystem.writeFile({ path, data: base64, directory: dir });
-      const uri = await Filesystem.getUri({ path, directory: dir });
+      // Garantir que a pasta Biz-flow existe
+      try {
+        await Filesystem.mkdir({ path: APP_FOLDER, directory: Directory.Documents, recursive: true });
+      } catch {}
+      const base64 = await blobToBase64(blob);
+      const path = `${APP_FOLDER}/${fileName}`;
+      await Filesystem.writeFile({ path, data: base64, directory: Directory.Documents });
+      const uri = await Filesystem.getUri({ path, directory: Directory.Documents });
       return uri.uri;
     } catch { return null; }
   };
 
-  const generatePDFBlob = useCallback(async (): Promise<{ blob: Blob; fileName: string } | null> => {
-    const targetRef = ghostReceiptRef.current || receiptRef.current;
-    if (!targetRef) return null;
-
+  // Helper: Guardar em cache (para share temporário)
+  const saveToCache = async (blob: Blob, fileName: string): Promise<string | null> => {
+    if (!isCapacitor) return null;
     try {
-      const canvas = await html2canvas(targetRef, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: 794,
-        height: 1123,
-        windowWidth: 1280,
-        onclone: (clonedDoc: Document) => {
-          const el = clonedDoc.getElementById('receipt-capture-ghost');
-          if (el) {
-            el.style.transform = 'none';
-            el.style.boxShadow = 'none';
-            el.style.margin = '0';
-            el.style.padding = '25mm';
-            el.style.position = 'static';
-            el.style.width = '210mm';
-            el.style.minHeight = '297mm';
-          }
-        },
-      });
+      const { Filesystem, Directory } = await import('@capacitor/filesystem');
+      const base64 = await blobToBase64(blob);
+      const path = `temp/${fileName}`;
+      await Filesystem.writeFile({ path, data: base64, directory: Directory.Cache });
+      const uri = await Filesystem.getUri({ path, directory: Directory.Cache });
+      return uri.uri;
+    } catch { return null; }
+  };
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.9);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-
-      const sanitizedNumber = validators.fileName(formData.number);
-      const sanitizedClientName = validators.fileName(formData.clientName);
-      const fileName = sanitizedClientName
-        ? `${sanitizedNumber}_${sanitizedClientName}.pdf`
-        : `${sanitizedNumber}_documento.pdf`;
-
-      return { blob: pdf.output('blob'), fileName };
-    } catch (error) {
-      console.error(error);
-      return null;
+  // Geração de PDF: jsPDF puro (primário) + html2canvas (fallback visual)
+  const generatePDFBlob = useCallback(async (): Promise<{ blob: Blob; fileName: string } | null> => {
+    // No Capacitor, usar jsPDF diretamente (mais confiável)
+    if (isCapacitor) {
+      try {
+        return generatePdfJsPDF(formData, fMoney);
+      } catch (e) {
+        console.error('jsPDF generation error:', e);
+        return null;
+      }
     }
+
+    // Web: tentar html2canvas para visual bonito
+    const targetRef = ghostReceiptRef.current || receiptRef.current;
+    if (targetRef) {
+      try {
+        const canvas = await html2canvas(targetRef, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          width: 794,
+          height: 1123,
+          windowWidth: 1280,
+          onclone: (clonedDoc: Document) => {
+            const el = clonedDoc.getElementById('receipt-capture-ghost');
+            if (el) {
+              el.style.transform = 'none';
+              el.style.boxShadow = 'none';
+              el.style.margin = '0';
+              el.style.padding = '25mm';
+              el.style.position = 'static';
+              el.style.width = '210mm';
+              el.style.minHeight = '297mm';
+            }
+          },
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+
+        const sanitizedNumber = validators.fileName(formData.number);
+        const sanitizedClientName = validators.fileName(formData.clientName);
+        const fileName = sanitizedClientName
+          ? `${sanitizedNumber}_${sanitizedClientName}.pdf`
+          : `${sanitizedNumber}_documento.pdf`;
+
+        return { blob: pdf.output('blob'), fileName };
+      } catch {
+        // html2canvas falhou → fallback jsPDF
+      }
+    }
+
+    // Fallback: jsPDF puro
+    try { return generatePdfJsPDF(formData, fMoney); } catch { return null; }
   }, [formData, ghostReceiptRef, receiptRef]);
 
   const handleGeneratePDF = useCallback(async () => {
     setIsGeneratingPdf(true);
-    notify('Preparando Documento A4...', 'info');
+    notify('A gerar PDF...', 'info');
 
     try {
       const pdfData = await generatePDFBlob();
@@ -102,15 +243,13 @@ export const useDocumentActions = ({
       const { blob, fileName } = pdfData;
 
       if (isCapacitor) {
-        // Nativo: guarda no dispositivo
-        const uri = await saveBlobNative(blob, fileName);
+        const uri = await saveToDevice(blob, fileName);
         if (uri) {
-          notify(`PDF guardado em: Documentos/${fileName}`, 'success');
+          notify(`PDF guardado em ${APP_FOLDER}/${fileName}`, 'success');
         } else {
           notify('Erro ao guardar PDF.', 'error');
         }
       } else {
-        // Web: download
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = fileName;
@@ -119,85 +258,139 @@ export const useDocumentActions = ({
       }
       await handleSave(true);
     } catch {
-      notify('Erro na geração do PDF. Tente novamente.', 'error');
+      notify('Erro na geração do PDF.', 'error');
     } finally {
       setIsGeneratingPdf(false);
     }
   }, [formData, generatePDFBlob, handleSave, notify]);
 
+  // WhatsApp: GERA PDF → GUARDA LOCAL → SHARE SHEET com PDF anexado
   const handleShareWhatsApp = useCallback(async () => {
     if (isSharing) return;
     setIsSharing(true);
-    notify('Preparando partilha...', 'info');
+    notify('A preparar documento...', 'info');
 
     try {
       const pdfData = await generatePDFBlob();
-      if (!pdfData) throw new Error('Erro ao gerar ficheiro.');
+      if (!pdfData) throw new Error('Erro ao gerar PDF.');
 
-      // Tentar share nativo via Capacitor
       if (isCapacitor) {
-        try {
-          const uri = await saveBlobNative(pdfData.blob, pdfData.fileName, 'Cache');
-          if (uri) {
-            const { Share } = await import('@capacitor/share');
-            await Share.share({ title: pdfData.fileName, url: uri, dialogTitle: 'Compartilhar Documento' });
-            notify('Partilha concluída!', 'success');
-          } else {
-            throw new Error('Erro ao preparar ficheiro');
-          }
-        } catch {
-          // Fallback: WhatsApp link via AppLauncher
-          if (!validators.phone(formData.clientContact || '')) {
-            notify('Número de telefone inválido.', 'error');
-          } else {
-            const cleanPhone = formData.clientContact!.replace(/\D/g, '');
-            const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Olá, segue o documento ${formData.number}.`)}`;
-            try {
-              const { AppLauncher } = await import('@capacitor/app-launcher');
-              await AppLauncher.openUrl({ url: waUrl });
-            } catch {
-              window.open(waUrl, '_blank');
-            }
-            notify('WhatsApp aberto!', 'success');
-          }
-        }
+        // 1. Guardar PDF na pasta Biz-flow (persistente)
+        const uri = await saveToDevice(pdfData.blob, pdfData.fileName);
+        if (!uri) throw new Error('Erro ao guardar PDF.');
+
+        // 2. Guardar também em cache para o Share sheet
+        const cacheUri = await saveToCache(pdfData.blob, pdfData.fileName);
+
+        // 3. Abrir Share sheet nativo com o PDF anexado
+        const { Share } = await import('@capacitor/share');
+        await Share.share({
+          title: `Documento ${formData.number}`,
+          text: `Segue o documento ${formData.number}`,
+          url: cacheUri || uri,
+          dialogTitle: 'Compartilhar Documento',
+        });
+        notify('Documento partilhado!', 'success');
       } else {
-        // Web: navigator.share ou WhatsApp fallback
+        // Web: navigator.share
         const file = new File([pdfData.blob], pdfData.fileName, { type: 'application/pdf' });
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: pdfData.fileName, text: `Envio de ${formData.number}` });
+          await navigator.share({ files: [file], title: pdfData.fileName, text: formData.number });
           notify('Partilha concluída!', 'success');
         } else if (formData.clientContact && validators.phone(formData.clientContact)) {
           const cleanPhone = formData.clientContact.replace(/\D/g, '');
           window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Olá, segue o documento ${formData.number}.`)}`, '_blank');
-        } else {
-          notify('Número de telefone inválido.', 'error');
+          notify('WhatsApp aberto!', 'success');
         }
       }
-    } catch {
-      notify('Erro ao partilhar documento.', 'error');
+    } catch (e: any) {
+      if (e?.message !== 'canceled') {
+        notify('Erro ao partilhar: ' + (e?.message || ''), 'error');
+      }
     } finally {
       setIsSharing(false);
     }
   }, [formData, generatePDFBlob, isSharing, notify]);
 
-  const buildThermalHtml = (doc: ReceiptData): string => {
-    const fM = (val: number) => `${val.toLocaleString()} ${doc.currency || 'MT'}`;
-    const tipo = { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type;
+  // Impressão Térmica
+  const handlePrintThermal = useCallback(async () => {
+    if (isPrinting) return;
+    setIsPrinting(true);
 
-    const itemsHtml = doc.items.map(item => `
-        <tr>
-          <td style="padding:2px 0;font-size:10px">${item.description}</td>
-          <td style="padding:2px 0;font-size:10px;text-align:right">${item.quantity}x</td>
-          <td style="padding:2px 0;font-size:10px;text-align:right">${fM(item.unitPrice)}</td>
-          <td style="padding:2px 0;font-size:10px;text-align:right;font-weight:bold">${fM(item.total)}</td>
-        </tr>`).join('');
+    try {
+      const doc = formData;
 
-    return `<!DOCTYPE html>
+      if (isCapacitor) {
+        // BLE nativo
+        try {
+          const { BLEPrinterService } = await import('../../features/bluetooth/BLEPrinterService');
+          const { ThermalPrinter } = await import('../../features/bluetooth/thermalPrinterProtocol');
+
+          // Scanear e conectar se necessário
+          if (!BLEPrinterService.isConnected()) {
+            notify('A procurar impressoras Bluetooth...', 'info');
+            const devices = await BLEPrinterService.scanDevices(8000);
+            if (devices.length === 0) {
+              notify('Nenhuma impressora encontrada. Verifique se está ligada.', 'error');
+              setIsPrinting(false);
+              return;
+            }
+            await BLEPrinterService.connect(devices[0]!.deviceId);
+            notify(`Conectado a: ${devices[0]!.name}`, 'success');
+          }
+
+          const printer = new ThermalPrinter();
+          const data = printer.buildDocument({
+            companyName: doc.companyName || 'Biz-flow',
+            companyNuit: doc.companyNuit,
+            documentType: { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type,
+            documentNumber: doc.number,
+            date: doc.date,
+            clientName: doc.clientName,
+            clientNuit: doc.clientNuit,
+            items: doc.items.map(i => ({
+              description: i.description,
+              quantity: i.quantity,
+              unitPrice: i.unitPrice,
+              total: i.total,
+            })),
+            subtotal: doc.subtotal,
+            taxRate: doc.taxRate,
+            taxAmount: doc.taxAmount,
+            discount: doc.discount,
+            total: doc.total,
+            currency: doc.currency,
+            stampText: doc.stampText,
+          }).getData();
+
+          await BLEPrinterService.print(data);
+          notify('Documento enviado para impressão!', 'success');
+        } catch (e: any) {
+          notify('Erro na impressão: ' + (e?.message || 'Verifique a impressora.'), 'error');
+        }
+      } else {
+        // Web: browser print
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+          notify('Bloqueador de pop-ups ativo.', 'error');
+          setIsPrinting(false);
+          return;
+        }
+        const fM = (val: number) => `${val.toLocaleString()} ${doc.currency || 'MT'}`;
+        const tipo = { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type;
+        const itemsHtml = doc.items.map(item => `
+          <tr>
+            <td style="padding:2px 0;font-size:10px">${item.description}</td>
+            <td style="padding:2px 0;font-size:10px;text-align:right">${item.quantity}x</td>
+            <td style="padding:2px 0;font-size:10px;text-align:right">${fM(item.unitPrice)}</td>
+            <td style="padding:2px 0;font-size:10px;text-align:right;font-weight:bold">${fM(item.total)}</td>
+          </tr>`).join('');
+
+        printWindow.document.write(`<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Imprimir Talão</title>
 <style>
   @page { width: 80mm; margin: 0; padding: 0; }
-  body { width: 72mm; margin: 0 auto; padding: 5mm 0; font-family: 'Courier New', monospace; font-size: 11px; color: #000; }
+  body { width: 72mm; margin: 0 auto; padding: 5mm 0; font-family: monospace; font-size: 11px; color: #000; }
   .center { text-align: center; }
   .bold { font-weight: bold; }
   .h1 { font-size: 14px; font-weight: bold; margin: 2px 0; }
@@ -212,93 +405,14 @@ export const useDocumentActions = ({
   <div class="center">
     ${doc.companyName ? `<div class="h1">${doc.companyName}</div>` : ''}
     ${doc.companyNuit ? `<div class="h2">NUIT: ${doc.companyNuit}</div>` : ''}
-    ${doc.companyAddress ? `<div style="font-size:10px">${doc.companyAddress}</div>` : ''}
   </div>
-  <hr>
-  <div class="center">
-    <div class="h1">${tipo}</div>
-    <div class="h2">Nº ${doc.number}</div>
-    <div class="h2">${doc.date}</div>
-  </div>
-  <hr>
+  <hr><div class="center"><div class="h1">${tipo}</div><div class="h2">Nº ${doc.number}</div><div class="h2">${doc.date}</div></div><hr>
   ${doc.clientName ? `<div><b>Cliente:</b> ${doc.clientName}</div>` : ''}
-  ${doc.clientNuit ? `<div><b>NUIT:</b> ${doc.clientNuit}</div>` : ''}
-  <hr>
-  <table>
-    <tr style="font-weight:bold;font-size:10px">
-      <td>Descrição</td><td style="text-align:right">Qtd</td><td style="text-align:right">Preço</td><td style="text-align:right">Total</td>
-    </tr>
-    ${itemsHtml}
-  </table>
-  <hr>
-  <div style="text-align:right">
-    <div><b>Subtotal:</b> ${fM(doc.subtotal)}</div>
-    ${doc.taxRate > 0 ? `<div><b>IVA (${doc.taxRate}%):</b> ${fM(doc.taxAmount)}</div>` : ''}
-    ${doc.discount > 0 ? `<div><b>Desconto:</b> -${fM(doc.discount)}</div>` : ''}
-    <div class="total">Total: ${fM(doc.total)}</div>
-  </div>
+  <hr><table><tr style="font-weight:bold;font-size:10px"><td>Descrição</td><td style="text-align:right">Qtd</td><td style="text-align:right">Preço</td><td style="text-align:right">Total</td></tr>${itemsHtml}</table><hr>
+  <div style="text-align:right"><div><b>Subtotal:</b> ${fM(doc.subtotal)}</div>${doc.taxRate > 0 ? `<div><b>IVA (${doc.taxRate}%):</b> ${fM(doc.taxAmount)}</div>` : ''}${doc.discount > 0 ? `<div><b>Desconto:</b> -${fM(doc.discount)}</div>` : ''}<div class="total">Total: ${fM(doc.total)}</div></div>
   ${doc.stampText ? `<hr><div class="center bold" style="font-size:14px">${doc.stampText}</div>` : ''}
-  <hr>
-  <div class="center footer">
-    <p>Obrigado pela preferência!</p>
-    <p>Gerado por Biz-flow</p>
-  </div>
-</body></html>`;
-  };
-
-  const handlePrintThermal = useCallback(async () => {
-    if (isPrinting) return;
-    setIsPrinting(true);
-
-    try {
-      if (isCapacitor) {
-        // Android: tentar BLE nativo
-        try {
-          const { BLEPrinterService } = await import('../../features/bluetooth/BLEPrinterService');
-          const { ThermalPrinter } = await import('../../features/bluetooth/thermalPrinterProtocol');
-
-          if (BLEPrinterService.isConnected()) {
-            const printer = new ThermalPrinter();
-            const data = printer.buildDocument({
-              companyName: formData.companyName || 'Biz-flow',
-              companyNuit: formData.companyNuit,
-              documentType: { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[formData.type] || formData.type,
-              documentNumber: formData.number,
-              date: formData.date,
-              clientName: formData.clientName,
-              clientNuit: formData.clientNuit,
-              items: formData.items.map(i => ({
-                description: i.description,
-                quantity: i.quantity,
-                unitPrice: i.unitPrice,
-                total: i.total,
-              })),
-              subtotal: formData.subtotal,
-              taxRate: formData.taxRate,
-              taxAmount: formData.taxAmount,
-              discount: formData.discount,
-              total: formData.total,
-              currency: formData.currency,
-              stampText: formData.stampText,
-            }).getData();
-
-            await BLEPrinterService.print(data);
-            notify('Documento enviado para impressão!', 'success');
-          } else {
-            notify('Nenhuma impressora Bluetooth conectada. Conecte uma em "Mais > Configurações".', 'info');
-          }
-        } catch {
-          notify('Erro na impressão Bluetooth. Verifique se a impressora está ligada.', 'error');
-        }
-      } else {
-        // Web: impressão via browser
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-          notify('Bloqueador de pop-ups ativo. Permita pop-ups para imprimir.', 'error');
-          setIsPrinting(false);
-          return;
-        }
-        printWindow.document.write(buildThermalHtml(formData));
+  <hr><div class="center footer"><p>Obrigado pela preferência!</p><p>Gerado por Biz-flow</p></div>
+</body></html>`);
         printWindow.document.close();
         printWindow.focus();
         setTimeout(() => { printWindow.print(); }, 500);
@@ -306,7 +420,7 @@ export const useDocumentActions = ({
       }
     } catch (erro) {
       console.error('Erro impressão:', erro);
-      notify('Erro ao imprimir talão.', 'error');
+      notify('Erro ao imprimir.', 'error');
     } finally {
       setIsPrinting(false);
     }

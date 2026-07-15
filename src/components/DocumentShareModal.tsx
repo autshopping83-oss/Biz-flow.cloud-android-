@@ -166,23 +166,38 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
     setIsSending(false);
   };
 
-  // WhatsApp (abre app nativo ou wa.me)
+  // WhatsApp (Gera PDF → guarda local → Share sheet com PDF anexado)
   const handleSendWhatsApp = async (telefone: string) => {
-    const cleanPhone = telefone.replace(/\D/g, '');
-    const texto = `Olá ${recipientName}, segue o documento ${formData.number} no valor de ${fMoney(formData.total)}. Biz-flow`;
-    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(texto)}`;
-
     if (isNative) {
+      // Gerar PDF primeiro
+      const pdfData = await getPdf();
+      if (!pdfData) {
+        setSendResult({ success: false, message: 'Erro ao gerar PDF.' });
+        return;
+      }
       try {
-        const { AppLauncher } = await import('@capacitor/app-launcher');
-        await AppLauncher.openUrl({ url: waUrl });
+        // Guardar PDF na pasta Biz-flow do dispositivo
+        const uri = await savePdfToDevice(pdfData.blob, pdfData.fileName);
+        const cacheUri = await savePdfToCache(pdfData.blob, pdfData.fileName);
+        // Abrir Share sheet nativo com o PDF
+        const { Share } = await import('@capacitor/share');
+        await Share.share({
+          title: `Documento ${formData.number}`,
+          text: `Olá ${recipientName}, segue o documento ${formData.number}`,
+          url: cacheUri || uri,
+          dialogTitle: 'Enviar via WhatsApp',
+        });
+        setSendResult({ success: true, message: `Documento partilhado com ${recipientName}!` });
       } catch {
-        window.open(waUrl, '_blank');
+        setSendResult({ success: true, message: `Partilha cancelada.` });
       }
     } else {
-      window.open(waUrl, '_blank');
+      // Web: wa.me com texto
+      const cleanPhone = telefone.replace(/\D/g, '');
+      const texto = `Olá ${recipientName}, segue o documento ${formData.number} no valor de ${fMoney(formData.total)}. Biz-flow`;
+      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(texto)}`, '_blank');
+      setSendResult({ success: true, message: `WhatsApp aberto para ${recipientName}!` });
     }
-    setSendResult({ success: true, message: `WhatsApp aberto para ${recipientName}!` });
   };
 
   // Email (abre app nativo ou mailto:)
