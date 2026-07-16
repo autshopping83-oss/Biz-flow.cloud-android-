@@ -1,72 +1,98 @@
 import { useCallback, useState } from 'react';
 import jsPDF from 'jspdf';
 import { validators } from '../../utils/validators';
-import { ReceiptData } from '../../types';
+import { ReceiptData, CompanySettings } from '../../types';
 
 interface UseDocumentActionsParams {
   formData: ReceiptData;
+  companySettings: CompanySettings;
   notify: (message: string, type: 'success' | 'error' | 'info') => void;
   handleSave: (silent?: boolean) => Promise<void>;
 }
 
 const isCapacitor = !!(window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
 
-// --- Geração de PDF via jsPDF puro (confiável, sem html2canvas) ---
-function generatePdfJsPDF(formData: ReceiptData, fMoney: (val: number) => string): { blob: Blob; fileName: string } {
+// --- Geração de PDF via jsPDF puro (confiável, com logo/assinatura/carimbo) ---
+function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySettings, fMoney: (val: number) => string): { blob: Blob; fileName: string } {
   const doc = formData;
   const pdf = new jsPDF('p', 'mm', 'a4');
   const tipo = { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type;
   let y = 20;
 
-  // Cabeçalho
-  pdf.setFontSize(18);
-  pdf.text(doc.companyName || 'Biz-flow', 105, y, { align: 'center' }); y += 10;
-  if (doc.companyAddress) { pdf.setFontSize(8); pdf.text(doc.companyAddress, 105, y, { align: 'center' }); y += 6; }
-  if (doc.companyNuit) { pdf.setFontSize(8); pdf.text('NUIT: ' + doc.companyNuit, 105, y, { align: 'center' }); y += 6; }
-  y += 4;
+  // Logo da empresa (se existir)
+  const logo = formData.companyLogo || companySettings.logo;
+  if (logo) {
+    try {
+      const cleanLogo = logo.includes('base64,') ? logo.split('base64,')[1]! : logo;
+      pdf.addImage(cleanLogo, 'PNG', 85, y, 40, 16);
+      y += 22;
+    } catch { /* ignora se imagem inválida */ }
+  }
 
-  // Tipo e número
-  pdf.setFontSize(14);
-  pdf.text(tipo + ' Nº ' + doc.number, 105, y, { align: 'center' }); y += 10;
+  // Nome da empresa
+  pdf.setFontSize(16);
+  pdf.text(doc.companyName || companySettings.name || 'Biz-flow', 105, y, { align: 'center' }); y += 8;
+  if (doc.companyAddress || companySettings.address) {
+    pdf.setFontSize(8);
+    pdf.text(doc.companyAddress || companySettings.address || '', 105, y, { align: 'center' }); y += 5;
+  }
+  if (doc.companyNuit || companySettings.nuit) {
+    pdf.setFontSize(8);
+    pdf.text('NUIT: ' + (doc.companyNuit || companySettings.nuit || ''), 105, y, { align: 'center' }); y += 5;
+  }
+  y += 3;
 
-  // Data e cliente
-  pdf.setFontSize(10);
+  // Linha separadora
+  pdf.setDrawColor(200);
+  pdf.line(20, y, 190, y); y += 5;
+
+  // Tipo, número e data
+  pdf.setFontSize(16);
+  pdf.setTextColor(0);
+  pdf.text(tipo, 20, y); pdf.text('Nº ' + doc.number, 190, y, { align: 'right' }); y += 7;
+  pdf.setFontSize(9);
   pdf.text('Data: ' + doc.date, 20, y);
   if (doc.dueDate) { pdf.text('Vencimento: ' + doc.dueDate, 130, y); }
   y += 8;
 
-  if (doc.clientName) { pdf.text('Cliente: ' + doc.clientName, 20, y); y += 6; }
-  if (doc.clientNuit) { pdf.text('NUIT: ' + doc.clientNuit, 20, y); y += 6; }
-  if (doc.clientContact) { pdf.text('Contato: ' + doc.clientContact, 20, y); y += 6; }
-  if (doc.clientLocation) { pdf.text('Local: ' + doc.clientLocation, 20, y); y += 6; }
-  y += 4;
+  // Cliente
+  if (doc.clientName) {
+    pdf.setFontSize(10);
+    pdf.text('Cliente: ' + doc.clientName, 20, y); y += 5;
+    if (doc.clientNuit) { pdf.setFontSize(9); pdf.text('NUIT: ' + doc.clientNuit, 20, y); y += 5; }
+    if (doc.clientContact) { pdf.setFontSize(9); pdf.text('Contato: ' + doc.clientContact, 20, y); y += 5; }
+    if (doc.clientLocation) { pdf.setFontSize(9); pdf.text('Local: ' + doc.clientLocation, 20, y); y += 5; }
+  }
+  y += 3;
 
   // Separador
   pdf.setDrawColor(200);
   pdf.line(20, y, 190, y); y += 6;
 
-  // Itens
-  pdf.setFontSize(9);
-  pdf.text('Descrição', 20, y);
-  pdf.text('Qtd', 115, y);
-  pdf.text('Preço', 140, y);
-  pdf.text('Total', 175, y);
-  y += 6;
-
-  pdf.line(20, y, 190, y); y += 4;
+  // Tabela de itens
+  pdf.setFontSize(8);
+  pdf.setFillColor(245, 245, 250);
+  pdf.rect(20, y, 170, 6, 'F');
+  pdf.setTextColor(100);
+  pdf.text('Descrição', 22, y + 4);
+  pdf.text('Qtd', 100, y + 4);
+  pdf.text('Preço', 130, y + 4);
+  pdf.text('Total', 170, y + 4);
+  pdf.setTextColor(0);
+  y += 9;
 
   pdf.setFontSize(8);
   for (const item of doc.items) {
-    if (y > 270) { pdf.addPage(); y = 20; }
-    pdf.text(item.description.substring(0, 55), 20, y);
-    pdf.text(String(item.quantity), 115, y, { align: 'right' });
-    pdf.text(fMoney(item.unitPrice), 140, y, { align: 'right' });
+    if (y > 265) { pdf.addPage(); y = 20; }
+    pdf.text(item.description.substring(0, 50), 22, y);
+    pdf.text(String(item.quantity), 105, y, { align: 'right' });
+    pdf.text(fMoney(item.unitPrice), 135, y, { align: 'right' });
     pdf.text(fMoney(item.total), 175, y, { align: 'right' });
     y += 5;
   }
 
   y += 3;
-  pdf.line(20, y, 190, y); y += 6;
+  pdf.line(20, y, 190, y); y += 5;
 
   // Totais
   pdf.setFontSize(10);
@@ -83,24 +109,51 @@ function generatePdfJsPDF(formData: ReceiptData, fMoney: (val: number) => string
     pdf.text('-' + fMoney(doc.discount), 175, y, { align: 'right' }); y += 6;
   }
 
-  pdf.setFontSize(14);
-  pdf.setTextColor(37, 99, 235);
+  // Total destacado
+  y += 2;
+  pdf.setFillColor(37, 99, 235);
+  pdf.rect(120, y - 2, 55, 8, 'F');
+  pdf.setTextColor(255);
+  pdf.setFontSize(12);
   pdf.text('TOTAL: ' + fMoney(doc.total), 175, y + 4, { align: 'right' });
+  pdf.setTextColor(0);
 
-  // Selo
+  // Assinatura digital
+  if (doc.signatureData) {
+    y += 12;
+    pdf.setFontSize(8);
+    pdf.text('Assinatura:', 20, y); y += 4;
+    try {
+      const cleanSig = doc.signatureData.includes('base64,') ? doc.signatureData.split('base64,')[1]! : doc.signatureData;
+      pdf.addImage(cleanSig, 'PNG', 100, y - 2, 40, 16);
+      y += 20;
+    } catch { y += 4; }
+  }
+
+  // Carimbo personalizado
+  if (companySettings.customStamp) {
+    try {
+      const cleanStamp = companySettings.customStamp.includes('base64,') ? companySettings.customStamp.split('base64,')[1]! : companySettings.customStamp;
+      pdf.addImage(cleanStamp, 'PNG', 20, y, 30, 16);
+      y += 20;
+    } catch { /* ignora */ }
+  }
+
+  // Selo de status
   if (doc.stampText) {
+    const stampY = Math.max(y + 10, 130);
     pdf.setTextColor(200, 50, 50);
-    pdf.setFontSize(20);
-    pdf.text(doc.stampText, 105, 120, { align: 'center', angle: -15 });
-    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(24);
+    pdf.text(doc.stampText, 105, stampY, { align: 'center', angle: -20 });
+    pdf.setTextColor(0);
   }
 
   // Rodapé
-  const pageCount = pdf.getNumberOfPages();
   pdf.setFontSize(7);
-  pdf.setTextColor(128);
-  pdf.text('Gerado por Biz-flow.cloud', 105, 290, { align: 'center' });
-  pdf.text(`Página 1/${pageCount}`, 190, 290, { align: 'right' });
+  pdf.setTextColor(150);
+  const pageCount = pdf.getNumberOfPages();
+  pdf.text('Gerado por Biz-flow.cloud', 105, 288, { align: 'center' });
+  pdf.text('Página 1/' + pageCount, 190, 288, { align: 'right' });
 
   const sanitizedNumber = validators.fileName(formData.number);
   const sanitizedClientName = validators.fileName(formData.clientName);
@@ -126,6 +179,7 @@ const APP_FOLDER = 'Biz-flow';
 
 export const useDocumentActions = ({
   formData,
+  companySettings,
   notify,
   handleSave,
 }: UseDocumentActionsParams) => {
@@ -169,12 +223,12 @@ export const useDocumentActions = ({
   // Geração de PDF: jsPDF puro (confiável, 0% dependência de DOM/rede)
   const generatePDFBlob = useCallback(async (): Promise<{ blob: Blob; fileName: string } | null> => {
     try {
-      return generatePdfJsPDF(formData, fMoney);
+      return generatePdfJsPDF(formData, companySettings, fMoney);
     } catch (e) {
       console.error('jsPDF generation error:', e);
       return null;
     }
-  }, [formData, fMoney]);
+  }, [formData, companySettings, fMoney]);
 
   const handleGeneratePDF = useCallback(async () => {
     setIsGeneratingPdf(true);

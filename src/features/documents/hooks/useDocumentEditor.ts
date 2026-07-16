@@ -78,6 +78,7 @@ export function useDocumentEditor({
 
   const { isGeneratingPdf, isSharing, isPrinting, handleGeneratePDF, handleShareWhatsApp, handlePrintThermal, generatePDFBlob } = useDocumentActions({
     formData,
+    companySettings,
     notify,
     handleSave: async (silent = false) => {
       if (!formData.clientName || formData.items.length === 0) return;
