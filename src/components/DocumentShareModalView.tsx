@@ -98,7 +98,7 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
           {renderOption('email', 'fa-envelope', 'bg-blue-100', 'text-blue-600', 'Enviar por Email', 'Abre o app de email do dispositivo')}
           {renderOption('whatsapp', 'fa-whatsapp', 'bg-emerald-100', 'text-emerald-600', 'Enviar por WhatsApp', 'Abre o WhatsApp com mensagem pronta')}
 
-          <button onClick={handleDownload} disabled={isGeneratingPdf}
+          <button onClick={handleDownload} disabled={isGeneratingPdf || isSending}
             className="w-full flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all group disabled:opacity-50">
             <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
               <i className="fa-solid fa-file-pdf text-xl"></i>
@@ -122,6 +122,17 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
             {isPrinting ? <i className="fa-solid fa-spinner animate-spin text-slate-500"></i> : <i className="fa-solid fa-chevron-right text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors"></i>}
           </button>
         </div>
+
+        {sendResult && (
+          <div className="px-6 pb-0">
+            <div className={`rounded-xl p-4 text-sm ${sendResult.success ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'}`}>
+              <div className="font-bold mb-1 flex items-center gap-2">
+                {sendResult.success ? <><i className="fa-solid fa-check-circle text-emerald-500"></i> Sucesso</> : <><i className="fa-solid fa-exclamation-circle text-red-500"></i> Erro</>}
+              </div>
+              <p className="text-xs opacity-80">{sendResult.message}</p>
+            </div>
+          </div>
+        )}
 
         <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t dark:border-slate-800">
           <button onClick={onClose} className="w-full py-3 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition-colors">Cancelar</button>
