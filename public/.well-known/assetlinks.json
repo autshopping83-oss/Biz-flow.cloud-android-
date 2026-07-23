@@ -1,12 +1,11 @@
-
 [
   {
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.bizflow.app",
+      "package_name": "com.bizflow.cloud",
       "sha256_cert_fingerprints": [
-        "REPLACE_WITH_YOUR_SHA256_FINGERPRINT"
+        "95:84:82:2A:E6:2E:12:B9:3D:57:6C:15:92:48:9A:42:4E:9B:BA:22"
       ]
     }
   }

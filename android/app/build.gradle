@@ -19,15 +19,15 @@ android {
     signingConfigs {
         release {
             storeFile file('bizflow-android.keystore')
-            storePassword '012244'
+            storePassword System.getenv("ANDROID_STORE_PASSWORD") ?: ''
             keyAlias 'bizflow_alias'
-            keyPassword '012244'
+            keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: ''
         }
     }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
     }

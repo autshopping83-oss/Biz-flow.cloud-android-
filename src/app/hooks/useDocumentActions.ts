@@ -3,6 +3,11 @@ import jsPDF from 'jspdf';
 import { validators } from '../../utils/validators';
 import { ReceiptData, CompanySettings } from '../../types';
 
+// Escape HTML entities para prevenir XSS em document.write
+function escapeHtml(str: string): string {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
 interface UseDocumentActionsParams {
   formData: ReceiptData;
   companySettings: CompanySettings;
@@ -375,9 +380,10 @@ export const useDocumentActions = ({
         }
         const fM = (val: number) => `${val.toLocaleString()} ${doc.currency || 'MT'}`;
         const tipo = { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type;
+        const e = escapeHtml;
         const itemsHtml = doc.items.map(item => `
           <tr>
-            <td style="padding:2px 0;font-size:10px">${item.description}</td>
+            <td style="padding:2px 0;font-size:10px">${e(item.description)}</td>
             <td style="padding:2px 0;font-size:10px;text-align:right">${item.quantity}x</td>
             <td style="padding:2px 0;font-size:10px;text-align:right">${fM(item.unitPrice)}</td>
             <td style="padding:2px 0;font-size:10px;text-align:right;font-weight:bold">${fM(item.total)}</td>
@@ -400,14 +406,14 @@ export const useDocumentActions = ({
   @media print { body { width: 58mm; } }
 </style></head><body>
   <div class="center">
-    ${doc.companyName ? `<div class="h1">${doc.companyName}</div>` : ''}
-    ${doc.companyNuit ? `<div class="h2">NUIT: ${doc.companyNuit}</div>` : ''}
+    ${doc.companyName ? `<div class="h1">${e(doc.companyName)}</div>` : ''}
+    ${doc.companyNuit ? `<div class="h2">NUIT: ${e(doc.companyNuit)}</div>` : ''}
   </div>
-  <hr><div class="center"><div class="h1">${tipo}</div><div class="h2">Nº ${doc.number}</div><div class="h2">${doc.date}</div></div><hr>
-  ${doc.clientName ? `<div><b>Cliente:</b> ${doc.clientName}</div>` : ''}
+  <hr><div class="center"><div class="h1">${tipo}</div><div class="h2">Nº ${e(doc.number)}</div><div class="h2">${e(doc.date)}</div></div><hr>
+  ${doc.clientName ? `<div><b>Cliente:</b> ${e(doc.clientName)}</div>` : ''}
   <hr><table><tr style="font-weight:bold;font-size:10px"><td>Descrição</td><td style="text-align:right">Qtd</td><td style="text-align:right">Preço</td><td style="text-align:right">Total</td></tr>${itemsHtml}</table><hr>
   <div style="text-align:right"><div><b>Subtotal:</b> ${fM(doc.subtotal)}</div>${doc.taxRate > 0 ? `<div><b>IVA (${doc.taxRate}%):</b> ${fM(doc.taxAmount)}</div>` : ''}${doc.discount > 0 ? `<div><b>Desconto:</b> -${fM(doc.discount)}</div>` : ''}<div class="total">Total: ${fM(doc.total)}</div></div>
-  ${doc.stampText ? `<hr><div class="center bold" style="font-size:14px">${doc.stampText}</div>` : ''}
+  ${doc.stampText ? `<hr><div class="center bold" style="font-size:14px">${e(doc.stampText)}</div>` : ''}
   <hr><div class="center footer"><p>Obrigado pela preferência!</p><p>Gerado por Biz-flow</p></div>
 </body></html>`);
         printWindow.document.close();
