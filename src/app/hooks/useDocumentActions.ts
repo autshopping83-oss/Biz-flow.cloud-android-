@@ -8,6 +8,294 @@ function escapeHtml(str: string): string {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
 
+// --- Template HTML/CSS Profissional para Impressão de Documentos ---
+function buildDocumentHtml(formData: ReceiptData, companySettings: CompanySettings, fM: (val: number) => string): string {
+  const e = escapeHtml;
+  const doc = formData;
+  const settings = companySettings;
+  const tipo = { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type;
+  const logo = doc.companyLogo || settings.logo;
+
+  const itemsHtml = doc.items.map((item, i) => `
+    <tr class="${i % 2 === 0 ? 'even' : 'odd'}">
+      <td class="desc">${e(item.description)}</td>
+      <td class="qty">${item.quantity}</td>
+      <td class="price">${fM(item.unitPrice)}</td>
+      <td class="total">${fM(item.total)}</td>
+    </tr>`).join('');
+
+  const taxHtml = doc.taxRate > 0 ? `
+    <div class="finance-row">
+      <span>IVA (${doc.taxRate}%):</span>
+      <span class="value">${fM(doc.taxAmount)}</span>
+    </div>` : '';
+
+  const discountHtml = doc.discount > 0 ? `
+    <div class="finance-row">
+      <span>Desconto:</span>
+      <span class="value">- ${fM(doc.discount)}</span>
+    </div>` : '';
+
+  return `<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<title>${tipo} ${doc.number}</title>
+<style>
+  /* === RESET & BASE === */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #1e293b;
+    line-height: 1.5;
+    padding: 10mm 12mm;
+    max-width: 210mm;
+    margin: 0 auto;
+    background: #fff;
+    position: relative;
+  }
+
+  /* === WATERMARK === */
+  ${doc.stampText ? `
+  .watermark {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-20deg);
+    font-size: 48px;
+    font-weight: 900;
+    color: rgba(220, 38, 38, 0.12);
+    pointer-events: none;
+    z-index: 999;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }` : ''}
+
+  /* === HEADER === */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6mm;
+    gap: 4mm;
+  }
+  .header-left { flex: 1; }
+  .header-left .logo { max-height: 60px; margin-bottom: 4px; }
+  .header-left .company-name { font-size: 16px; font-weight: 700; color: #0f172a; }
+  .header-left .company-detail { font-size: 9px; color: #64748b; margin-top: 1px; }
+  .header-right { text-align: right; flex-shrink: 0; }
+  .header-right .doc-type {
+    font-size: 18px; font-weight: 800; color: #2563eb;
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+  .header-right .doc-number { font-size: 13px; font-weight: 700; color: #0f172a; margin-top: 2px; }
+  .header-right .doc-date { font-size: 9px; color: #64748b; margin-top: 2px; }
+
+  /* === DIVIDER === */
+  .divider {
+    border: none;
+    height: 2px;
+    background: linear-gradient(to right, #2563eb, transparent);
+    margin-bottom: 5mm;
+  }
+
+  /* === CLIENT SECTION === */
+  .client-section {
+    background: #f8fafc;
+    border-radius: 4px;
+    padding: 3mm 4mm;
+    margin-bottom: 5mm;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2mm 4mm;
+  }
+  .client-section .label { font-size: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+  .client-section .value { font-size: 11px; font-weight: 600; color: #0f172a; }
+
+  /* === ITEMS TABLE === */
+  table.items { width: 100%; border-collapse: collapse; margin-bottom: 4mm; }
+  table.items thead th {
+    background: #1e293b;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 2.5mm 2mm;
+    text-align: left;
+  }
+  table.items thead th:last-child { text-align: right; }
+  table.items thead th:nth-child(2),
+  table.items thead th:nth-child(3) { text-align: center; }
+  table.items tbody td {
+    padding: 1.5mm 2mm;
+    font-size: 10px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  table.items tbody tr.even { background: #f8fafc; }
+  table.items tbody tr.odd { background: #fff; }
+  table.items tbody td.desc { max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  table.items tbody td.qty { text-align: center; }
+  table.items tbody td.price { text-align: center; }
+  table.items tbody td.total { text-align: right; font-weight: 600; }
+
+  /* === COLUMN WIDTHS === */
+  table.items .col-desc { width: 48%; }
+  table.items .col-qty { width: 10%; }
+  table.items .col-price { width: 20%; }
+  table.items .col-total { width: 22%; }
+
+  /* === FINANCIAL SUMMARY === */
+  .finance-wrapper { display: flex; justify-content: flex-end; margin-bottom: 4mm; }
+  .finance-box { width: 55%; }
+  .finance-row {
+    display: flex; justify-content: space-between;
+    font-size: 10px; padding: 1.5mm 2mm;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .finance-row .value { font-weight: 600; }
+  .total-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #2563eb; color: #fff;
+    padding: 2.5mm 3mm;
+    border-radius: 4px;
+    margin-top: 2mm;
+  }
+  .total-row .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .total-row .value { font-size: 16px; font-weight: 800; }
+
+  /* === SIGNATURE & STAMP === */
+  .footer-section {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-top: 6mm; padding-top: 3mm;
+    border-top: 1px solid #e2e8f0;
+  }
+  .footer-section .signature-area { max-height: 30px; }
+  .footer-section .stamp-area { max-height: 30px; }
+  .footer-note {
+    text-align: center; font-size: 8px; color: #94a3b8;
+    margin-top: 4mm; padding-top: 2mm;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  /* === RESPONSIVIDADE: THERMAL 58/80mm === */
+  @media print {
+    @page { margin: 5mm; }
+    body { padding: 0; max-width: 100%; }
+    .watermark { display: block; }
+  }
+
+  @media print and (max-width: 80mm) {
+    body { font-size: 8px; padding: 2mm; }
+    .header { flex-direction: column; gap: 1mm; }
+    .header-right { text-align: left; }
+    .header-left .company-name { font-size: 12px; }
+    .header-left .logo { max-height: 30px; }
+    .header-right .doc-type { font-size: 13px; }
+    .client-section { grid-template-columns: 1fr; padding: 2mm; gap: 1mm; }
+    table.items thead th { font-size: 7px; padding: 1.5mm 1mm; }
+    table.items tbody td { font-size: 7px; padding: 1mm; }
+    .finance-box { width: 100%; }
+    .total-row .value { font-size: 12px; }
+    .watermark { font-size: 24px; }
+    .footer-section { flex-direction: column; gap: 2mm; }
+  }
+
+  @media print and (max-width: 58mm) {
+    body { font-size: 7px; padding: 1.5mm; }
+    .header-left .company-name { font-size: 10px; }
+    .header-right .doc-type { font-size: 11px; }
+    table.items thead th { font-size: 6px; padding: 1mm 0.5mm; letter-spacing: 0; }
+    table.items tbody td { font-size: 6px; padding: 0.8mm 0.5mm; }
+    .total-row { padding: 1.5mm 2mm; }
+    .total-row .value { font-size: 10px; }
+    .watermark { font-size: 18px; letter-spacing: 4px; }
+  }
+</style>
+</head>
+<body>
+
+  ${doc.stampText ? `<div class="watermark">${e(doc.stampText)}</div>` : ''}
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      ${logo ? `<img class="logo" src="${logo}" alt="Logo" />` : ''}
+      <div class="company-name">${e(doc.companyName || settings.name || 'Biz-flow')}</div>
+      <div class="company-detail">${e(doc.companyNuit || settings.nuit || '') ? `NUIT: ${e(doc.companyNuit || settings.nuit || '')}` : ''}</div>
+      <div class="company-detail">${e(doc.companyAddress || settings.address || '')}</div>
+      <div class="company-detail">${e(doc.companyContact || settings.contact || '')}</div>
+    </div>
+    <div class="header-right">
+      <div class="doc-type">${tipo}</div>
+      <div class="doc-number">Nº ${e(doc.number)}</div>
+      <div class="doc-date">Emissão: ${e(doc.date)}</div>
+      ${doc.dueDate ? `<div class="doc-date">Vencimento: ${e(doc.dueDate)}</div>` : ''}
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- CLIENTE -->
+  ${doc.clientName ? `
+  <div class="client-section">
+    <div>
+      <div class="label">Cliente</div>
+      <div class="value">${e(doc.clientName)}</div>
+    </div>
+    ${doc.clientNuit ? `<div><div class="label">NUIT</div><div class="value">${e(doc.clientNuit)}</div></div>` : ''}
+    ${doc.clientContact ? `<div><div class="label">Contacto</div><div class="value">${e(doc.clientContact)}</div></div>` : ''}
+    ${doc.clientLocation ? `<div><div class="label">Localização</div><div class="value">${e(doc.clientLocation)}</div></div>` : ''}
+  </div>` : ''}
+
+  <!-- TABELA DE ITENS -->
+  <table class="items">
+    <thead>
+      <tr>
+        <th class="col-desc">Descrição</th>
+        <th class="col-qty">Qtd</th>
+        <th class="col-price">Preço Unit.</th>
+        <th class="col-total">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemsHtml}
+    </tbody>
+  </table>
+
+  <!-- RESUMO FINANCEIRO -->
+  <div class="finance-wrapper">
+    <div class="finance-box">
+      <div class="finance-row">
+        <span>Subtotal</span>
+        <span class="value">${fM(doc.subtotal)}</span>
+      </div>
+      ${taxHtml}
+      ${discountHtml}
+      <div class="total-row">
+        <span class="label">Total ${tipo === 'ORÇAMENTO' ? 'Estimado' : 'a Pagar'}</span>
+        <span class="value">${fM(doc.total)}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ASSINATURA / CARIMBO -->
+  ${doc.signatureData || settings.customStamp ? `
+  <div class="footer-section">
+    ${doc.signatureData ? `<div><div style="font-size:8px;color:#94a3b8;margin-bottom:2px">Assinatura</div><img class="signature-area" src="${doc.signatureData}" alt="Assinatura" /></div>` : ''}
+    ${settings.customStamp ? `<div><img class="stamp-area" src="${settings.customStamp}" alt="Carimbo" /></div>` : ''}
+  </div>` : ''}
+
+  <!-- RODAPÉ -->
+  <div class="footer-note">
+    Gerado por Biz-flow.cloud — Documento processado electronicamente
+  </div>
+
+</body>
+</html>`;
+}
+
 interface UseDocumentActionsParams {
   formData: ReceiptData;
   companySettings: CompanySettings;
@@ -371,7 +659,7 @@ export const useDocumentActions = ({
           notify('Erro na impressão: ' + (e?.message || 'Verifique a impressora.'), 'error');
         }
       } else {
-        // Web: browser print
+        // Web: browser print with professional layout
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
           notify('Bloqueador de pop-ups ativo.', 'error');
@@ -379,43 +667,7 @@ export const useDocumentActions = ({
           return;
         }
         const fM = (val: number) => `${val.toLocaleString()} ${doc.currency || 'MT'}`;
-        const tipo = { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type;
-        const e = escapeHtml;
-        const itemsHtml = doc.items.map(item => `
-          <tr>
-            <td style="padding:2px 0;font-size:10px">${e(item.description)}</td>
-            <td style="padding:2px 0;font-size:10px;text-align:right">${item.quantity}x</td>
-            <td style="padding:2px 0;font-size:10px;text-align:right">${fM(item.unitPrice)}</td>
-            <td style="padding:2px 0;font-size:10px;text-align:right;font-weight:bold">${fM(item.total)}</td>
-          </tr>`).join('');
-
-        printWindow.document.write(`<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Imprimir Talão</title>
-<style>
-  @page { width: 80mm; margin: 0; padding: 0; }
-  body { width: 72mm; margin: 0 auto; padding: 5mm 0; font-family: monospace; font-size: 11px; color: #000; }
-  .center { text-align: center; }
-  .bold { font-weight: bold; }
-  .h1 { font-size: 14px; font-weight: bold; margin: 2px 0; }
-  .h2 { font-size: 12px; margin: 2px 0; }
-  hr { border: none; border-top: 1px dashed #000; margin: 6px 0; }
-  table { width: 100%; border-collapse: collapse; }
-  td { padding: 1px 0; }
-  .total { font-size: 16px; font-weight: bold; margin: 8px 0; }
-  .footer { margin-top: 10px; font-size: 10px; }
-  @media print { body { width: 58mm; } }
-</style></head><body>
-  <div class="center">
-    ${doc.companyName ? `<div class="h1">${e(doc.companyName)}</div>` : ''}
-    ${doc.companyNuit ? `<div class="h2">NUIT: ${e(doc.companyNuit)}</div>` : ''}
-  </div>
-  <hr><div class="center"><div class="h1">${tipo}</div><div class="h2">Nº ${e(doc.number)}</div><div class="h2">${e(doc.date)}</div></div><hr>
-  ${doc.clientName ? `<div><b>Cliente:</b> ${e(doc.clientName)}</div>` : ''}
-  <hr><table><tr style="font-weight:bold;font-size:10px"><td>Descrição</td><td style="text-align:right">Qtd</td><td style="text-align:right">Preço</td><td style="text-align:right">Total</td></tr>${itemsHtml}</table><hr>
-  <div style="text-align:right"><div><b>Subtotal:</b> ${fM(doc.subtotal)}</div>${doc.taxRate > 0 ? `<div><b>IVA (${doc.taxRate}%):</b> ${fM(doc.taxAmount)}</div>` : ''}${doc.discount > 0 ? `<div><b>Desconto:</b> -${fM(doc.discount)}</div>` : ''}<div class="total">Total: ${fM(doc.total)}</div></div>
-  ${doc.stampText ? `<hr><div class="center bold" style="font-size:14px">${e(doc.stampText)}</div>` : ''}
-  <hr><div class="center footer"><p>Obrigado pela preferência!</p><p>Gerado por Biz-flow</p></div>
-</body></html>`);
+        printWindow.document.write(buildDocumentHtml(formData, companySettings, fM));
         printWindow.document.close();
         printWindow.focus();
         setTimeout(() => { printWindow.print(); }, 500);
