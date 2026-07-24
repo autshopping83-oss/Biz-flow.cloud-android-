@@ -23,16 +23,21 @@ const initCapacitor = async () => {
       const { StatusBar, Style } = await import('@capacitor/status-bar');
       await StatusBar.setStyle({ style: Style.Light });
       await StatusBar.setBackgroundColor({ color: '#ffffff' });
+      // Garantir que o WebView não se sobreponha à barra de estado
+      await StatusBar.setOverlaysWebView({ overlay: false });
     } catch {}
+
+    // Safe area CSS — definir todas as variáveis
+    document.documentElement.style.setProperty('--safe-area-top', 'env(safe-area-inset-top, 24px)');
+    document.documentElement.style.setProperty('--safe-area-bottom', 'env(safe-area-inset-bottom, 0px)');
+    document.documentElement.style.setProperty('--safe-area-left', 'env(safe-area-inset-left, 0px)');
+    document.documentElement.style.setProperty('--safe-area-right', 'env(safe-area-inset-right, 0px)');
 
     // Criar pasta Biz-flow no dispositivo (primeira execução)
     try {
       const { Filesystem, Directory } = await import('@capacitor/filesystem');
       await Filesystem.mkdir({ path: 'Biz-flow', directory: Directory.Documents, recursive: true });
     } catch {}
-
-    // Safe area CSS
-    document.documentElement.style.setProperty('--safe-area-bottom', 'env(safe-area-inset-bottom, 0px)');
   }
 };
 

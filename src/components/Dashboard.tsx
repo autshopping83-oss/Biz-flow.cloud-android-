@@ -168,7 +168,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* Navbar */}
-      <nav className="bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 backdrop-blur-md transition-colors duration-300">
+      <nav className="bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 backdrop-blur-md transition-colors duration-300"
+           style={{ paddingTop: 'var(--safe-area-top, 0px)' }}>
          <div className="max-w-6xl mx-auto px-4 md:px-6 h-18 flex justify-between items-center py-3">
             <div className="flex items-center gap-4">
                <button onClick={() => setIsMenuOpen(true)} className="w-10 h-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200 transition-colors">
