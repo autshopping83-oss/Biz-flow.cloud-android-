@@ -307,6 +307,7 @@ const isCapacitor = !!(window as { Capacitor?: { isNativePlatform?: () => boolea
 
 // --- Geração de PDF profissional via jsPDF (layout igual ao template HTML) ---
 function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySettings, fMoney: (val: number) => string): { blob: Blob; fileName: string } {
+  try {
   const doc = formData;
   const pdf = new jsPDF('p', 'mm', 'a4');
   const tipo = { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type;
@@ -457,6 +458,10 @@ function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySetting
     : `${sanitizedNumber}_documento.pdf`;
 
   return { blob: pdf.output('blob'), fileName };
+  } catch (e) {
+    console.error('generatePdfJsPDF CRASH:', e, '| formData.type:', formData?.type, '| items:', formData?.items?.length);
+    throw e;
+  }
 }
 
 // --- Blob → Base64 ---
