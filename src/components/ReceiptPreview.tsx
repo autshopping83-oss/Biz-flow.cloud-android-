@@ -175,7 +175,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, companySettin
     );
   }
 
-  // ======== LAYOUT A4 ========
+  // ======== LAYOUT A4 (com scaling responsivo para mobile) ========
   const isBw = theme === 'bw';
   const a4Style = getA4Style(theme);
 
@@ -185,7 +185,26 @@ const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, companySettin
     : { primary: '#0f172a', secondary: '#334155', muted: '#94a3b8', light: '#f1f5f9', border: '#e2e8f0', accent: '#2563eb' };
 
   return (
-    <div ref={ref} id={captureId} style={a4Style}>
+    <div className="a4-responsive-wrapper" style={{ overflow: 'hidden', width: '100%', display: 'flex', justifyContent: 'center' }}>
+      <style>{`
+        .a4-responsive-wrapper .a4-content {
+          transform-origin: top center;
+          width: 210mm;
+        }
+        @media (max-width: 820px) {
+          .a4-responsive-wrapper .a4-content { transform: scale(0.48); }
+          .a4-responsive-wrapper { height: 143mm; }
+        }
+        @media (max-width: 500px) {
+          .a4-responsive-wrapper .a4-content { transform: scale(0.43); }
+          .a4-responsive-wrapper { height: 128mm; }
+        }
+        @media (max-width: 400px) {
+          .a4-responsive-wrapper .a4-content { transform: scale(0.38); }
+          .a4-responsive-wrapper { height: 113mm; }
+        }
+      `}</style>
+      <div ref={ref} id={captureId} style={a4Style} className="a4-content">
       
       {/* === TOP BAR === */}
       <div 
@@ -467,6 +486,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, companySettin
         </div>
       </div>
     </div>
+  </div>
   );
 });
 
