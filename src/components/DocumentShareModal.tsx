@@ -87,10 +87,44 @@ async function savePdfToCache(blob: Blob, fileName: string): Promise<string | nu
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
-    await Filesystem.writeFile({ path: `temp/${fileName}`, data: base64, directory: Directory.Cache });
-    const uri = await Filesystem.getUri({ path: `temp/${fileName}`, directory: Directory.Cache });
+
+    // Primeiro guardar em ExternalStorage (acessível para apps externos como Gmail)
+    const path = `Biz-flow/${fileName}`;
+    await Filesystem.writeFile({ path, data: base64, directory: Directory.ExternalStorage });
+
+    // Verificar que o ficheiro foi guardado
+    const uri = await Filesystem.getUri({ path, directory: Directory.ExternalStorage });
+    console.log('PDF guardado para partilha:', uri.uri);
+
+    // Verificar que o ficheiro existe lendo de volta
+    try {
+      await Filesystem.stat({ path, directory: Directory.ExternalStorage });
+      console.log('Ficheiro confirmado no disco:', path);
+    } catch {
+      console.warn('Ficheiro nao encontrado apos guardar');
+    }
+
     return uri.uri;
-  } catch { return null; }
+  } catch (e) {
+    console.warn('savePdfToCache falhou:', e);
+    // Fallback: Directory.Cache
+    try {
+      const { Filesystem, Directory } = await import('@capacitor/filesystem');
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(',')[1] ?? '');
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      const path = `temp/${fileName}`;
+      await Filesystem.writeFile({ path, data: base64, directory: Directory.Cache });
+      const uri = await Filesystem.getUri({ path, directory: Directory.Cache });
+      console.log('PDF fallback Cache:', uri.uri);
+      return uri.uri;
+    } catch {
+      return null;
+    }
+  }
 }
 
 export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
