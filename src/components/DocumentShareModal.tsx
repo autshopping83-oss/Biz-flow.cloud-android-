@@ -20,13 +20,16 @@ interface DocumentShareModalProps {
 type ShareMethod = 'email' | 'whatsapp' | 'download' | 'print' | 'nativeshare' | null;
 
 async function getPdfData(onGetPdfBlob: (() => Promise<{ blob: Blob; fileName: string } | null>) | undefined, fMoney: (val: number) => string, formData: ReceiptData): Promise<{ blob: Blob; fileName: string } | null> {
-  // Tenta html2canvas via hook primeiro
-  if (onGetPdfBlob) {
-    const data = await onGetPdfBlob();
-    if (data) return data;
+  try {
+    if (onGetPdfBlob) {
+      const data = await onGetPdfBlob();
+      if (data) return data;
+    }
+    return gerarPdfFallback(fMoney, formData);
+  } catch (e) {
+    console.error('getPdfData FAIL:', e);
+    return null;
   }
-  // Fallback: jsPDF puro
-  return gerarPdfFallback(fMoney, formData);
 }
 
 async function gerarPdfFallback(fMoney: (val: number) => string, formData: ReceiptData): Promise<{ blob: Blob; fileName: string } | null> {

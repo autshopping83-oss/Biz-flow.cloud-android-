@@ -518,9 +518,12 @@ export const useDocumentActions = ({
   // Geração de PDF: jsPDF puro (confiável, 0% dependência de DOM/rede)
   const generatePDFBlob = useCallback(async (): Promise<{ blob: Blob; fileName: string } | null> => {
     try {
-      return generatePdfJsPDF(formData, companySettings, fMoney);
+      console.log('generatePDFBlob: iniciando...', formData.type, formData.items.length, 'itens');
+      const result = generatePdfJsPDF(formData, companySettings, fMoney);
+      console.log('generatePDFBlob: sucesso', result.fileName);
+      return result;
     } catch (e) {
-      console.error('jsPDF generation error:', e);
+      console.error('generatePDFBlob FAIL:', e);
       return null;
     }
   }, [formData, companySettings, fMoney]);
