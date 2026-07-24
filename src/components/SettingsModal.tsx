@@ -141,11 +141,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
             Desenhe sua assinatura padrão que será aplicada automaticamente a todos os documentos.
           </p>
-          <div className="w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 cursor-crosshair mb-4">
+          <div className="w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 cursor-crosshair mb-4 overflow-hidden">
             <canvas
               ref={settingsSignatureCanvasRef}
-              width={400}
-              height={128}
               className="w-full h-full"
               onMouseDown={handleSettingsSignatureStartDrawing as unknown as React.MouseEventHandler<HTMLCanvasElement>}
               onMouseMove={handleSettingsSignatureDraw as unknown as React.MouseEventHandler<HTMLCanvasElement>}

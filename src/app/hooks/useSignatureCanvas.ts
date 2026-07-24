@@ -7,6 +7,25 @@ const getCoords = (e: MouseEvent | TouchEvent, canvas: HTMLCanvasElement) => {
   return { x: clientX - rect.left, y: clientY - rect.top };
 };
 
+// Configura um canvas de assinatura com as mesmas propriedades
+const setupCanvas = (canvas: HTMLCanvasElement) => {
+  // Tornar responsivo: usar devicePixelRatio para nitidez
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  ctx.scale(dpr, dpr);
+  ctx.strokeStyle = document.documentElement.classList.contains('dark') ? '#FFFFFF' : '#000000';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  return ctx;
+};
+
 export const useSignatureCanvas = (showSignatureModal: boolean) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const settingsSignatureCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -24,19 +43,13 @@ export const useSignatureCanvas = (showSignatureModal: boolean) => {
     return canvas.toDataURL('image/png');
   }, []);
 
+  // --- DOCUMENT SIGNATURE CANVAS (nativo, via useEffect) ---
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !showSignatureModal) return;
 
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-
-    const ctx = canvas.getContext('2d');
+    const ctx = setupCanvas(canvas);
     if (!ctx) return;
-
-    ctx.strokeStyle = document.documentElement.classList.contains('dark') ? '#FFFFFF' : '#000000';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
 
     let lastX = 0;
     let lastY = 0;
@@ -84,12 +97,49 @@ export const useSignatureCanvas = (showSignatureModal: boolean) => {
     };
   }, [showSignatureModal]);
 
+  // --- SETTINGS SIGNATURE CANVAS (inicializado com mesma lógica do document canvas) ---
+  useEffect(() => {
+    const canvas = settingsSignatureCanvasRef.current;
+    if (!canvas) return;
+
+    // Repetir setup em resize da janela
+    const handleResize = () => {
+      const ctx = setupCanvas(canvas);
+      if (!ctx) return;
+      // Redesenhar se houver dados salvos (opcional)
+    };
+
+    // Setup inicial
+    setupCanvas(canvas);
+
+    // Atualizar em resize
+    window.addEventListener('resize', handleResize);
+
+    // Atualizar se o tema mudar (dark/light)
+    const observer = new MutationObserver(() => {
+      setupCanvas(canvas);
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      observer.disconnect();
+    };
+  }, []);
+
+  // Handlers para SettingsModal (React synthetic events) — usam o canvas já configurado
   const handleSettingsSignatureStartDrawing = useCallback((e: MouseEvent | TouchEvent) => {
     const canvas = settingsSignatureCanvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!ctx || !canvas) return;
+    if (!canvas) return;
+    // Re-configurar contexto (garantir que existe)
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     isDrawing.current = true;
     const { x, y } = getCoords(e, canvas);
+    ctx.strokeStyle = document.documentElement.classList.contains('dark') ? '#FFFFFF' : '#000000';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     ctx.beginPath();
     ctx.moveTo(x, y);
   }, []);
