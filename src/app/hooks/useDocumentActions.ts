@@ -322,7 +322,7 @@ function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySetting
   const logo = formData.companyLogo || companySettings.logo;
   if (logo) {
     try {
-      const cleanLogo = logo.includes('base64,') ? logo.split('base64,')[1]! : logo;
+      const cleanLogo = logo.includes('base64,') ? (logo.split('base64,').at(1) ?? logo) : logo;
       pdf.addImage(cleanLogo, 'PNG', margin, y, 35, 14);
     } catch {}
   }
@@ -431,7 +431,7 @@ function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySetting
     pdf.setFontSize(7); pdf.setTextColor(148, 163, 184); pdf.setFont('Helvetica', 'bold');
     pdf.text('Assinatura', margin, y); y += 3;
     try {
-      const cleanSig = doc.signatureData.includes('base64,') ? doc.signatureData.split('base64,')[1]! : doc.signatureData;
+      const cleanSig = doc.signatureData.includes('base64,') ? (doc.signatureData.split('base64,').at(1) ?? doc.signatureData) : doc.signatureData;
       pdf.addImage(cleanSig, 'PNG', margin, y, 30, 12);
       y += 14;
     } catch {}
@@ -440,7 +440,7 @@ function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySetting
   // === CARIMBO ===
   if (companySettings.customStamp) {
     try {
-      const cleanStamp = companySettings.customStamp.includes('base64,') ? companySettings.customStamp.split('base64,')[1]! : companySettings.customStamp;
+      const cleanStamp = companySettings.customStamp.includes('base64,') ? (companySettings.customStamp.split('base64,').at(1) ?? companySettings.customStamp) : companySettings.customStamp;
       pdf.addImage(cleanStamp, 'PNG', margin + 120, Math.max(y, 230), 30, 12);
     } catch {}
   }
@@ -681,7 +681,7 @@ export const useDocumentActions = ({
     } finally {
       setIsPrinting(false);
     }
-  }, [isPrinting, formData, notify]);
+  }, [isPrinting, formData, companySettings, notify]);
 
   return {
     isGeneratingPdf,

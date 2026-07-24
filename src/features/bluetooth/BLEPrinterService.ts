@@ -94,12 +94,18 @@ export const BLEPrinterService = {
    */
   async connect(deviceId: string): Promise<void> {
     try {
-      await BleClient.connect(deviceId, (disconnectedId: string) => {
-        console.log('BLE device disconnected:', disconnectedId);
-        if (this.connectedDeviceId === disconnectedId) {
-          this.connectedDeviceId = null;
-        }
-      });
+      // Timeout de 15s para conexão BLE
+      await Promise.race([
+        BleClient.connect(deviceId, (disconnectedId: string) => {
+          console.log('BLE device disconnected:', disconnectedId);
+          if (this.connectedDeviceId === disconnectedId) {
+            this.connectedDeviceId = null;
+          }
+        }),
+        new Promise<void>((_, reject) =>
+          setTimeout(() => reject(new Error('Tempo limite de conexão excedido (15s)')), 15000)
+        ),
+      ]);
       this.connectedDeviceId = deviceId;
     } catch (error) {
       throw new Error(`Falha ao conectar: ${(error as Error).message}`);

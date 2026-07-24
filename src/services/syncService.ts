@@ -109,7 +109,7 @@ export const syncSingleDocument = async (doc: {
       status: doc.status, synced: true,
       created_at: new Date(doc.createdAt).toISOString(),
     }, { onConflict: 'id' }).abortSignal(AbortSignal.timeout(10000));
-  } catch {
-    // Silencioso — sync nao deve bloquear o salvamento local
+  } catch (e) {
+    console.warn('Sync single document failed:', e);
   }
 };

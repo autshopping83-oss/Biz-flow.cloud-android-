@@ -101,6 +101,7 @@ export interface Transaction {
 }
 
 export interface SavedClient {
+  id?: number;
   name: string;
   contact: string;
   nuit: string;
@@ -109,6 +110,7 @@ export interface SavedClient {
 }
 
 export interface SavedProduct {
+  id?: number;
   description: string;
   unitPrice: number;
   userId?: string;

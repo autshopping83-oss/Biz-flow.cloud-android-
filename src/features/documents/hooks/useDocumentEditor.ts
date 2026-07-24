@@ -59,7 +59,7 @@ export function useDocumentEditor({
           }
         } catch { /* ignora draft corrompido */ }
       }
-    });
+    }).catch(() => { /* Dexie indisponivel — ignora rascunho */ });
   }, []);
 
   // Auto-salvar com debounce de 3s sempre que formData mudar
@@ -67,7 +67,7 @@ export function useDocumentEditor({
     if (!formData.clientName && formData.items.length === 0) return;
     if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
     autoSaveRef.current = setTimeout(() => {
-      db.settings.put({ id: DRAFT_ID, draftData: JSON.stringify(formData) });
+      db.settings.put({ id: DRAFT_ID, draftData: JSON.stringify(formData) }).catch(() => {});
     }, 3000);
     return () => {
       if (autoSaveRef.current) clearTimeout(autoSaveRef.current);

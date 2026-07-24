@@ -118,7 +118,7 @@ export const ClientsPage = ({ userId, savedClients, onBack, onUpdateClients, onV
                     className="px-3 py-1.5 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 transition">
                     <i className="fa-solid fa-pen mr-1"></i>Editar
                   </button>
-                  <button onClick={() => handleDelete((c as SavedClient & { id?: number }).id ?? i)}
+                  <button onClick={() => handleDelete(c.id ?? i)}
                     className="px-3 py-1.5 text-xs bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 transition">
                     <i className="fa-solid fa-trash mr-1"></i>Excluir
                   </button>

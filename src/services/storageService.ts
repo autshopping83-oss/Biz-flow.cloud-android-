@@ -1,6 +1,11 @@
 import { ReceiptData, CompanySettings, DocumentType, Comment, Transaction, SavedClient, SavedProduct, Product } from '../types';
 import { db } from './db';
 
+const safeJsonParse = <T>(json: string | null, fallback: T): T => {
+  if (!json) return fallback;
+  try { return JSON.parse(json); } catch { return fallback; }
+};
+
 // Chaves de localStorage para fallback
 const COMMENTS_KEY = 'bizflow_comments_v1';
 
@@ -249,7 +254,7 @@ export const getComments = async (): Promise<Comment[]> => {
   } catch (e) {
     // Fallback to localStorage if Dexie fails
     const stored = localStorage.getItem(COMMENTS_KEY);
-    return stored ? JSON.parse(stored) : [];
+    return stored ? safeJsonParse(stored, []) : [];
   }
 };
 
@@ -260,7 +265,7 @@ export const saveComment = async (comment: Comment): Promise<Comment[]> => {
   } catch (e) {
     // Fallback to localStorage
     const current = localStorage.getItem(COMMENTS_KEY);
-    const parsed = current ? JSON.parse(current) : [];
+    const parsed = current ? safeJsonParse<Comment[]>(current, []) : [];
     const updated = [comment, ...parsed];
     localStorage.setItem(COMMENTS_KEY, JSON.stringify(updated));
     return updated;
@@ -274,7 +279,7 @@ export const deleteComment = async (commentId: string): Promise<Comment[]> => {
   } catch (e) {
     // Fallback to localStorage
     const current = localStorage.getItem(COMMENTS_KEY);
-    const parsed = current ? JSON.parse(current) : [];
+    const parsed = current ? safeJsonParse<Comment[]>(current, []) : [];
     const updated = parsed.filter((c: Comment) => c.id !== commentId);
     localStorage.setItem(COMMENTS_KEY, JSON.stringify(updated));
     return updated;

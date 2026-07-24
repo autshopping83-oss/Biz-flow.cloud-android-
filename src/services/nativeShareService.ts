@@ -32,7 +32,9 @@ export const NativeShareService = {
         text,
         dialogTitle: 'Compartilhar',
       });
-    } catch {}
+    } catch (e) {
+      console.warn('Share text error:', e);
+    }
   },
 
   /**
