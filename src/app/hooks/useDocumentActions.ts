@@ -571,6 +571,9 @@ export const useDocumentActions = ({
         const uri = await saveToDevice(pdfData.blob, pdfData.fileName);
         if (!uri) throw new Error('Erro ao guardar PDF.');
 
+        // 1.5. Salvar documento no histórico (silencioso)
+        await handleSave(true);
+
         // 2. Guardar também em cache para o Share sheet
         const cacheUri = await saveToCache(pdfData.blob, pdfData.fileName);
 
@@ -655,7 +658,10 @@ export const useDocumentActions = ({
             stampText: doc.stampText,
           }).getData();
 
+          // 2. Salvar documento no histórico (silencioso)
           await BLEPrinterService.print(data);
+          await handleSave(true);
+
           notify('Documento enviado para impressão!', 'success');
         } catch (e: any) {
           notify('Erro na impressão: ' + (e?.message || 'Verifique a impressora.'), 'error');
