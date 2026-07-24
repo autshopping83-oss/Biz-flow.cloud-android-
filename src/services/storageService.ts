@@ -298,3 +298,37 @@ export const deleteTransaction = async (id: string, userId: string): Promise<Tra
   await db.transactions.delete(id);
   return await getTransactions(userId);
 };
+
+// --- Estatísticas do Dashboard ---
+
+export interface TotaisMensais {
+  mes: string; // "2026-07"
+  receita: number;
+  despesa: number;
+  documentos: number;
+}
+
+export const calcularTotaisPorMes = async (userId: string): Promise<TotaisMensais[]> => {
+  if (!userId) return [];
+  try {
+    const docs = await db.receipts.where('userId').equals(userId).toArray();
+    const map = new Map<string, TotaisMensais>();
+
+    docs.forEach(d => {
+      if (!d.date) return;
+      const mes = d.date.slice(0, 7); // "2026-07"
+      const entry = map.get(mes) || { mes, receita: 0, despesa: 0, documentos: 0 };
+      entry.documentos++;
+      if (d.type === 'INVOICE' || d.type === 'INVOICE_RECEIPT' || d.type === 'RECEIPT') {
+        entry.receita += d.total;
+      } else {
+        entry.despesa += d.total;
+      }
+      map.set(mes, entry);
+    });
+
+    return Array.from(map.values()).sort((a, b) => a.mes.localeCompare(b.mes));
+  } catch {
+    return [];
+  }
+};

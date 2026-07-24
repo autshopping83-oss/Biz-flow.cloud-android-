@@ -85,7 +85,7 @@ export function useDocumentEditor({
       const newHistory = await saveReceipt(formData, 'local');
       setHistory(newHistory);
       await db.settings.delete(DRAFT_ID);
-      if (!silent) notify('Dados guardados.', 'success');
+      if (!silent) notify('Documento guardado e painel atualizado!', 'success');
     },
   });
 
