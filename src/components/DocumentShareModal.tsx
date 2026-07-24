@@ -221,7 +221,7 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
             title: `Documento ${formData.number}`,
             text: `Olá ${recipientName},\n\nSegue o documento ${formData.number}.\n\nCumprimentos,\n${companySettings.name}`,
             url: cacheUri,
-            dialogTitle: 'Enviar documento para',
+            dialogTitle: 'Enviar documento por email',
           });
           setSendResult({ success: true, message: `Documento partilhado com ${recipientName}!` });
         } else {
