@@ -22,6 +22,7 @@ import { ProductsPage } from '../features/products/ProductsPage';
 import { ClientsPage } from '../features/clients/ClientsPage';
 import { ClientHistory } from '../features/clients/ClientHistory';
 import { AppShell } from '../components/AppShell';
+import { TermsModal, hasAcceptedTerms } from '../components/TermsModal';
 import type { NavTab } from '../components/BottomNav';
 
 const Dashboard = lazy(() => import('../components/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -62,6 +63,7 @@ const App: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
   const [forcedDashTab, setForcedDashTab] = useState<string | undefined>(undefined);
   const [forceMenu, setForceMenu] = useState<number>(0);
+  const [showTerms, setShowTerms] = useState(!hasAcceptedTerms());
 
   console.debug('BizFlow version:', V);
 
@@ -205,6 +207,8 @@ const App: React.FC = () => {
   const isFullscreen = currentView === 'app' || currentView === 'loading';
 
   return (
+    <>
+    {showTerms && <TermsModal onAccept={() => setShowTerms(false)} />}
     <Suspense fallback={<PageLoader />}>
       {isFullscreen ? (
         <>
@@ -269,6 +273,7 @@ const App: React.FC = () => {
           onClear={editor.clearSignature} onClose={() => editor.setShowSignatureModal(false)} />
       )}
     </Suspense>
+    </>
   );
 };
 
