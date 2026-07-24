@@ -39,6 +39,18 @@ const initCapacitor = async () => {
       await Filesystem.mkdir({ path: 'Biz-flow', directory: Directory.Documents, recursive: true });
     } catch {}
   }
+
+  // Inicializar BLE após o Capacitor bridge estar pronto
+  try {
+    const { App } = await import('@capacitor/app');
+    App.addListener('appStateChange', (state) => {
+      if (state.isActive) {
+        import('../features/bluetooth/BLEPrinterService').then(({ BLEPrinterService }) => {
+          BLEPrinterService.initialize();
+        }).catch(() => {});
+      }
+    });
+  } catch {}
 };
 
 initCapacitor();

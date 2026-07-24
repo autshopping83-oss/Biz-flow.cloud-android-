@@ -9,22 +9,62 @@ export interface PrinterDevice {
   name: string;
 }
 
+// Flag para evitar múltiplas inicializações
+let bleInitialized = false;
+let bleInitializing = false;
+let bleInitCallbacks: Array<() => void> = [];
+
 export const BLEPrinterService = {
   devices: [] as PrinterDevice[],
   connectedDeviceId: null as string | null,
 
   /**
+   * Inicializa o BLE (chamado pelo lifecycle do app, NÃO por scanDevices/print)
+   * Deve ser chamado APÓS o Capacitor bridge estar pronto (appStateChange listener)
+   */
+  async initialize(): Promise<void> {
+    if (bleInitialized) return;
+    if (bleInitializing) {
+      // Aguardar inicialização em progresso
+      return new Promise(resolve => bleInitCallbacks.push(resolve));
+    }
+    bleInitializing = true;
+
+    const capacitor = (window as any).Capacitor;
+    if (!capacitor?.isNativePlatform()) {
+      bleInitializing = false;
+      bleInitCallbacks.forEach(cb => cb());
+      bleInitCallbacks = [];
+      return;
+    }
+
+    try {
+      await BleClient.initialize({ androidNeverForLocation: true });
+      bleInitialized = true;
+    } catch {
+      // Plugin não disponível ou erro na inicialização — silencioso
+    } finally {
+      bleInitializing = false;
+      bleInitCallbacks.forEach(cb => cb());
+      bleInitCallbacks = [];
+    }
+  },
+
+  /**
+   * Verifica se BLE está disponível (sincrono, sem inicializar)
+   */
+  isAvailable(): boolean {
+    return !!(window as any).Capacitor?.isNativePlatform?.();
+  },
+
+  /**
    * Escaneia dispositivos BLE próximos
    */
   async scanDevices(timeout = 8000): Promise<PrinterDevice[]> {
-    this.devices = [];
-
-    try {
-      // Inicializa BLE (pede permissão Bluetooth internamente)
-      await BleClient.initialize();
-    } catch {
-      throw new Error('Permissão Bluetooth não concedida. Ative o Bluetooth nas configurações.');
+    if (!bleInitialized) {
+      throw new Error('Bluetooth não disponível. Reinicie o app e tente novamente.');
     }
+    this.devices = [];
 
     // Escanear dispositivos
     await BleClient.requestLEScan(
