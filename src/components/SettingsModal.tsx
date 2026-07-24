@@ -136,7 +136,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
+        {false && <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
           <h4 className="text-md font-bold text-slate-800 dark:text-slate-200 mb-3">Assinatura Padrão</h4>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
             Desenhe sua assinatura padrão que será aplicada automaticamente a todos os documentos.
@@ -158,9 +158,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button onClick={onClearSignature} className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-white font-bold text-xs py-2 px-4 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Limpar</button>
             <button onClick={onSaveSignature} className="bg-purple-600 text-white font-bold text-xs py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">Guardar Assinatura</button>
           </div>
-        </div>
+        </div>}
 
-        <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
+        {false && <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
           <h4 className="text-md font-bold text-slate-800 dark:text-slate-200 mb-3">
             <i className="fa-regular fa-envelope mr-2"></i> Email (Gmail)
           </h4>
@@ -198,7 +198,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {gmailConectado ? 'Reconectar' : 'Conectar Gmail'}
             </button>
           </div>
-        </div>
+        </div>}
       </div>
       <div className="p-6 bg-slate-50 dark:bg-slate-900/50 border-t dark:border-slate-800 flex gap-4 transition-colors">
         <button onClick={onClose} className="flex-1 bg-white dark:bg-slate-800 border dark:border-slate-700 dark:text-white font-bold py-4 rounded-xl text-xs uppercase tracking-widest transition-colors">Cancelar</button>
