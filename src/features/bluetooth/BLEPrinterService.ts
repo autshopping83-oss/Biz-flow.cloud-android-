@@ -25,7 +25,6 @@ export const BLEPrinterService = {
   async initialize(): Promise<void> {
     if (bleInitialized) return;
     if (bleInitializing) {
-      // Aguardar inicialização em progresso
       return new Promise(resolve => bleInitCallbacks.push(resolve));
     }
     bleInitializing = true;
@@ -39,10 +38,21 @@ export const BLEPrinterService = {
     }
 
     try {
+      // Verificar se Bluetooth está ativo no dispositivo
+      const enabled = await BleClient.isEnabled();
+      if (!enabled) {
+        bleInitializing = false;
+        bleInitCallbacks.forEach(cb => cb());
+        bleInitCallbacks = [];
+        return; // Graceful: Bluetooth desligado, app continua a funcionar
+      }
+
+      // Pedir permissões Bluetooth em runtime (obrigatório para Android 12+)
       await BleClient.initialize({ androidNeverForLocation: true });
       bleInitialized = true;
-    } catch {
-      // Plugin não disponível ou erro na inicialização — silencioso
+    } catch (e) {
+      console.warn('BLE initialize failed:', e);
+      // Graceful degradation: app nao quebra, impressao nao disponivel
     } finally {
       bleInitializing = false;
       bleInitCallbacks.forEach(cb => cb());
@@ -62,7 +72,16 @@ export const BLEPrinterService = {
    */
   async scanDevices(timeout = 8000): Promise<PrinterDevice[]> {
     if (!bleInitialized) {
-      throw new Error('Bluetooth não disponível. Reinicie o app e tente novamente.');
+      throw new Error('Bluetooth não disponível. Verifique se o Bluetooth está ligado nas definições do dispositivo.');
+    }
+    // Verificar novamente se Bluetooth continua ativo
+    try {
+      const enabled = await BleClient.isEnabled();
+      if (!enabled) {
+        throw new Error('Bluetooth está desligado. Ligue o Bluetooth nas definições do dispositivo.');
+      }
+    } catch {
+      throw new Error('Não foi possível verificar o Bluetooth. Reinicie a app.');
     }
     this.devices = [];
 
