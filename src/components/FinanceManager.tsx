@@ -21,6 +21,86 @@ const getCoordinatesForPercent = (percent: number) => {
     return [x, y];
 };
 
+const DonutChart: React.FC<{ income: number; expense: number; currency: string; lang: string }> = ({ income, expense, currency, lang }) => {
+  const total = income + expense;
+  if (total <= 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-slate-500 text-sm p-10">
+        <i className="fa-solid fa-chart-pie mr-2"></i>
+        Sem dados financeiros.
+      </div>
+    );
+  }
+
+  const incomePct = income / total;
+  const expensePct = expense / total;
+
+  // Gerar path para o donut
+  const getArcPath = (startPct: number, endPct: number, radius: number) => {
+    const startAngle = startPct * 2 * Math.PI - Math.PI / 2;
+    const endAngle = endPct * 2 * Math.PI - Math.PI / 2;
+    const x1 = radius * Math.cos(startAngle);
+    const y1 = radius * Math.sin(startAngle);
+    const x2 = radius * Math.cos(endAngle);
+    const y2 = radius * Math.sin(endAngle);
+    const largeArc = endPct - startPct > 0.5 ? 1 : 0;
+    return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L 0 0 Z`;
+  };
+
+  const innerRadius = 52;  // Para efeito donut (buraco)
+  const outerRadius = 80;
+
+  // Fatias: income (verde) de 0 a incomePct, expense (vermelho) de incomePct a 1
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div className="relative w-44 h-44">
+        <svg viewBox="-90 -90 180 180" className="w-full h-full transform -rotate-90">
+          {/* Fundo cinza */}
+          <circle cx="0" cy="0" r={outerRadius} fill="none" stroke="#e2e8f0" strokeWidth={outerRadius - innerRadius} className="dark:stroke-slate-700" />
+          {/* Income (verde) */}
+          {incomePct > 0 && (
+            <circle cx="0" cy="0" r={(outerRadius + innerRadius) / 2}
+              fill="none" stroke="#22c55e" strokeWidth={outerRadius - innerRadius}
+              strokeDasharray={`${incomePct * 100} ${(1 - incomePct) * 100}`}
+              strokeLinecap="round"
+              className="animate-[dash_1s_ease-out]"
+              style={{ strokeDashoffset: 0 }} />
+          )}
+          {/* Expense (vermelho) — começa onde income termina */}
+          {expensePct > 0 && (
+            <circle cx="0" cy="0" r={(outerRadius + innerRadius) / 2}
+              fill="none" stroke="#f43f5e" strokeWidth={outerRadius - innerRadius}
+              strokeDasharray={`${expensePct * 100} ${(1 - expensePct) * 100}`}
+              strokeDashoffset={-incomePct * 100}
+              strokeLinecap="round"
+              className="animate-[dash_1s_ease-out_0.3s]"
+              style={{ strokeDashoffset: -incomePct * 100 }} />
+          )}
+        </svg>
+        {/* Valor central */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-xs text-slate-400">Total</span>
+          <span className="text-lg font-black text-slate-900 dark:text-white">{formatMoney(total, currency, lang)}</span>
+        </div>
+      </div>
+      {/* Legenda */}
+      <div className="flex gap-6 text-sm">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+          <span className="text-slate-600 dark:text-slate-300">Entradas</span>
+          <span className="font-bold text-slate-800 dark:text-slate-200">{(incomePct * 100).toFixed(0)}%</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-rose-500"></div>
+          <span className="text-slate-600 dark:text-slate-300">Saídas</span>
+          <span className="font-bold text-slate-800 dark:text-slate-200">{(expensePct * 100).toFixed(0)}%</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Pie Chart original (despesas por categoria)
 const PieChart: React.FC<{ data: { labels: string[], data: number[], total: number }, currency: string, lang: string }> = ({ data, currency, lang }) => {
     if (!data || data.data.length === 0 || data.total <= 0) {
         return (
@@ -250,13 +330,13 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId, lang, ref
   const totalExpense = transactions.reduce((sum, t) => t.type === 'EXPENSE' ? sum + t.amount : sum, 0);
   const balance = totalIncome - totalExpense;
 
-  const CHART_HEIGHT = 220;
-  const CHART_WIDTH = 800;
-  const BAR_WIDTH = timeRange === 'MONTH' ? 12 : 20;
-  const GAP = timeRange === 'MONTH' ? 4 : 10;
-  
   return (
     <div className="animate-[fadeIn_0.3s_ease-out] max-w-5xl mx-auto pb-20">
+      <style>{`
+        @keyframes growUp { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+        @keyframes dash { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
       
       <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-8 gap-4">
         <div>
@@ -280,32 +360,32 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId, lang, ref
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 relative overflow-hidden group">
-           <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i className="fa-solid fa-wallet text-6xl text-blue-600"></i></div>
-           <p className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider">{t('balance')}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 relative overflow-hidden group transition-all hover:shadow-md">
+           <div className="absolute right-0 top-0 p-3 opacity-[0.06] group-hover:opacity-[0.12] transition-opacity"><i className="fa-solid fa-wallet text-5xl text-blue-600"></i></div>
+           <p className="text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-wider">{t('balance')}</p>
            {isLoading ? (
-             <div className="h-8 w-32 bg-slate-200 dark:bg-slate-800 animate-pulse rounded mt-2"></div>
+             <div className="h-7 w-28 bg-slate-200 dark:bg-slate-800 animate-pulse rounded mt-2"></div>
            ) : (
-             <p className={`text-3xl font-black mt-2 ${balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-500'}`}>{formatMoney(balance, currency, lang)}</p>
+             <p className={`text-xl font-black mt-1 ${balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-500'}`}>{formatMoney(balance, currency, lang)}</p>
            )}
         </div>
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 relative overflow-hidden">
-           <div className="absolute right-0 top-0 p-4 opacity-10"><i className="fa-solid fa-arrow-trend-up text-6xl text-emerald-500"></i></div>
-           <p className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider">{t('income')}</p>
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 relative overflow-hidden group transition-all hover:shadow-md">
+           <div className="absolute right-0 top-0 p-3 opacity-[0.06] group-hover:opacity-[0.12] transition-opacity"><i className="fa-solid fa-arrow-trend-up text-5xl text-emerald-500"></i></div>
+           <p className="text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-wider">{t('income')}</p>
            {isLoading ? (
-             <div className="h-8 w-32 bg-slate-200 dark:bg-slate-800 animate-pulse rounded mt-2"></div>
+             <div className="h-7 w-28 bg-slate-200 dark:bg-slate-800 animate-pulse rounded mt-2"></div>
            ) : (
-             <p className="text-3xl font-black mt-2 text-emerald-600">{formatMoney(totalIncome, currency, lang)}</p>
+             <p className="text-xl font-black mt-1 text-emerald-600">{formatMoney(totalIncome, currency, lang)}</p>
            )}
         </div>
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 relative overflow-hidden">
-           <div className="absolute right-0 top-0 p-4 opacity-10"><i className="fa-solid fa-arrow-trend-down text-6xl text-rose-500"></i></div>
-           <p className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider">{t('expense')}</p>
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 relative overflow-hidden group transition-all hover:shadow-md">
+           <div className="absolute right-0 top-0 p-3 opacity-[0.06] group-hover:opacity-[0.12] transition-opacity"><i className="fa-solid fa-arrow-trend-down text-5xl text-rose-500"></i></div>
+           <p className="text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-wider">{t('expense')}</p>
            {isLoading ? (
-             <div className="h-8 w-32 bg-slate-200 dark:bg-slate-800 animate-pulse rounded mt-2"></div>
+             <div className="h-7 w-28 bg-slate-200 dark:bg-slate-800 animate-pulse rounded mt-2"></div>
            ) : (
-             <p className="text-3xl font-black mt-2 text-rose-500">{formatMoney(totalExpense, currency, lang)}</p>
+             <p className="text-xl font-black mt-1 text-rose-500">{formatMoney(totalExpense, currency, lang)}</p>
            )}
         </div>
       </div>
@@ -333,51 +413,59 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId, lang, ref
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-slate-900 dark:text-white">Análise de Período</h3>
-              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-                  <button onClick={() => setTimeRange('WEEK')} className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${timeRange === 'WEEK' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500'}`}>Semana</button>
-                  <button onClick={() => setTimeRange('MONTH')} className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${timeRange === 'MONTH' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500'}`}>Mês</button>
-                  <button onClick={() => setTimeRange('YEAR')} className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${timeRange === 'YEAR' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500'}`}>Ano</button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white">Análise de Período</h3>
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
+                  <button onClick={() => setTimeRange('WEEK')} className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-colors ${timeRange === 'WEEK' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500'}`}>Semana</button>
+                  <button onClick={() => setTimeRange('MONTH')} className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-colors ${timeRange === 'MONTH' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500'}`}>Mês</button>
+                  <button onClick={() => setTimeRange('YEAR')} className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-colors ${timeRange === 'YEAR' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500'}`}>Ano</button>
               </div>
           </div>
 
           <div className="w-full overflow-x-auto">
-              <div className="min-w-[600px] h-[250px] relative">
-                  <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="w-full h-full" preserveAspectRatio="none">
+              <div className="min-w-[320px] h-[200px] relative">
+                  <svg viewBox="0 0 100 50" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
                       {[0, 0.25, 0.5, 0.75, 1].map(tick => (
-                          <line key={tick} x1="0" y1={CHART_HEIGHT * tick} x2={CHART_WIDTH} y2={CHART_HEIGHT * tick} stroke="#e2e8f0" strokeDasharray="4 4" strokeWidth="1" className="dark:stroke-slate-800" />
+                          <line key={tick} x1="0" y1={tick * 45 + 5} x2="100" y2={tick * 45 + 5} stroke="#e2e8f0" strokeDasharray="2 3" strokeWidth="0.5" className="dark:stroke-slate-800" />
                       ))}
                       {processedData.data.map((d, i) => {
-                          const x = (i * (CHART_WIDTH / processedData.data.length)) + (CHART_WIDTH / processedData.data.length / 2) - BAR_WIDTH;
-                          const incomeH = (d.income / processedData.maxValue) * (CHART_HEIGHT * 0.85);
-                          const expenseH = (d.expense / processedData.maxValue) * (CHART_HEIGHT * 0.85);
+                          const barSpace = 100 / processedData.data.length;
+                          const barCenter = barSpace * i + barSpace / 2;
+                          const barW = Math.min(barSpace * 0.28, 3);
+                          const gap = Math.min(barSpace * 0.08, 0.5);
+                          const maxH = 42;
+                          const incH = (d.income / processedData.maxValue) * maxH;
+                          const expH = (d.expense / processedData.maxValue) * maxH;
                           return (
-                              <g key={i} onMouseEnter={() => setHoveredData(d)} onMouseLeave={() => setHoveredData(null)}>
-                                  <rect x={x} y={CHART_HEIGHT - incomeH - 20} width={BAR_WIDTH} height={Math.max(incomeH, 0)} className="fill-emerald-500 hover:fill-emerald-400 transition-all cursor-pointer" rx="4"/>
-                                  <rect x={x + BAR_WIDTH + GAP} y={CHART_HEIGHT - expenseH - 20} width={BAR_WIDTH} height={Math.max(expenseH, 0)} className="fill-rose-500 hover:fill-rose-400 transition-all cursor-pointer" rx="4"/>
-                                  <text x={x + BAR_WIDTH} y={CHART_HEIGHT} fontSize="12" textAnchor="middle" className="fill-slate-400 font-sans">{d.label}</text>
+                              <g key={i} onMouseEnter={() => setHoveredData(d)} onMouseLeave={() => setHoveredData(null)} className="cursor-pointer">
+                                  <rect x={barCenter - barW - gap} y={50 - 5 - incH} width={barW} height={Math.max(incH, 0.5)} fill="#22c55e" rx="1" className="transition-all duration-300 hover:opacity-80" style={{ animation: `growUp 0.6s ease-out forwards`, transformOrigin: 'bottom' }} />
+                                  <rect x={barCenter + gap} y={50 - 5 - expH} width={barW} height={Math.max(expH, 0.5)} fill="#f43f5e" rx="1" className="transition-all duration-300 hover:opacity-80" style={{ animation: `growUp 0.6s ease-out ${i * 0.05}s forwards`, transformOrigin: 'bottom' }} />
                               </g>
                           )
                       })}
                   </svg>
                   {hoveredData && (
-                      <div className="absolute top-0 right-0 bg-slate-900/90 text-white p-3 rounded-lg shadow-lg pointer-events-none backdrop-blur-sm z-10 text-sm">
+                      <div className="absolute top-0 right-0 bg-slate-900/90 text-white p-2 rounded-lg shadow-lg pointer-events-none backdrop-blur-sm z-10 text-xs">
                           <p className="font-bold mb-1 text-slate-300 border-b border-slate-700 pb-1">{hoveredData.label}</p>
-                          <div className="flex justify-between gap-4 text-emerald-400"><span>Entrada:</span><span className="font-mono">{formatMoney(hoveredData.income, currency, lang)}</span></div>
-                          <div className="flex justify-between gap-4 text-rose-400"><span>Saída:</span><span className="font-mono">{formatMoney(hoveredData.expense, currency, lang)}</span></div>
+                          <div className="flex justify-between gap-3 text-emerald-400"><span>Entrada:</span><span>{formatMoney(hoveredData.income, currency, lang)}</span></div>
+                          <div className="flex justify-between gap-3 text-rose-400"><span>Saída:</span><span>{formatMoney(hoveredData.expense, currency, lang)}</span></div>
                       </div>
                   )}
               </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-            <h3 className="font-bold text-slate-900 dark:text-white mb-6">Despesas por Categoria</h3>
-            <PieChart data={expenseByCategory} currency={currency} lang={lang} />
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-4">Entradas vs Saídas</h3>
+            <DonutChart income={totalIncome} expense={totalExpense} currency={currency} lang={lang} />
         </div>
+      </div>
+
+      <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm mb-6">
+        <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-4">Despesas por Categoria</h3>
+        <PieChart data={expenseByCategory} currency={currency} lang={lang} />
       </div>
 
 
