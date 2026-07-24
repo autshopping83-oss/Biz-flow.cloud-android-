@@ -75,7 +75,8 @@ export const ConnectAccountModal: React.FC<ConnectAccountModalProps> = ({ onClos
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden animate-scaleIn">
+      <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden animate-scaleIn"
+           style={{ paddingTop: 'var(--safe-area-top, 0px)' }}>
         {/* Header */}
         <div className="p-6 text-center border-b border-slate-100 dark:border-slate-800">
           <div className="flex justify-center mb-3">

@@ -71,7 +71,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
         onClick={() => setIsMenuOpen(false)}
       ></div>
       
-      <div className={`fixed top-0 left-0 h-full w-80 bg-white dark:bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-out flex flex-col ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed top-0 left-0 h-full w-80 bg-white dark:bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-out flex flex-col ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+           style={{ paddingTop: 'var(--safe-area-top, 0px)' }}>
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
            <div className="flex items-center gap-3">
               <Logo className="w-10 h-10" />

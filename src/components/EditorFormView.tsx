@@ -316,7 +316,8 @@ export const EditorFormView: React.FC<EditorFormViewProps> = ({
     {/* Save New Product Modal */}
     {showSaveProductModal && pendingItem && (
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 animate-fadeIn">
-        <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-slideUp">
+        <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-slideUp"
+             style={{ paddingTop: 'var(--safe-area-top, 0px)' }}>
           <div className="p-6">
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">

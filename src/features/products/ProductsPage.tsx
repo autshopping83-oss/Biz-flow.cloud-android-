@@ -68,7 +68,7 @@ export const ProductsPage = ({ userId, onBack }: Props) => {
 
         {showForm && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl" style={{ paddingTop: 'calc(1.5rem + var(--safe-area-top, 0px))' }} onClick={e => e.stopPropagation()}>
               <h3 className="font-bold text-lg mb-4 dark:text-white">{editId ? 'Editar' : 'Novo'} Produto</h3>
               <div className="space-y-3">
                 <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}

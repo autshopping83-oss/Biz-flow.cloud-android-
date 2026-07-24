@@ -44,7 +44,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onConectarGmail,
 }) => (
   <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 animate-fadeIn">
-    <div className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors">
+    <div className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors"
+         style={{ paddingTop: 'var(--safe-area-top, 0px)' }}>
       <div className="p-6 border-b dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10">
         <h2 className="text-xl font-bold dark:text-white">Configurações</h2>
         <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-colors">

@@ -16,7 +16,8 @@ interface SignatureModalProps {
 export const SignatureModal: React.FC<SignatureModalProps> = ({ canvasRef, onSave, onClear, onClose }) => {
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[80] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+           style={{ paddingTop: 'var(--safe-area-top, 0px)' }}>
         <div className="p-6 border-b dark:border-slate-800 flex justify-between items-center flex-shrink-0">
           <h3 className="font-bold text-lg dark:text-white">Assinatura Digital</h3>
           <button onClick={onClose} className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-colors hover:bg-slate-200">

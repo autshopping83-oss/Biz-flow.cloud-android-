@@ -11,7 +11,8 @@ export const LegalModal: React.FC<Props> = ({ initialTab = 'PRIVACY', onClose })
 
   return (
     <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-slate-950 w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scaleIn">
+      <div className="bg-white dark:bg-slate-950 w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scaleIn"
+           style={{ paddingTop: 'var(--safe-area-top, 0px)' }}>
         
         {/* Header */}
         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900">

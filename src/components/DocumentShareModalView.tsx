@@ -44,7 +44,8 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
 
   const renderSelection = () => (
     <div className="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-      <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden">
+      <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden"
+           style={{ paddingTop: 'var(--safe-area-top, 0px)' }}>
         <div className="p-6 border-b dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
@@ -166,7 +167,8 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
 
   return (
     <div className="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden"
+           style={{ paddingTop: 'var(--safe-area-top, 0px)' }}>
         <div className="p-6 border-b dark:border-slate-800">
           <div className="flex items-center gap-3">
             <button onClick={() => setSelectedMethod(null)} className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-white transition-colors">
