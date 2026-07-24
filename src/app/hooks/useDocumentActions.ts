@@ -305,151 +305,145 @@ interface UseDocumentActionsParams {
 
 const isCapacitor = !!(window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
 
-// --- Geração de PDF profissional via jsPDF (layout igual ao template HTML) ---
+// --- Geração de PDF profissional (layout limpo, equilibrado) ---
 function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySettings, fMoney: (val: number) => string): { blob: Blob; fileName: string } {
   try {
   const doc = formData;
   const pdf = new jsPDF('p', 'mm', 'a4');
   const tipo = { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type;
-  const pageW = 190; // largura util A4 (210 - 10*2 margens)
-  const margin = 15;
+  const pageW = 185;
+  const margin = 12;
   let y = margin;
 
-  // === HELPERS ===
-  const sectionLine = () => { pdf.setDrawColor(37, 99, 235); pdf.setLineWidth(0.5); pdf.line(margin, y, margin + pageW, y); y += 3; };
-  const space = (mm: number) => { y += mm; };
-
-  // === LOGO ===
+  // === LOGO + HEADER (compacto, 2 colunas) ===
   const logo = formData.companyLogo || companySettings.logo;
+  let headerY = y;
   if (logo) {
     try {
       const cleanLogo = logo.includes('base64,') ? (logo.split('base64,').at(1) ?? logo) : logo;
-      pdf.addImage(cleanLogo, 'PNG', margin, y, 35, 14);
+      pdf.addImage(cleanLogo, 'PNG', margin, y, 30, 12);
+      headerY = y + 12;
     } catch {}
   }
-  // Lado direito: tipo documento
-  pdf.setFontSize(16); pdf.setTextColor(37, 99, 235); pdf.setFont('Helvetica', 'bold');
-  pdf.text(tipo, margin + pageW, y + 5, { align: 'right' });
-  pdf.setFontSize(11); pdf.setTextColor(15, 23, 42); pdf.setFont('Helvetica', 'bold');
-  pdf.text('Nº ' + doc.number, margin + pageW, y + 10, { align: 'right' });
-  pdf.setFontSize(8); pdf.setTextColor(100, 116, 139); pdf.setFont('Helvetica', 'normal');
-  pdf.text('Emissão: ' + doc.date, margin + pageW, y + 14, { align: 'right' });
-  if (doc.dueDate) pdf.text('Vencimento: ' + doc.dueDate, margin + pageW, y + 17, { align: 'right' });
-  y += 18;
 
-  // Nome empresa (esquerda, abaixo do logo)
-  pdf.setFontSize(13); pdf.setTextColor(15, 23, 42); pdf.setFont('Helvetica', 'bold');
-  pdf.text(doc.companyName || companySettings.name || 'Biz-flow', margin, y); y += 5;
-  pdf.setFontSize(8); pdf.setTextColor(100, 116, 139); pdf.setFont('Helvetica', 'normal');
-  if (doc.companyAddress || companySettings.address) { pdf.text(doc.companyAddress || companySettings.address || '', margin, y); y += 4; }
-  if (doc.companyNuit || companySettings.nuit) { pdf.text('NUIT: ' + (doc.companyNuit || companySettings.nuit || ''), margin, y); y += 4; }
-  if (doc.companyContact || companySettings.contact) { pdf.text(doc.companyContact || companySettings.contact || '', margin, y); y += 4; }
+  // Direita: tipo doc + número + data
+  pdf.setFontSize(14); pdf.setTextColor(37, 99, 235); pdf.setFont('Helvetica', 'bold');
+  pdf.text(tipo, margin + pageW, y + 4, { align: 'right' });
+  pdf.setFontSize(10); pdf.setTextColor(30, 41, 59); pdf.setFont('Helvetica', 'bold');
+  pdf.text('Nº ' + doc.number, margin + pageW, y + 9, { align: 'right' });
+  pdf.setFontSize(7); pdf.setTextColor(100, 116, 139); pdf.setFont('Helvetica', 'normal');
+  pdf.text('Emissão: ' + doc.date, margin + pageW, y + 13, { align: 'right' });
+  if (doc.dueDate) pdf.text('Vencimento: ' + doc.dueDate, margin + pageW, y + 16, { align: 'right' });
+
+  // Esquerda: nome empresa
+  y = headerY > margin ? headerY : y + 14;
+  pdf.setFontSize(12); pdf.setTextColor(30, 41, 59); pdf.setFont('Helvetica', 'bold');
+  pdf.text(doc.companyName || companySettings.name || 'Biz-flow', margin, y); y += 4;
+  pdf.setFontSize(7); pdf.setTextColor(100, 116, 139); pdf.setFont('Helvetica', 'normal');
+  if (doc.companyAddress || companySettings.address) { pdf.text(doc.companyAddress || companySettings.address || '', margin, y); y += 3; }
+  if (doc.companyNuit || companySettings.nuit) { pdf.text('NUIT: ' + (doc.companyNuit || companySettings.nuit || ''), margin, y); y += 3; }
   y += 2;
 
-  // Separador azul gradiente (simulado com linha grossa)
-  pdf.setDrawColor(37, 99, 235); pdf.setLineWidth(0.8); pdf.line(margin, y, margin + pageW, y);
+  // Separador azul
+  pdf.setDrawColor(37, 99, 235); pdf.setLineWidth(0.6); pdf.line(margin, y, margin + pageW, y);
   y += 4;
 
-  // === CLIENTE (caixa cinza) ===
+  // === CLIENTE (compacto) ===
   if (doc.clientName) {
-    const cliY = y;
-    pdf.setFillColor(248, 250, 252); pdf.rect(margin, y, pageW, 20, 'F');
-    y += 2;
-    pdf.setFontSize(7); pdf.setTextColor(148, 163, 184); pdf.setFont('Helvetica', 'bold');
+    pdf.setFillColor(248, 250, 252); pdf.rect(margin, y, pageW, 14, 'F');
+    const cliY = y; y += 2;
+    pdf.setFontSize(6); pdf.setTextColor(148, 163, 184); pdf.setFont('Helvetica', 'bold');
     pdf.text('CLIENTE', margin + 3, y); y += 4;
-    pdf.setFontSize(10); pdf.setTextColor(15, 23, 42); pdf.setFont('Helvetica', 'bold');
-    pdf.text(doc.clientName, margin + 3, y); y += 5;
-    pdf.setFontSize(8); pdf.setTextColor(100, 116, 139); pdf.setFont('Helvetica', 'normal');
-    if (doc.clientNuit) { pdf.text('NUIT: ' + doc.clientNuit, margin + 3, y); }
-    if (doc.clientContact) { pdf.text('Contato: ' + doc.clientContact, margin + 80, y); }
-    y += 4;
-    if (doc.clientLocation) { pdf.text('Local: ' + doc.clientLocation, margin + 3, y); }
-    y = cliY + 22;
+    pdf.setFontSize(9); pdf.setTextColor(30, 41, 59); pdf.setFont('Helvetica', 'bold');
+    pdf.text(doc.clientName, margin + 3, y);
+    pdf.setFontSize(7); pdf.setTextColor(100, 116, 139); pdf.setFont('Helvetica', 'normal');
+    if (doc.clientNuit) { pdf.text('NUIT: ' + doc.clientNuit, margin + 80, y); }
+    y = cliY + 16;
   }
-  space(2);
+  y += 2;
 
   // === TABELA DE ITENS ===
-  const colDesc = 90, colQtd = 20, colPreco = 33, colTotal = 37;
+  const colDesc = 88, colQtd = 18, colPreco = 32, colTotal = 37;
   const tX = margin;
-  const headerY = y;
+  const headerY2 = y;
 
-  pdf.setFillColor(30, 41, 59); pdf.rect(tX, headerY, pageW, 7, 'F');
-  pdf.setFontSize(7); pdf.setTextColor(255, 255, 255); pdf.setFont('Helvetica', 'bold');
-  pdf.text('Descrição', tX + 2, headerY + 5);
-  pdf.text('Qtd', tX + colDesc + 2, headerY + 5);
-  pdf.text('Preço Unit.', tX + colDesc + colQtd + 2, headerY + 5);
-  pdf.text('Total', tX + colDesc + colQtd + colPreco + 2, headerY + 5);
-  y = headerY + 9;
+  // Cabeçalho azul (não escuro)
+  pdf.setFillColor(37, 99, 235); pdf.rect(tX, headerY2, pageW, 6, 'F');
+  pdf.setFontSize(6); pdf.setTextColor(255, 255, 255); pdf.setFont('Helvetica', 'bold');
+  pdf.text('Descrição', tX + 2, headerY2 + 4);
+  pdf.text('Qtd', tX + colDesc + 2, headerY2 + 4);
+  pdf.text('Preço Unit.', tX + colDesc + colQtd + 2, headerY2 + 4);
+  pdf.text('Total', tX + colDesc + colQtd + colPreco + 2, headerY2 + 4);
+  y = headerY2 + 8;
 
   pdf.setFontSize(8); pdf.setTextColor(30, 41, 59); pdf.setFont('Helvetica', 'normal');
   let rowCount = 0;
   for (const item of doc.items) {
-    if (y > 270) { pdf.addPage(); y = margin; }
-    const rowBg = rowCount % 2 === 0 ? 255 : 250;
-    pdf.setFillColor(rowBg, rowBg, rowBg + 2);
-    pdf.rect(tX, y - 2, pageW, 6, 'F');
+    if (y > 272) { pdf.addPage(); y = margin; }
+    // Zebra suave
+    if (rowCount % 2 === 1) {
+      pdf.setFillColor(249, 250, 251);
+      pdf.rect(tX, y - 2, pageW, 5.5, 'F');
+    }
     pdf.text(item.description.substring(0, 55), tX + 2, y);
     pdf.text(String(item.quantity), tX + colDesc + 2, y);
     pdf.text(fMoney(item.unitPrice), tX + colDesc + colQtd + 2, y);
     pdf.text(fMoney(item.total), tX + colDesc + colQtd + colPreco + 2, y);
-    y += 5; rowCount++;
+    y += 4.5; rowCount++;
   }
   y += 2;
-  pdf.setDrawColor(226, 232, 240); pdf.line(tX, y, tX + pageW, y); y += 5;
+  pdf.setDrawColor(226, 232, 240); pdf.setLineWidth(0.3); pdf.line(tX, y, tX + pageW, y); y += 4;
 
-  // === RESUMO FINANCEIRO (alinhado à direita) ===
-  const finX = 95; // inicio da secao financeira (55% de 190 = ~105)
-  pdf.setFontSize(9); pdf.setTextColor(71, 85, 105); pdf.setFont('Helvetica', 'normal');
-  pdf.text('Subtotal', finX, y); pdf.text(fMoney(doc.subtotal), margin + pageW, y, { align: 'right' }); y += 5;
+  // === TOTAIS ===
+  const finX = 100;
+  pdf.setFontSize(8); pdf.setTextColor(71, 85, 105); pdf.setFont('Helvetica', 'normal');
+  pdf.text('Subtotal', finX, y); pdf.text(fMoney(doc.subtotal), margin + pageW, y, { align: 'right' }); y += 4;
   if (doc.taxRate > 0) {
     pdf.text('IVA (' + doc.taxRate + '%)', finX, y);
-    pdf.text(fMoney(doc.taxAmount), margin + pageW, y, { align: 'right' }); y += 5;
+    pdf.text(fMoney(doc.taxAmount), margin + pageW, y, { align: 'right' }); y += 4;
   }
   if (doc.discount > 0) {
     pdf.text('Desconto', finX, y);
-    pdf.text('- ' + fMoney(doc.discount), margin + pageW, y, { align: 'right' }); y += 5;
+    pdf.text('- ' + fMoney(doc.discount), margin + pageW, y, { align: 'right' }); y += 4;
   }
   y += 1;
-  // Caixa azul do total
-  pdf.setFillColor(37, 99, 235); pdf.rect(finX, y - 1, margin + pageW - finX, 7, 'F');
+  // Total em destaque azul
+  pdf.setFillColor(37, 99, 235); pdf.rect(finX, y, margin + pageW - finX, 6, 'F');
   pdf.setTextColor(255, 255, 255); pdf.setFont('Helvetica', 'bold');
-  pdf.setFontSize(9); pdf.text('Total ' + (tipo === 'ORÇAMENTO' ? 'Estimado' : 'a Pagar'), finX + 2, y + 4);
-  pdf.setFontSize(12); pdf.text(fMoney(doc.total), margin + pageW, y + 4, { align: 'right' });
-  pdf.setTextColor(0); y += 10;
+  pdf.setFontSize(8); pdf.text('TOTAL ' + (tipo === 'ORÇAMENTO' ? 'ESTIMADO' : 'A PAGAR'), finX + 2, y + 4);
+  pdf.setFontSize(11); pdf.text(fMoney(doc.total), margin + pageW, y + 4, { align: 'right' });
+  pdf.setTextColor(0); y += 9;
 
-  // === WATERMARK (selo) ===
+  // === SELO (watermark suave) ===
   if (doc.stampText) {
     pdf.setTextColor(220, 38, 38);
     pdf.setFont('Helvetica', 'bold');
-    pdf.setFontSize(28);
-    pdf.text(doc.stampText, 105, 130, { align: 'center', angle: -20 });
+    pdf.setFontSize(22);
+    pdf.text(doc.stampText, 105, 135, { align: 'center', angle: -18 });
     pdf.setTextColor(0);
   }
 
-  // === ASSINATURA ===
+  // === ASSINATURA + CARIMBO no rodapé ===
+  const footerY = Math.max(y, 250);
+  y = footerY;
   if (doc.signatureData) {
-    y = Math.max(y, 235);
-    pdf.setFontSize(7); pdf.setTextColor(148, 163, 184); pdf.setFont('Helvetica', 'bold');
-    pdf.text('Assinatura', margin, y); y += 3;
+    pdf.setFontSize(6); pdf.setTextColor(148, 163, 184); pdf.setFont('Helvetica', 'bold');
+    pdf.text('Assinatura', margin, y);
     try {
       const cleanSig = doc.signatureData.includes('base64,') ? (doc.signatureData.split('base64,').at(1) ?? doc.signatureData) : doc.signatureData;
-      pdf.addImage(cleanSig, 'PNG', margin, y, 30, 12);
-      y += 14;
+      pdf.addImage(cleanSig, 'PNG', margin, y + 2, 28, 10);
     } catch {}
   }
-
-  // === CARIMBO ===
   if (companySettings.customStamp) {
     try {
       const cleanStamp = companySettings.customStamp.includes('base64,') ? (companySettings.customStamp.split('base64,').at(1) ?? companySettings.customStamp) : companySettings.customStamp;
-      pdf.addImage(cleanStamp, 'PNG', margin + 120, Math.max(y, 230), 30, 12);
+      pdf.addImage(cleanStamp, 'PNG', margin + 120, y, 28, 10);
     } catch {}
   }
 
-  // === RODAPÉ ===
-  pdf.setFontSize(7); pdf.setTextColor(148, 163, 184); pdf.setFont('Helvetica', 'normal');
-  pdf.text('Gerado por Biz-flow.cloud — Documento processado electronicamente', 105, 288, { align: 'center' });
-  pdf.text('Página 1/' + pdf.getNumberOfPages(), margin + pageW, 288, { align: 'right' });
+  // Rodapé fixo
+  pdf.setFontSize(6); pdf.setTextColor(180, 190, 200); pdf.setFont('Helvetica', 'normal');
+  pdf.text('Gerado por Biz-flow.cloud', 105, 288, { align: 'center' });
 
   const sanitizedNumber = validators.fileName(formData.number);
   const sanitizedClientName = validators.fileName(formData.clientName);
