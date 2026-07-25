@@ -43,6 +43,7 @@ interface AppEditorViewProps {
   onSign: () => void;
   onClearClient: () => void;
   onThemeChange: (theme: 'color' | 'bw') => void;
+  onGeneratePDF?: () => Promise<void>;
   userId?: string;
   onViewClientHistory?: (clientName: string) => void;
   onUpdateProducts?: (products: SavedProduct[]) => void;
@@ -54,7 +55,7 @@ export const AppEditorView: React.FC<AppEditorViewProps> = ({
   savedClients, savedProducts, receiptRef, ghostReceiptRef, thermalReceiptRef,
   t, fMoney, onBack, onOpenSettings, onShareWhatsApp, onOpenShareModal,
   onSetMobileTab, onFormDataChange, onNewItemChange, onAddItem, onRemoveItem,
-  onEnhanceDescription, onInitNew, onSign, onClearClient, onThemeChange, userId,
+  onEnhanceDescription, onInitNew, onSign, onClearClient, onThemeChange, onGeneratePDF, userId,
   onViewClientHistory,
   onUpdateProducts,
 }) => {
@@ -82,6 +83,12 @@ export const AppEditorView: React.FC<AppEditorViewProps> = ({
               {isSharing ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-share-nodes text-lg"></i>}
               <span className="hidden sm:inline">Partilhar</span>
             </button>
+            {onGeneratePDF && (
+            <button onClick={onGeneratePDF} disabled={isGeneratingPdf} className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-black shadow-xl shadow-emerald-600/20 flex items-center gap-2 hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50">
+              {isGeneratingPdf ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-file-pdf text-lg"></i>}
+              <span className="hidden sm:inline">Guardar PDF</span>
+            </button>
+            )}
           </div>
         </div>
       </header>

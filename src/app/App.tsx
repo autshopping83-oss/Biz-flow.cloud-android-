@@ -227,7 +227,7 @@ const App: React.FC = () => {
               onAddItem={editor.handleAddItem} onRemoveItem={editor.handleRemoveItem}
               onEnhanceDescription={editor.handleEnhanceDescription} onInitNew={editor.initNewDocument}
               onSign={() => editor.setShowSignatureModal(true)} onClearClient={editor.handleClearClient}
-              onThemeChange={editor.handleThemeChange} userId={userId}
+              onThemeChange={editor.handleThemeChange} onGeneratePDF={editor.handleGeneratePDF} userId={userId}
               onViewClientHistory={handleViewClientHistory}
               onUpdateProducts={setSavedProducts} />
           )}

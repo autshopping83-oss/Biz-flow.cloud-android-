@@ -52,7 +52,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, companySettin
     if (isBw) {
       return "border-[3px] border-black px-4 py-1 font-bold text-2xl uppercase tracking-[0.15em] opacity-40 transform -rotate-12 whitespace-nowrap bg-white";
     }
-    const base = "border-[6px] px-6 py-2 rounded-xl font-black text-6xl uppercase tracking-[0.2em] opacity-30 mix-blend-multiply transform -rotate-12 border-double whitespace-nowrap";
+    const base = "border-[6px] px-6 py-2 rounded-xl font-black text-6xl uppercase tracking-[0.2em] opacity-40 mix-blend-multiply transform -rotate-12 border-double whitespace-nowrap";
     const textLower = text.toLowerCase();
     if (['pago', 'paid', 'pagado', 'payé', 'bezahlt'].some(w => textLower.includes(w))) return `${base} border-emerald-700 text-emerald-700`;
     if (['emitido', 'issued', 'emitida', 'émis', 'ausgestellt'].some(w => textLower.includes(w))) return `${base} border-blue-700 text-blue-700`;
