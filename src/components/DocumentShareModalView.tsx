@@ -79,25 +79,7 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
         </div>
 
         <div className="p-6 space-y-3">
-          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">Escolha como deseja enviar</p>
-
-          {/* Native Share (Android) - aparece apenas em dispositivo nativo */}
-          {isNative && handleNativeShare && (
-            <button onClick={handleNativeShare}
-              className="w-full flex items-center gap-4 p-4 rounded-2xl border border-blue-200 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/10 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all group">
-              <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
-                <i className="fa-solid fa-share-nodes text-xl"></i>
-              </div>
-              <div className="flex-1 text-left">
-                <p className="font-bold dark:text-white">Compartilhar via...</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Abre o menu de partilha nativo do Android</p>
-              </div>
-              <i className="fa-solid fa-chevron-right text-blue-400 group-hover:text-blue-500 transition-colors"></i>
-            </button>
-          )}
-
-          {renderOption('email', 'fa-envelope', 'bg-blue-100', 'text-blue-600', 'Enviar por Email', 'Abre o app de email do dispositivo')}
-          {renderOption('whatsapp', 'fa-whatsapp', 'bg-emerald-100', 'text-emerald-600', 'Enviar por WhatsApp', 'Abre o WhatsApp com mensagem pronta')}
+          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">Opções do Documento</p>
 
           <button onClick={handleDownload} disabled={isGeneratingPdf || isSending}
             className="w-full flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all group disabled:opacity-50">

@@ -78,13 +78,9 @@ export const AppEditorView: React.FC<AppEditorViewProps> = ({
             <button onClick={onOpenSettings} className="w-10 h-10 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition-transform active:scale-90 bg-slate-50 dark:bg-slate-800">
               <i className="fa-solid fa-gear"></i>
             </button>
-            <button onClick={onShareWhatsApp} disabled={isSharing} className="bg-[#25D366] text-white px-4 py-2 rounded-xl text-sm font-black shadow-xl shadow-[#25D366]/20 flex items-center gap-2 hover:bg-[#20bd5a] transition-all active:scale-95 disabled:opacity-50">
-              {isSharing ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-brands fa-whatsapp text-lg"></i>}
-              <span className="hidden sm:inline">WhatsApp</span>
-            </button>
-            <button onClick={onOpenShareModal} disabled={isPrinting || isGeneratingPdf} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-black shadow-xl shadow-blue-600/20 flex items-center gap-2 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50">
-              {(isPrinting || isGeneratingPdf) ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-share-nodes"></i>}
-              <span className="hidden lg:inline">Compartilhar</span>
+            <button onClick={onShareWhatsApp} disabled={isSharing} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-black shadow-xl shadow-blue-600/20 flex items-center gap-2 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50">
+              {isSharing ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-share-nodes text-lg"></i>}
+              <span className="hidden sm:inline">Partilhar</span>
             </button>
           </div>
         </div>
