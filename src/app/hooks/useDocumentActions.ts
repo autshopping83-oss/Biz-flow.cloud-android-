@@ -46,7 +46,7 @@ function buildDocumentHtml(formData: ReceiptData, companySettings: CompanySettin
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #000; line-height: 1.5; padding: 10mm 12mm; max-width: 210mm; margin: 0 auto; background: #fff; position: relative; }
-  ${doc.stampText ? `.watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-20deg); font-size: 48px; font-weight: 900; color: rgba(0, 0, 0, 0.06); pointer-events: none; z-index: 999; letter-spacing: 8px; text-transform: uppercase; white-space: nowrap; }` : ''}
+  ${doc.stampText ? `.watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-20deg); font-size: 48px; font-weight: 900; color: rgba(0, 0, 0, 0.10); pointer-events: none; z-index: 999; letter-spacing: 8px; text-transform: uppercase; white-space: nowrap; }` : ''}
   .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6mm; gap: 4mm; }
   .header-left { flex: 1; }
   .header-left .logo { max-height: 60px; margin-bottom: 4px; filter: grayscale(100%); }
@@ -232,7 +232,7 @@ function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySetting
     pdf.setTextColor(0, 0, 0); y += 12;
 
     if (doc.stampText) {
-      pdf.setTextColor(240, 240, 240);
+      pdf.setTextColor(160, 160, 160);
       pdf.setFont('Helvetica', 'bold');
       pdf.setFontSize(32);
       pdf.text(doc.stampText, 105, 140, { align: 'center', angle: -20 });
