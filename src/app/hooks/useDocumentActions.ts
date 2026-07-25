@@ -8,6 +8,8 @@ function escapeHtml(str: string): string {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
 
+const isCapacitor = !!(window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
+
 // --- Template HTML/CSS Profissional (Monocromático) ---
 function buildDocumentHtml(formData: ReceiptData, companySettings: CompanySettings, fM: (val: number) => string): string {
   const e = escapeHtml;
