@@ -69,6 +69,18 @@ export const useAppLifecycle = ({
         if (savedTheme === 'dark') {
           document.documentElement.classList.add('dark');
         }
+
+        // 1ª execução: detetar idioma do dispositivo
+        if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.()) {
+          try {
+            const { Device } = await import('@capacitor/device');
+            const { value } = await Device.getLanguageCode();
+            const lang = (value || '').slice(0, 2);  // 'pt-BR' → 'pt'
+            if (['pt', 'en', 'es', 'fr', 'de'].includes(lang)) {
+              setCompanySettings(prev => ({ ...prev, language: lang }));
+            }
+          } catch {}
+        }
       }
 
       // Load history, clients, products from local storage
