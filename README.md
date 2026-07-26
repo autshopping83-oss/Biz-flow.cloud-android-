@@ -1,62 +1,111 @@
-# 🧾 Biz-Flow.cloud
+# 🧾 Biz-flow.cloud
 
-**Biz-Flow** é uma plataforma robusta e moderna de gestão de negócios (Business OS) projetada especificamente para freelancers, autônomos e pequenas empresas. O aplicativo combina emissão de documentos profissionais, controle financeiro rigoroso e recursos de IA em uma experiência de Progressive Web App (PWA).
+**Biz-flow.cloud** é uma plataforma de gestão de negócios (Business OS) com aplicação **nativa Android** via Capacitor, emissão de documentos profissionais, controle financeiro e sincronização cloud opcional.
 
-## 🚀 Funcionalidades Principais
+[![Android](https://img.shields.io/badge/Android-Native-3DDC84?logo=android)](https://play.google.com)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript)](https://www.typescriptlang.org)
+[![Capacitor](https://img.shields.io/badge/Capacitor-6-119EFF?logo=capacitor)](https://capacitorjs.com)
+[![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?logo=supabase)](https://supabase.com)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000?logo=vercel)](https://vercel.com)
 
-### 📄 Emissão de Documentos (A4 & Térmico)
-- **Documentos Suportados:** Faturas, Recibos e Orçamentos.
-- **Exportação Profissional:** Geração de PDFs em formato A4 via `jsPDF` e `html2canvas`.
-- **Assinatura Digital:** Recurso de assinatura direto na tela (Canvas) para validade imediata.
-- **Impressão Térmica:** Suporte nativo a impressoras Bluetooth ESC/POS (58mm/80mm) via Web Bluetooth API.
+---
+
+## 🚀 Funcionalidades
+
+### 📄 Documentos Fiscais
+- **4 tipos**: Fatura, Recibo, Fatura-Recibo, Orçamento
+- **PDF profissional monocromático** (jsPDF puro, sem html2canvas)
+- **Impressão térmica** 58/80mm via Bluetooth BLE (ESC/POS)
+- **Assinatura digital** no canvas + carimbo personalizado
 
 ### 💰 Gestão Financeira
-- **Fluxo de Caixa:** Registro e monitoramento de Receitas e Despesas.
-- **Dashboard Analítico:** Gráficos dinâmicos (Semanal, Mensal, Anual) para visualização de saúde financeira.
-- **Sincronização Cloud:** Persistência em tempo real utilizando Supabase.
+- Registo de receitas e despesas
+- Dashboard com gráficos de barras, donut e pizza
+- Histórico com busca e filtros
 
-### 🤖 Inteligência Artificial (Gemini API)
-- **Otimização de Itens:** Uso do modelo `gemini-3-flash-preview` para reescrever descrições de itens, tornando-as mais profissionais e formais automaticamente.
+### 🌐 Cloud (Opcional)
+- Sincronização offline-first com Supabase
+- Auth email/password + Google OAuth
+- RLS (Row Level Security) em todas as tabelas
 
-### 👥 Comunidade & Social
-- **Feed Global:** Espaço para empreendedores compartilharem dicas, dúvidas e networking.
-- **Integração WhatsApp:** Atalhos para suporte oficial e grupos de comunidade.
+### 🌍 Internacionalização (i18n)
+- **Detecção automática** de idioma e moeda do dispositivo (`@capacitor/device`)
+- Formatador `Intl.NumberFormat` com símbolo da moeda local (sem conversão de valores)
+- 5 idiomas: Português, Inglês, Espanhol, Francês, Alemão
+- 200+ moedas suportadas
 
-### 🛠️ Diferenciais Técnicos
-- **PWA (Offline First):** Instalável no Android, iOS e Desktop com suporte a cache via Service Workers.
-- **Multi-Moeda & Idioma:** Suporte total para MZN, AOA, BRL, USD, EUR e mais.
-- **Arquivamento Nativo:** Integração com a *File System Access API* para salvar documentos automaticamente em pastas locais do computador.
+### 🤖 IA (Google Gemini)
+- Enriquecimento de descrições de itens (em pausa)
 
-## 🛠️ Stack Tecnológica
+---
 
-- **Frontend:** React 19 + TypeScript.
-- **Estilização:** Tailwind CSS (com suporte a Dark Mode).
-- **Backend/DB:** Supabase (PostgreSQL + Auth + Storage).
-- **IA:** Google Generative AI (Gemini SDK).
-- **PDF:** jsPDF & html2canvas.
-- **PWA:** Service Workers e Manifest API.
+## 🛠️ Stack
 
-## 📁 Estrutura de Pastas
+| Camada | Tecnologia |
+|---|---|
+| **Frontend** | React 19 + TypeScript + Vite |
+| **Mobile** | Capacitor 6 (Android nativo) |
+| **CSS** | Tailwind CSS 3 (dark mode) |
+| **Backend/DB** | Supabase (Auth + DB + Storage) |
+| **Offline** | Dexie (IndexedDB) |
+| **PDF** | jsPDF puro |
+| **BLE** | @capacitor-community/bluetooth-le |
+| **CI/CD** | GitHub Actions → AAB signed |
+| **Deploy** | Vercel (SPA + serverless API) |
 
-```text
-/
-├── components/          # Componentes modulares (UI, Dash, Editor)
-├── services/            # Lógica de negócio (API, Bluetooth, Storage)
-├── types.ts             # Definições de tipos TypeScript
-├── App.tsx              # Componente principal (Orquestrador)
-├── index.tsx            # Ponto de entrada e Error Boundary
-└── index.html           # Template base e Splash Screen
+---
+
+## 📁 Estrutura
+
 ```
+biz-flowcloud/
+├── src/                    # Código React (feature-first)
+│   ├── app/                # Entry point, hooks, views
+│   ├── components/         # Componentes UI partilhados
+│   ├── features/           # Módulos de negócio (auth, documents, bluetooth)
+│   ├── services/           # API, Dexie, Supabase, traduções
+│   ├── types/              # Interfaces TypeScript
+│   └── utils/              # Validators, security
+├── android/                # Projeto Android nativo (Capacitor)
+├── public/                 # Assets estáticos + PWA manifest
+├── api/                    # Vercel serverless functions (OAuth, email)
+├── services/               # Serviços standalone
+│   ├── email-service/      # Servidor Express (Nodemailer + OAuth2)
+│   └── whatsapp-service/   # Serviço WhatsApp
+├── tools/                  # Ferramentas de desenvolvimento
+│   ├── agents/             # Configuração de agentes
+│   ├── docs/               # Documentação técnica
+│   └── scripts/            # Scripts utilitários
+├── supabase/               # Configuração local Supabase CLI
+├── .github/                # GitHub Actions workflows
+├── capacitor.config.ts     # Configuração Capacitor
+├── vite.config.ts          # Configuração Vite
+└── vercel.json             # Configuração Deploy Vercel
+```
+
+---
 
 ## ⚙️ Configuração
 
-O projeto utiliza variáveis de ambiente para chaves sensíveis:
-- `VITE_GEMINI_API_KEY`: Chave da API do Google Gemini.
-- `VITE_SUPABASE_URL` & `VITE_SUPABASE_ANON_KEY`: Configurações de acesso ao banco de dados (Injetadas via `supabaseClient.ts`).
+```bash
+# Instalar dependências
+npm install
+
+# Desenvolvimento web
+npm run dev
+
+# Build Android
+npm run build && npx cap sync
+cd android && ./gradlew bundleRelease
+
+# Variáveis de ambiente (.env.local)
+VITE_SUPABASE_URL=https://xxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGci...
+```
+
+---
 
 ## 📄 Licença
 
-Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
-
----
-*Desenvolvido com foco em performance, estética e produtividade.*
+MIT © Biz-flow.cloud
