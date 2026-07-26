@@ -234,7 +234,7 @@ const App: React.FC = () => {
           {currentView === 'loading' && <PageLoader />}
         </>
       ) : (
-        <AppShell activeTab={activeTab} onTabChange={handleTabChange} isConnected={isConnected}>
+        <AppShell activeTab={activeTab} onTabChange={handleTabChange} isConnected={isConnected} t={t}>
           {renderContent()}
         </AppShell>
       )}

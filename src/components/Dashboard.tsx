@@ -143,7 +143,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <button onClick={() => { setIsMenuOpen(false); onOpenConnectAccount?.(); }}
                 className="w-full text-left px-5 py-3.5 rounded-xl font-medium flex items-center gap-4 border transition-all bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40">
                 <i className="fa-solid fa-link text-emerald-500 w-5 text-center"></i>
-                Conectar Conta
+                {t('connectAccount')}
               </button>
             )}
 

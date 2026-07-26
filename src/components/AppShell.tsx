@@ -11,10 +11,11 @@ interface AppShellProps {
   children: React.ReactNode;
 }
 
-export const AppShell: React.FC<AppShellProps> = ({
+export const AppShell: React.FC<AppShellProps & { t: (key: string) => string }> = ({
   activeTab,
   onTabChange,
   isConnected,
+  t,
   children,
 }) => {
   return (
@@ -26,6 +27,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         activeTab={activeTab}
         onTabChange={onTabChange}
         isConnected={isConnected}
+        t={t}
       />
     </div>
   );

@@ -9,22 +9,23 @@ interface BottomNavProps {
   activeTab: NavTab;
   onTabChange: (tab: NavTab) => void;
   isConnected: boolean;
+  t: (key: string) => string;
 }
 
 interface TabItem {
   key: NavTab;
   icon: string;
-  label: string;
+  labelKey: string;
 }
 
 const tabs: TabItem[] = [
-  { key: 'home', icon: 'fa-house', label: 'Início' },
-  { key: 'history', icon: 'fa-clock-rotate-left', label: 'Documentos' },
-  { key: 'finance', icon: 'fa-chart-pie', label: 'Finanças' },
-  { key: 'more', icon: 'fa-ellipsis-h', label: 'Mais' },
+  { key: 'home', icon: 'fa-house', labelKey: 'home' },
+  { key: 'history', icon: 'fa-clock-rotate-left', labelKey: 'documents' },
+  { key: 'finance', icon: 'fa-chart-pie', labelKey: 'finance' },
+  { key: 'more', icon: 'fa-ellipsis-h', labelKey: 'more' },
 ];
 
-export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange }) => {
+export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, t }) => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-800 backdrop-blur-lg"
          style={{ paddingBottom: 'var(--safe-area-bottom, 0px)' }}>
@@ -44,7 +45,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange }) 
             )}
             <i className={`fa-solid ${tab.icon} text-lg ${activeTab === tab.key ? 'scale-110' : ''}`} />
             <span className={`text-[10px] font-semibold tracking-tight ${activeTab === tab.key ? 'font-bold' : ''}`}>
-              {tab.label}
+              {t(tab.labelKey)}
             </span>
           </button>
         ))}
