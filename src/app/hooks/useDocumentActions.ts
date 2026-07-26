@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import jsPDF from 'jspdf';
 import { validators } from '../../utils/validators';
+import { formatMoney } from '../../services/translationService';
 import { ReceiptData, CompanySettings } from '../../types';
 
 // Escape HTML entities para prevenir XSS em document.write
@@ -297,8 +298,8 @@ export const useDocumentActions = ({
   const [isSharing, setIsSharing] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
 
-  // Helper: formatar dinheiro
-  const fMoney = (val: number) => `${val.toLocaleString()} ${formData.currency || 'MZN'}`;
+  // Helper: formatar dinheiro com i18n
+  const fMoney = (val: number) => formatMoney(val, (formData.currency || 'MZN'), (formData.language || 'pt'));
 
   // Helper: Guardar no dispositivo (pastas Biz-flow/)
   const saveToDevice = async (blob: Blob, fileName: string): Promise<string | null> => {
@@ -492,7 +493,7 @@ export const useDocumentActions = ({
           setIsPrinting(false);
           return;
         }
-        const fM = (val: number) => `${val.toLocaleString()} ${doc.currency || 'MT'}`;
+        const fM = (val: number) => formatMoney(val, (doc.currency || 'MZN'), (doc.language || 'pt'));
         printWindow.document.write(buildDocumentHtml(formData, companySettings, fM));
         printWindow.document.close();
         printWindow.focus();
