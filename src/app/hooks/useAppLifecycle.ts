@@ -70,15 +70,28 @@ export const useAppLifecycle = ({
           document.documentElement.classList.add('dark');
         }
 
-        // 1ª execução: detetar idioma do dispositivo
+        // 1ª execução: detetar idioma e moeda do dispositivo
         if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.()) {
           try {
             const { Device } = await import('@capacitor/device');
-            const { value } = await Device.getLanguageCode();
-            const lang = (value || '').slice(0, 2);  // 'pt-BR' → 'pt'
-            if (['pt', 'en', 'es', 'fr', 'de'].includes(lang)) {
+            const { value: locale } = await Device.getLanguageTag();
+
+            // Idioma: 'pt-BR' → 'pt'
+            const lang = (locale || '').slice(0, 2);
+            if (lang && lang.length === 2) {
               setCompanySettings(prev => ({ ...prev, language: lang }));
             }
+
+            // Moeda: mapear país → moeda
+            const countryMap: Record<string, string> = {
+              MZ: 'MZN', BR: 'BRL', US: 'USD', PT: 'EUR', AO: 'AOA',
+              GB: 'GBP', CA: 'CAD', CH: 'CHF', JP: 'JPY', CN: 'CNY',
+              IN: 'INR', ZA: 'ZAR', NG: 'NGN', KE: 'KES', FR: 'EUR',
+              DE: 'EUR', IT: 'EUR', ES: 'EUR', NL: 'EUR',
+            };
+            const country = (locale || '').split('-')[1]?.toUpperCase() || '';
+            const currency = countryMap[country] || 'MZN';
+            setCompanySettings(prev => ({ ...prev, currency }));
           } catch {}
         }
       }

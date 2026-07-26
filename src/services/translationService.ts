@@ -494,8 +494,10 @@ const TRANSLATIONS: Record<string, Record<TranslationKey, string>> = {
 
 export const getTranslation = (lang: string, key: string): string => {
   const translations = TRANSLATIONS[lang];
-  if (!translations) return key;
-  return (translations as Record<string, string>)[key] || key;
+  if (translations) return (translations as Record<string, string>)[key] || key;
+  // Fallback to Portuguese if language not available
+  const fallback = TRANSLATIONS['pt'];
+  return (fallback as Record<string, string>)[key] || key;
 };
 
 export const formatMoney = (amount: number, currencyCode: string, lang?: string) => {
