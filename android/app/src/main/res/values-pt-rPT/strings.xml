@@ -7,7 +7,7 @@
     <string name="nav_finance">Finanças</string>
     <string name="nav_more">Mais</string>
 
-    <string name="dashboard_title">Painel de Controle</string>
+    <string name="dashboard_title">Painel de Controlo</string>
     <string name="dashboard_subtitle">Bem-vindo ao seu escritório digital.</string>
     <string name="monthly_revenue">Receita Mensal</string>
     <string name="home_revenue_placeholder">MZN 0,00</string>
@@ -19,7 +19,7 @@
     <string name="action_invoice_receipt">Fatura-Recibo</string>
     <string name="action_invoice_receipt_sub">Pagamento imediato.</string>
     <string name="action_new_quote">Novo Orçamento</string>
-    <string name="action_new_quote_sub">Criar cotação.</string>
+    <string name="action_new_quote_sub">Criar orçamento.</string>
 
     <string name="home_add">Adicionar</string>
     <string name="home_quick_expense">Nova Despesa</string>

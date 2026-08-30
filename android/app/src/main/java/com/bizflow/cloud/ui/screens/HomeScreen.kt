@@ -56,13 +56,13 @@ fun HomeScreen(
                 title = {
                     Column {
                         Text(
-                            text = stringResource(R.string.home_title),
+                            text = stringResource(R.string.dashboard_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = stringResource(R.string.home_subtitle),
+                            text = stringResource(R.string.dashboard_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -70,7 +70,7 @@ fun HomeScreen(
                 },
                 actions = {
                     RevenueBadge(
-                        label = stringResource(R.string.home_monthly_revenue),
+                        label = stringResource(R.string.monthly_revenue),
                         value = stringResource(R.string.home_revenue_placeholder),
                         modifier = Modifier.padding(end = 12.dp),
                     )
@@ -139,8 +139,8 @@ private fun QuickActionsSection() {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             ActionCard(
-                title = stringResource(R.string.home_action_invoice),
-                subtitle = stringResource(R.string.home_action_invoice_sub),
+                title = stringResource(R.string.action_new_invoice),
+                subtitle = stringResource(R.string.action_new_invoice_sub),
                 containerColor = InvoiceBlue,
                 leadingIcon = Icons.Filled.Description,
                 onAdd = { /* Fase 6: nova fatura */ },
@@ -148,8 +148,8 @@ private fun QuickActionsSection() {
                 modifier = Modifier.weight(1f),
             )
             ActionCard(
-                title = stringResource(R.string.home_action_receipt),
-                subtitle = stringResource(R.string.home_action_receipt_sub),
+                title = stringResource(R.string.action_new_receipt),
+                subtitle = stringResource(R.string.action_new_receipt_sub),
                 containerColor = ReceiptEmerald,
                 leadingIcon = Icons.Filled.Paid,
                 onAdd = { /* Fase 6: novo recibo */ },
@@ -159,8 +159,8 @@ private fun QuickActionsSection() {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             ActionCard(
-                title = stringResource(R.string.home_action_invoice_receipt),
-                subtitle = stringResource(R.string.home_action_invoice_receipt_sub),
+                title = stringResource(R.string.action_invoice_receipt),
+                subtitle = stringResource(R.string.action_invoice_receipt_sub),
                 containerColor = InvoiceReceiptViolet,
                 leadingIcon = Icons.Filled.RequestQuote,
                 onAdd = { /* Fase 6: nova factura-recibo */ },
@@ -168,8 +168,8 @@ private fun QuickActionsSection() {
                 modifier = Modifier.weight(1f),
             )
             ActionCard(
-                title = stringResource(R.string.home_action_quote),
-                subtitle = stringResource(R.string.home_action_quote_sub),
+                title = stringResource(R.string.action_new_quote),
+                subtitle = stringResource(R.string.action_new_quote_sub),
                 containerColor = QuoteVioletDark,
                 leadingIcon = Icons.Filled.RequestQuote,
                 onAdd = { /* Fase 6: novo orcamento */ },

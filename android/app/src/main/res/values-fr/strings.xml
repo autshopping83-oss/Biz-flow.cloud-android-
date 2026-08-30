@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Biz-flow</string>
+
+    <string name="nav_home">Accueil</string>
+    <string name="nav_documents">Documents</string>
+    <string name="nav_finance">Finances</string>
+    <string name="nav_more">Plus</string>
+
+    <string name="dashboard_title">Tableau de Bord</string>
+    <string name="dashboard_subtitle">Bienvenue dans votre bureau numérique.</string>
+    <string name="monthly_revenue">Revenu Mensuel</string>
+    <string name="home_revenue_placeholder">MZN 0,00</string>
+
+    <string name="action_new_invoice">Nouvelle Facture</string>
+    <string name="action_new_invoice_sub">Émettre une facture fiscale.</string>
+    <string name="action_new_receipt">Nouveau Reçu</string>
+    <string name="action_new_receipt_sub">Preuve de paiement.</string>
+    <string name="action_invoice_receipt">Facture-Reçu</string>
+    <string name="action_invoice_receipt_sub">Paiement immédiat.</string>
+    <string name="action_new_quote">Nouveau Devis</string>
+    <string name="action_new_quote_sub">Créer un devis.</string>
+
+    <string name="home_add">Ajouter</string>
+    <string name="home_quick_expense">Nouvelle Dépense</string>
+    <string name="home_quick_reports">Rapports</string>
+    <string name="home_recent_title">Récents</string>
+    <string name="home_view_history">Voir l\'historique</string>
+    <string name="home_recent_empty">Aucun document récent</string>
+
+    <string name="fab_add_document">Nouveau document</string>
+    <string name="documents_empty_title">Aucun document pour le moment</string>
+    <string name="documents_empty_body">Créez votre premier document en touchant le bouton +</string>
+    <string name="documents_no_client">Sans client</string>
+
+    <string name="status_draft">Brouillon</string>
+    <string name="status_sent">Envoyé</string>
+    <string name="status_paid">Payé</string>
+    <string name="status_overdue">En retard</string>
+
+    <string name="screen_under_construction">En construction</string>
+</resources>

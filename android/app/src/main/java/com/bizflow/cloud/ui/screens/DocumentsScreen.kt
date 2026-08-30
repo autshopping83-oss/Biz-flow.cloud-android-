@@ -47,7 +47,7 @@ fun DocumentsScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(text = stringResource(R.string.tab_documents)) },
+                title = { Text(text = stringResource(R.string.nav_documents)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface,

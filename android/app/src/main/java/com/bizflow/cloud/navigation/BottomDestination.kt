@@ -14,8 +14,8 @@ enum class BottomDestination(
     @StringRes val labelRes: Int,
     val icon: ImageVector,
 ) {
-    HOME("home", R.string.tab_home, Icons.Filled.Home),
-    DOCUMENTS("documents", R.string.tab_documents, Icons.Filled.Description),
-    FINANCE("finance", R.string.tab_finance, Icons.Filled.AccountBalanceWallet),
-    MORE("more", R.string.tab_more, Icons.Filled.MoreHoriz),
+    HOME("home", R.string.nav_home, Icons.Filled.Home),
+    DOCUMENTS("documents", R.string.nav_documents, Icons.Filled.Description),
+    FINANCE("finance", R.string.nav_finance, Icons.Filled.AccountBalanceWallet),
+    MORE("more", R.string.nav_more, Icons.Filled.MoreHoriz),
 }

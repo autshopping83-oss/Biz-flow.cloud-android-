@@ -15,10 +15,10 @@
     <string name="action_new_invoice">Nova Fatura</string>
     <string name="action_new_invoice_sub">Emitir fatura fiscal.</string>
     <string name="action_new_receipt">Novo Recibo</string>
-    <string name="action_new_receipt_sub">Comprovativo.</string>
+    <string name="action_new_receipt_sub">Comprovante.</string>
     <string name="action_invoice_receipt">Fatura-Recibo</string>
     <string name="action_invoice_receipt_sub">Pagamento imediato.</string>
-    <string name="action_new_quote">Novo Orçamento</string>
+    <string name="action_new_quote">Nova Cotação</string>
     <string name="action_new_quote_sub">Criar cotação.</string>
 
     <string name="home_add">Adicionar</string>
@@ -30,7 +30,7 @@
 
     <string name="fab_add_document">Novo documento</string>
     <string name="documents_empty_title">Nenhum documento por agora</string>
-    <string name="documents_empty_body">Crie o seu primeiro documento clicando no botão +</string>
+    <string name="documents_empty_body">Crie o seu primeiro documento tocando no botão +</string>
     <string name="documents_no_client">Sem cliente</string>
 
     <string name="status_draft">Rascunho</string>

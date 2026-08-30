@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Biz-flow</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_documents">Documents</string>
+    <string name="nav_finance">Finance</string>
+    <string name="nav_more">More</string>
+
+    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_subtitle">Welcome to your digital office.</string>
+    <string name="monthly_revenue">Monthly Revenue</string>
+    <string name="home_revenue_placeholder">MZN 0.00</string>
+
+    <string name="action_new_invoice">New Invoice</string>
+    <string name="action_new_invoice_sub">Issue a tax invoice.</string>
+    <string name="action_new_receipt">New Receipt</string>
+    <string name="action_new_receipt_sub">Proof of payment.</string>
+    <string name="action_invoice_receipt">Invoice-Receipt</string>
+    <string name="action_invoice_receipt_sub">Immediate payment.</string>
+    <string name="action_new_quote">New Quote</string>
+    <string name="action_new_quote_sub">Create a quote.</string>
+
+    <string name="home_add">Add</string>
+    <string name="home_quick_expense">New Expense</string>
+    <string name="home_quick_reports">Reports</string>
+    <string name="home_recent_title">Recent</string>
+    <string name="home_view_history">View history</string>
+    <string name="home_recent_empty">No recent documents</string>
+
+    <string name="fab_add_document">New document</string>
+    <string name="documents_empty_title">No documents yet</string>
+    <string name="documents_empty_body">Create your first document by tapping the + button</string>
+    <string name="documents_no_client">No client</string>
+
+    <string name="status_draft">Draft</string>
+    <string name="status_sent">Sent</string>
+    <string name="status_paid">Paid</string>
+    <string name="status_overdue">Overdue</string>
+
+    <string name="screen_under_construction">Under construction</string>
+</resources>

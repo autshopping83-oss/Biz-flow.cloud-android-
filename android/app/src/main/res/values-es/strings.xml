@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Biz-flow</string>
+
+    <string name="nav_home">Inicio</string>
+    <string name="nav_documents">Documentos</string>
+    <string name="nav_finance">Finanzas</string>
+    <string name="nav_more">Más</string>
+
+    <string name="dashboard_title">Panel de Control</string>
+    <string name="dashboard_subtitle">Bienvenido a su oficina digital.</string>
+    <string name="monthly_revenue">Ingresos Mensuales</string>
+    <string name="home_revenue_placeholder">MZN 0,00</string>
+
+    <string name="action_new_invoice">Nueva Factura</string>
+    <string name="action_new_invoice_sub">Emitir factura fiscal.</string>
+    <string name="action_new_receipt">Nuevo Recibo</string>
+    <string name="action_new_receipt_sub">Comprobante.</string>
+    <string name="action_invoice_receipt">Factura-Recibo</string>
+    <string name="action_invoice_receipt_sub">Pago inmediato.</string>
+    <string name="action_new_quote">Nuevo Presupuesto</string>
+    <string name="action_new_quote_sub">Crear cotización.</string>
+
+    <string name="home_add">Agregar</string>
+    <string name="home_quick_expense">Nuevo Gasto</string>
+    <string name="home_quick_reports">Informes</string>
+    <string name="home_recent_title">Recientes</string>
+    <string name="home_view_history">Ver historial</string>
+    <string name="home_recent_empty">Sin documentos recientes</string>
+
+    <string name="fab_add_document">Nuevo documento</string>
+    <string name="documents_empty_title">Sin documentos por ahora</string>
+    <string name="documents_empty_body">Cree su primer documento tocando el botón +</string>
+    <string name="documents_no_client">Sin cliente</string>
+
+    <string name="status_draft">Borrador</string>
+    <string name="status_sent">Enviado</string>
+    <string name="status_paid">Pagado</string>
+    <string name="status_overdue">Vencido</string>
+
+    <string name="screen_under_construction">En construcción</string>
+</resources>
