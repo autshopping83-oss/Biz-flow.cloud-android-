@@ -8,22 +8,46 @@ import kotlinx.coroutines.flow.map
 class CompanySettingsRepository(
     private val dao: CompanySettingsDao,
 ) {
+    fun observe(): Flow<CompanySettingsEntity?> = dao.observe()
+
     fun observeDocumentTemplateId(): Flow<String> =
         dao.observeDocumentTemplateId().map { it ?: CompanySettingsEntity.DEFAULT_TEMPLATE_ID }
+
+    suspend fun getSettings(): CompanySettingsEntity? = dao.get()
 
     suspend fun getDocumentTemplateId(): String =
         dao.get()?.documentTemplateId ?: CompanySettingsEntity.DEFAULT_TEMPLATE_ID
 
     suspend fun setDocumentTemplateId(templateId: String) {
-        val existing = dao.get()
-        if (existing == null) {
-            dao.upsert(defaultSettings(templateId))
-        } else {
-            dao.updateDocumentTemplateId(templateId, System.currentTimeMillis())
+        updateOrCreate { _, now ->
+            dao.updateDocumentTemplateId(templateId, now)
         }
     }
 
-    private fun defaultSettings(templateId: String): CompanySettingsEntity {
+    suspend fun setLogoPath(path: String?) {
+        updateOrCreate { _, now -> dao.updateLogoPath(path, now) }
+    }
+
+    suspend fun setStampPath(path: String?) {
+        updateOrCreate { _, now -> dao.updateStampPath(path, now) }
+    }
+
+    suspend fun setDefaultSignaturePath(path: String?) {
+        updateOrCreate { _, now -> dao.updateDefaultSignaturePath(path, now) }
+    }
+
+    private suspend fun updateOrCreate(update: suspend (CompanySettingsEntity?, Long) -> Unit) {
+        val existing = dao.get()
+        val now = System.currentTimeMillis()
+        if (existing == null) {
+            dao.upsert(defaultSettings(now))
+            update(null, now)
+        } else {
+            update(existing, now)
+        }
+    }
+
+    private fun defaultSettings(now: Long): CompanySettingsEntity {
         return CompanySettingsEntity(
             name = "",
             address = "",
@@ -40,8 +64,7 @@ class CompanySettingsRepository(
             signature = null,
             userPhone = null,
             userEmail = null,
-            updatedAt = System.currentTimeMillis(),
-            documentTemplateId = templateId,
+            updatedAt = now,
         )
     }
 }

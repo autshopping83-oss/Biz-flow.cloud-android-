@@ -23,4 +23,13 @@ interface CompanySettingsDao {
 
     @Query("UPDATE company_settings SET documentTemplateId = :templateId, updatedAt = :now WHERE id = 'default'")
     suspend fun updateDocumentTemplateId(templateId: String, now: Long)
+
+    @Query("UPDATE company_settings SET logoPath = :path, updatedAt = :now WHERE id = 'default'")
+    suspend fun updateLogoPath(path: String?, now: Long)
+
+    @Query("UPDATE company_settings SET stampPath = :path, updatedAt = :now WHERE id = 'default'")
+    suspend fun updateStampPath(path: String?, now: Long)
+
+    @Query("UPDATE company_settings SET defaultSignaturePath = :path, updatedAt = :now WHERE id = 'default'")
+    suspend fun updateDefaultSignaturePath(path: String?, now: Long)
 }

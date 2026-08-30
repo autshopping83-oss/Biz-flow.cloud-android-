@@ -18,10 +18,9 @@ class DocumentRepository(
 
     fun observePendingSyncCount(): Flow<Int> = documentDao.observePendingSyncCount()
 
-    suspend fun nextNumber(type: String): String {
-        val sequence = documentDao.countByType(type) + 1
-        val prefix = DocumentType.prefix(type)
-        return "$prefix-${sequence.toString().padStart(3, '0')}"
+    suspend fun nextNumber(type: DocumentType): String {
+        val sequence = documentDao.countByType(type.code) + 1
+        return "${type.prefix}-${sequence.toString().padStart(3, '0')}"
     }
 
     suspend fun save(document: DocumentEntity, items: List<LineItemEntity>) {

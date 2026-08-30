@@ -21,6 +21,7 @@
 </head>
 <body>
   <div class="page">
+    {{STATUS_SEAL_HTML}}
     <div class="header">
       <div>{{COMPANY_LOGO_HTML}}<strong>{{COMPANY_NAME}}</strong><div>{{COMPANY_DETAILS}}</div></div>
       <div class="doc-title-block" style="text-align: right;">
@@ -43,6 +44,9 @@
         <div style="display:flex; justify-content:space-between;"><span>{{TAX_LABEL}}:</span><span>{{TAX_AMOUNT}}</span></div>
         <div class="grand-total" style="display:flex; justify-content:space-between;"><span>Total:</span><span>{{TOTAL_AMOUNT}}</span></div>
       </div>
+    </div>
+    <div class="signature-row" style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:22px;">
+      <div>{{COMPANY_STAMP_HTML}}{{SIGNATURE_HTML}}<div style="border-top:1px solid #2B3A4A; width:200px; margin-top:34px; padding-top:4px; font-size:9px; color:#555;">Assinatura Autorizada</div></div>
     </div>
     <div class="footer-bar"><div>{{COMPANY_NAME}} • Biz-flow.cloud</div><div>Obrigado pela preferência!</div></div>
   </div>

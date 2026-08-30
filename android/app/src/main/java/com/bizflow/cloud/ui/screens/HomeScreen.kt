@@ -46,7 +46,7 @@ import com.bizflow.cloud.ui.theme.ReceiptEmerald
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    onCreateDocument: (String) -> Unit = {},
+    onCreateDocument: (DocumentType) -> Unit = {},
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
 ) {
     val recentDocuments by viewModel.recentDocuments.collectAsStateWithLifecycle()
@@ -137,7 +137,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun QuickActionsSection(onCreateDocument: (String) -> Unit) {
+private fun QuickActionsSection(onCreateDocument: (DocumentType) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             ActionCard(
@@ -145,8 +145,8 @@ private fun QuickActionsSection(onCreateDocument: (String) -> Unit) {
                 subtitle = stringResource(R.string.action_new_invoice_sub),
                 containerColor = InvoiceBlue,
                 leadingIcon = Icons.Filled.Description,
-                onAdd = { onCreateDocument(DocumentType.INVOICE) },
-                onClick = { onCreateDocument(DocumentType.INVOICE) },
+                onAdd = { onCreateDocument(DocumentType.FATURA) },
+                onClick = { onCreateDocument(DocumentType.FATURA) },
                 modifier = Modifier.weight(1f),
             )
             ActionCard(
@@ -154,8 +154,8 @@ private fun QuickActionsSection(onCreateDocument: (String) -> Unit) {
                 subtitle = stringResource(R.string.action_new_receipt_sub),
                 containerColor = ReceiptEmerald,
                 leadingIcon = Icons.Filled.Paid,
-                onAdd = { onCreateDocument(DocumentType.RECEIPT) },
-                onClick = { onCreateDocument(DocumentType.RECEIPT) },
+                onAdd = { onCreateDocument(DocumentType.RECIBO) },
+                onClick = { onCreateDocument(DocumentType.RECIBO) },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -165,8 +165,8 @@ private fun QuickActionsSection(onCreateDocument: (String) -> Unit) {
                 subtitle = stringResource(R.string.action_invoice_receipt_sub),
                 containerColor = InvoiceReceiptViolet,
                 leadingIcon = Icons.Filled.RequestQuote,
-                onAdd = { onCreateDocument(DocumentType.INVOICE_RECEIPT) },
-                onClick = { onCreateDocument(DocumentType.INVOICE_RECEIPT) },
+                onAdd = { onCreateDocument(DocumentType.FATURA_RECIBO) },
+                onClick = { onCreateDocument(DocumentType.FATURA_RECIBO) },
                 modifier = Modifier.weight(1f),
             )
             ActionCard(
@@ -174,8 +174,8 @@ private fun QuickActionsSection(onCreateDocument: (String) -> Unit) {
                 subtitle = stringResource(R.string.action_new_quote_sub),
                 containerColor = QuoteVioletDark,
                 leadingIcon = Icons.Filled.RequestQuote,
-                onAdd = { onCreateDocument(DocumentType.QUOTE) },
-                onClick = { onCreateDocument(DocumentType.QUOTE) },
+                onAdd = { onCreateDocument(DocumentType.ORCAMENTO) },
+                onClick = { onCreateDocument(DocumentType.ORCAMENTO) },
                 modifier = Modifier.weight(1f),
             )
         }

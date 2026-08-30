@@ -1,17 +1,20 @@
 package com.bizflow.cloud.data.model
 
-object DocumentType {
-    const val INVOICE = "INVOICE"
-    const val INVOICE_RECEIPT = "INVOICE_RECEIPT"
-    const val RECEIPT = "RECEIPT"
-    const val QUOTE = "QUOTE"
+enum class DocumentType(val code: String) {
+    FATURA("INVOICE"),
+    FATURA_RECIBO("INVOICE_RECEIPT"),
+    RECIBO("RECEIPT"),
+    ORCAMENTO("QUOTE");
 
-    val all = listOf(INVOICE, INVOICE_RECEIPT, RECEIPT, QUOTE)
+    val prefix: String
+        get() = when (this) {
+            FATURA -> "FT"
+            FATURA_RECIBO -> "FTR"
+            RECIBO -> "REC"
+            ORCAMENTO -> "COT"
+        }
 
-    fun prefix(type: String): String = when (type) {
-        INVOICE -> "FT"
-        INVOICE_RECEIPT -> "FTR"
-        RECEIPT -> "REC"
-        else -> "COT"
+    companion object {
+        fun fromCode(code: String?): DocumentType = values().firstOrNull { it.code == code } ?: FATURA
     }
 }

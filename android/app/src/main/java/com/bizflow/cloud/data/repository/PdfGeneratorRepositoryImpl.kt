@@ -13,45 +13,67 @@ import android.print.PrintDocumentAdapter
 import android.print.PrintManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.bizflow.cloud.core.util.ImageFiles
 import com.bizflow.cloud.core.util.formatDate
 import com.bizflow.cloud.core.util.formatMoney
+import com.bizflow.cloud.data.local.entity.CompanySettingsEntity
 import com.bizflow.cloud.data.local.entity.DocumentEntity
 import com.bizflow.cloud.data.local.entity.LineItemEntity
+import com.bizflow.cloud.data.model.DocumentStatus
+import com.bizflow.cloud.data.model.DocumentType
+import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-class PdfGeneratorRepository(
+class PdfGeneratorRepositoryImpl(
+    private val applicationContext: Context,
     private val companySettingsRepository: CompanySettingsRepository,
 ) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val printing = AtomicBoolean(false)
     private var activeWebView: WebView? = null
 
-    fun generatePdf(context: Context, document: DocumentEntity, items: List<LineItemEntity>) {
+    suspend fun buildHtml(document: DocumentEntity, items: List<LineItemEntity>): String =
+        withContext(Dispatchers.IO) {
+            val settings = companySettingsRepository.getSettings()
+            val templateId = settings?.documentTemplateId ?: CompanySettingsEntity.DEFAULT_TEMPLATE_ID
+            val template = readTemplate(templateId)
+            buildFromTemplate(template, settings, document, items)
+        }
+
+    suspend fun generatePdf(context: Context, document: DocumentEntity, items: List<LineItemEntity>) {
+        val html = buildHtml(document, items)
+        printHtml(context, html, "Documento_${document.number}")
+    }
+
+    fun printHtml(context: Context, html: String, jobName: String) {
         if (printing.get()) return
-        val templateId = runBlocking { companySettingsRepository.getDocumentTemplateId() }
-        val html = buildHtml(context, templateId, document, items)
         mainHandler.post {
             if (printing.compareAndSet(false, true)) {
-                startPrint(context.applicationContext, html, document)
+                startPrint(context.applicationContext, html, jobName)
             }
         }
     }
 
-    private fun buildHtml(
-        context: Context,
-        templateId: String,
+    private fun readTemplate(templateId: String): String {
+        return applicationContext.assets.open("templates/$templateId.html")
+            .bufferedReader(Charsets.UTF_8)
+            .use { it.readText() }
+    }
+
+    private fun buildFromTemplate(
+        template: String,
+        settings: CompanySettingsEntity?,
         document: DocumentEntity,
         items: List<LineItemEntity>,
     ): String {
-        val raw = context.assets.open("templates/$templateId.html")
-            .bufferedReader(Charsets.UTF_8)
-            .use { it.readText() }
-        return raw
-            .replace("{{COMPANY_LOGO_HTML}}", logoHtml(document.companyLogo))
+        return template
+            .replace("{{COMPANY_LOGO_HTML}}", logoHtml(settings?.logoPath?.takeIf { contentExists(it) }
+                ?: document.companyLogo))
             .replace("{{COMPANY_NAME}}", html(document.companyName ?: ""))
             .replace("{{COMPANY_DETAILS}}", html(companyDetails(document)))
-            .replace("{{DOC_TITLE}}", documentTitle(document.type))
+            .replace("{{DOC_TITLE}}", documentTitle(document.documentType))
             .replace("{{DOC_NUMBER}}", html(document.number))
             .replace("{{DOC_DATE}}", formatDate(document.date))
             .replace("{{CLIENT_NAME}}", html(document.clientName))
@@ -62,8 +84,38 @@ class PdfGeneratorRepository(
             .replace("{{TAX_LABEL}}", "IVA (${(document.taxRate * 100).toInt()}%)")
             .replace("{{TAX_AMOUNT}}", formatMoney(document.taxAmount, document.currency))
             .replace("{{TOTAL_AMOUNT}}", formatMoney(document.total, document.currency))
+            .replace("{{STATUS_SEAL_HTML}}", statusSealHtml(document.status))
+            .replace("{{COMPANY_STAMP_HTML}}", companyStampHtml(settings?.stampPath, document.stampText))
             .replace("{{TERMS_AND_CONDITIONS}}", html(document.stampText ?: ""))
-            .replace("{{SIGNATURE_HTML}}", signatureHtml(document.signatureData))
+            .replace("{{SIGNATURE_HTML}}", signatureHtml(resolveSignature(document, settings)))
+    }
+
+    private fun contentExists(path: String?): Boolean =
+        path != null && File(path).exists()
+
+    private fun resolveSignature(document: DocumentEntity, settings: CompanySettingsEntity?): String? {
+        return document.signaturePath
+            ?: settings?.defaultSignaturePath
+            ?: document.signatureData
+    }
+
+    private fun companyStampHtml(stampPath: String?, stampText: String?): String {
+        if (stampPath != null && contentExists(stampPath)) {
+            return ImageFiles.toDataUrl(stampPath)?.let { dataUrl ->
+                "<img src=\"$dataUrl\" style=\"max-height:52px; max-width:120px; display:inline-block; vertical-align:middle;\">"
+            } ?: ""
+        }
+        return if (stampText.isNullOrBlank()) "" else {
+            "<span style=\"border:2px dashed #999; color:#666; border-radius:8px; padding:4px 10px; " +
+                "font-size:11px; font-weight:700; display:inline-block; vertical-align:middle;\">${html(stampText)}</span>"
+        }
+    }
+
+    private fun statusSealHtml(status: DocumentStatus): String {
+        if (status == DocumentStatus.EMITIDO) return ""
+        return "<div style=\"position:absolute; top:44%; left:50%; transform:translate(-50%,-50%) rotate(-20deg); " +
+            "border:6px solid #C62828; color:#C62828; border-radius:14px; padding:10px 30px; " +
+            "font-size:44px; font-weight:900; letter-spacing:8px; opacity:0.16;\">${status.name}</div>"
     }
 
     private fun companyDetails(document: DocumentEntity): String {
@@ -92,25 +144,25 @@ class PdfGeneratorRepository(
         }
     }
 
-    private fun documentTitle(type: String): String {
+    private fun documentTitle(type: DocumentType): String {
         return when (type) {
-            "FAT" -> "Factura"
-            "FAT-REC" -> "Fatura Recibo"
-            "REC" -> "Recibo"
-            "COT" -> "Cotação"
-            else -> "Documento"
+            DocumentType.FATURA -> "Factura"
+            DocumentType.FATURA_RECIBO -> "Fatura Recibo"
+            DocumentType.RECIBO -> "Recibo"
+            DocumentType.ORCAMENTO -> "Cotação"
         }
     }
 
     private fun logoHtml(logo: String?): String {
         if (logo.isNullOrBlank()) return ""
-        return "<img src=\"$logo\" style=\"max-height:56px; max-width:160px; display:block;\">"
+        val src = if (logo.startsWith("data:")) logo else ImageFiles.toDataUrl(logo) ?: return ""
+        return "<img src=\"$src\" style=\"max-height:56px; max-width:160px; display:block;\">"
     }
 
-    private fun signatureHtml(signatureData: String?): String {
-        if (signatureData.isNullOrBlank()) return ""
-        return "<img src=\"data:image/png;base64,$signatureData\" " +
-            "style=\"max-height:46px; display:block; margin:0 auto;\">"
+    private fun signatureHtml(signature: String?): String {
+        if (signature.isNullOrBlank()) return ""
+        val src = if (signature.startsWith("data:")) signature else ImageFiles.toDataUrl(signature) ?: return ""
+        return "<img src=\"$src\" style=\"max-height:46px; display:block; margin:0 auto;\">"
     }
 
     private fun formatQuantity(quantity: Double): String {
@@ -125,7 +177,7 @@ class PdfGeneratorRepository(
         return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     }
 
-    private fun startPrint(context: Context, html: String, document: DocumentEntity) {
+    private fun startPrint(context: Context, html: String, jobName: String) {
         val webView = WebView(context)
         activeWebView = webView
         webView.setBackgroundColor(Color.TRANSPARENT)
@@ -141,7 +193,6 @@ class PdfGeneratorRepository(
         webView.layout(0, 0, (widthInches * dpi).toInt(), (widthInches * dpi * 4f / 3f).toInt())
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
-                val jobName = "Documento_${document.number}"
                 val inner = webView.createPrintDocumentAdapter(jobName)
                 val adapter = TrackedPrintDocumentAdapter(inner) {
                     webView.stopLoading()
@@ -161,11 +212,22 @@ class PdfGeneratorRepository(
         private val inner: PrintDocumentAdapter,
         private val onFinished: () -> Unit,
     ) : PrintDocumentAdapter() {
-        override fun onLayout(oldAttributes: PrintAttributes?, newAttributes: PrintAttributes?, cancellationSignal: CancellationSignal?, callback: LayoutResultCallback?, extras: Bundle?) {
+        override fun onLayout(
+            oldAttributes: PrintAttributes?,
+            newAttributes: PrintAttributes?,
+            cancellationSignal: CancellationSignal?,
+            callback: LayoutResultCallback?,
+            extras: Bundle?,
+        ) {
             inner.onLayout(oldAttributes, newAttributes, cancellationSignal, callback, extras)
         }
 
-        override fun onWrite(pages: Array<out PageRange>?, destination: ParcelFileDescriptor?, cancellationSignal: CancellationSignal?, callback: WriteResultCallback?) {
+        override fun onWrite(
+            pages: Array<out PageRange>?,
+            destination: ParcelFileDescriptor?,
+            cancellationSignal: CancellationSignal?,
+            callback: WriteResultCallback?,
+        ) {
             inner.onWrite(pages, destination, cancellationSignal, callback)
         }
 

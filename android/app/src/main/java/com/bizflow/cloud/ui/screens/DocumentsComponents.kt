@@ -21,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bizflow.cloud.R
 import com.bizflow.cloud.data.local.entity.DocumentEntity
+import com.bizflow.cloud.data.model.DocumentStatus
+import com.bizflow.cloud.data.model.DocumentType
 
 @Composable
 fun DocumentCard(
@@ -35,7 +37,7 @@ fun DocumentCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TypeBadge(type = document.type)
+                TypeBadge(type = document.documentType)
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -63,7 +65,7 @@ fun DocumentCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
                 )
-                document.status?.let { status ->
+                document.status.let { status ->
                     StatusChip(status = status)
                 }
             }
@@ -72,7 +74,7 @@ fun DocumentCard(
 }
 
 @Composable
-fun TypeBadge(type: String, modifier: Modifier = Modifier) {
+fun TypeBadge(type: DocumentType, modifier: Modifier = Modifier) {
     val style = typeStyle(type)
     Surface(
         shape = MaterialTheme.shapes.small,
@@ -91,7 +93,7 @@ fun TypeBadge(type: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun StatusChip(status: String, modifier: Modifier = Modifier) {
+fun StatusChip(status: DocumentStatus, modifier: Modifier = Modifier) {
     val style = statusStyle(status)
     Surface(
         shape = MaterialTheme.shapes.small,

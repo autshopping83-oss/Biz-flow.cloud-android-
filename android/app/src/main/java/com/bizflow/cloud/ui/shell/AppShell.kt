@@ -21,7 +21,8 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.bizflow.cloud.data.model.DocumentType
 import com.bizflow.cloud.navigation.BottomDestination
-import com.bizflow.cloud.ui.screens.DocumentEditorScreen
+import com.bizflow.cloud.ui.screens.CompanySettingsScreen
+import com.bizflow.cloud.ui.screens.CreateDocumentScreen
 import com.bizflow.cloud.ui.screens.DocumentsScreen
 import com.bizflow.cloud.ui.screens.HomeScreen
 import com.bizflow.cloud.ui.screens.MoreScreen
@@ -44,14 +45,14 @@ fun AppShell() {
             ) {
                 HomeScreen(
                     onCreateDocument = { type ->
-                        navController.navigate("${EditorRoute.EDITOR}/$type")
+                        navController.navigate("${EditorRoute.EDITOR}/${type.code}")
                     },
                 )
             }
             composable(BottomDestination.DOCUMENTS.route) {
                 DocumentsScreen(
                     onAddDocument = {
-                        navController.navigate("${EditorRoute.EDITOR}/${DocumentType.INVOICE}")
+                        navController.navigate("${EditorRoute.EDITOR}/${DocumentType.FATURA.code}")
                     },
                 )
             }
@@ -59,7 +60,11 @@ fun AppShell() {
                 PlaceholderScreen(titleRes = BottomDestination.FINANCE.labelRes)
             }
             composable(BottomDestination.MORE.route) {
-                MoreScreen()
+                MoreScreen(
+                    onOpenCompanySettings = {
+                        navController.navigate(EditorRoute.COMPANY_SETTINGS)
+                    },
+                )
             }
             composable(
                 route = "${EditorRoute.EDITOR}/{documentType}",
@@ -67,7 +72,10 @@ fun AppShell() {
                     navArgument("documentType") { type = NavType.StringType },
                 ),
             ) {
-                DocumentEditorScreen(onClose = { navController.popBackStack() })
+                CreateDocumentScreen(onClose = { navController.popBackStack() })
+            }
+            composable(EditorRoute.COMPANY_SETTINGS) {
+                CompanySettingsScreen(onClose = { navController.popBackStack() })
             }
         }
     }
@@ -75,6 +83,7 @@ fun AppShell() {
 
 private object EditorRoute {
     const val EDITOR = "documentEditor"
+    const val COMPANY_SETTINGS = "companySettings"
 }
 
 @Composable

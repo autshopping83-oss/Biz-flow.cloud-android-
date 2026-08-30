@@ -1,12 +1,15 @@
 package com.bizflow.cloud.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.bizflow.cloud.data.model.DocumentStatus
+import com.bizflow.cloud.data.model.DocumentType
 
 @Entity(tableName = "documents")
 data class DocumentEntity(
     @PrimaryKey val id: String,
-    val type: String,
+    @ColumnInfo(name = "type") val documentType: DocumentType,
     val number: String,
     val date: String,
     val dueDate: String?,
@@ -30,7 +33,8 @@ data class DocumentEntity(
     val paymentMethod: String?,
     val stampText: String?,
     val signatureData: String?,
-    val status: String?,
+    val signaturePath: String? = null,
+    @ColumnInfo(name = "status") val status: DocumentStatus = DocumentStatus.PENDENTE,
     val documentTheme: String?,
     val createdAt: Long,
     val pdfUrl: String?,

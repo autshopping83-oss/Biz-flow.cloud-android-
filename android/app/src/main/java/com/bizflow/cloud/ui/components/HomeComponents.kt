@@ -29,8 +29,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bizflow.cloud.R
 import com.bizflow.cloud.data.local.entity.DocumentEntity
+import com.bizflow.cloud.data.model.DocumentStatus
 import com.bizflow.cloud.ui.screens.formatDate
 import com.bizflow.cloud.ui.screens.formatMoney
+import com.bizflow.cloud.ui.screens.statusLabelRes
 import com.bizflow.cloud.ui.theme.RevenueBadgeBackground
 import com.bizflow.cloud.ui.theme.RevenueBadgeText
 
@@ -198,7 +200,7 @@ fun RecentDocumentRow(
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                document.status?.let { status ->
+                document.status.let { status ->
                     StatusPill(status = status)
                 }
             }
@@ -207,24 +209,19 @@ fun RecentDocumentRow(
 }
 
 @Composable
-private fun StatusPill(status: String) {
-    val display = when (status) {
-        "PAID" -> R.string.status_paid
-        "OVERDUE" -> R.string.status_overdue
-        "SENT" -> R.string.status_sent
-        else -> R.string.status_draft
-    }
+private fun StatusPill(status: DocumentStatus) {
+    val display = statusLabelRes(status)
     val color = when (status) {
-        "PAID" -> RevenueBadgeText
-        "OVERDUE" -> MaterialTheme.colorScheme.error
-        "SENT" -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
+        DocumentStatus.PAGO -> RevenueBadgeText
+        DocumentStatus.ANULADO -> MaterialTheme.colorScheme.error
+        DocumentStatus.EMITIDO -> MaterialTheme.colorScheme.primary
+        DocumentStatus.PENDENTE -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     val background = when (status) {
-        "PAID" -> RevenueBadgeBackground
-        "OVERDUE" -> MaterialTheme.colorScheme.errorContainer
-        "SENT" -> MaterialTheme.colorScheme.primaryContainer
-        else -> MaterialTheme.colorScheme.surfaceContainerHighest
+        DocumentStatus.PAGO -> RevenueBadgeBackground
+        DocumentStatus.ANULADO -> MaterialTheme.colorScheme.errorContainer
+        DocumentStatus.EMITIDO -> MaterialTheme.colorScheme.primaryContainer
+        DocumentStatus.PENDENTE -> MaterialTheme.colorScheme.surfaceContainerHighest
     }
     Box(
         modifier = Modifier

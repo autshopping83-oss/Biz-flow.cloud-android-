@@ -1,5 +1,6 @@
 package com.bizflow.cloud.ui.screens
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +32,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bizflow.cloud.R
 import com.bizflow.cloud.data.local.model.DocumentWithItems
+import com.bizflow.cloud.data.model.DocumentStatus
+import com.bizflow.cloud.data.model.DocumentType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,32 +135,32 @@ fun formatDate(date: String): String = com.bizflow.cloud.core.util.formatDate(da
 data class TypeStyle(val label: String, val container: Color)
 
 @Composable
-fun typeStyle(type: String): TypeStyle {
+fun typeStyle(type: DocumentType): TypeStyle {
     val container = when (type) {
-        "INVOICE" -> MaterialTheme.colorScheme.primaryContainer
-        "INVOICE_RECEIPT" -> MaterialTheme.colorScheme.secondaryContainer
-        "QUOTE" -> MaterialTheme.colorScheme.tertiaryContainer
-        "RECEIPT" -> MaterialTheme.colorScheme.tertiaryContainer
-        else -> MaterialTheme.colorScheme.surfaceContainerHighest
+        DocumentType.FATURA -> MaterialTheme.colorScheme.primaryContainer
+        DocumentType.FATURA_RECIBO -> MaterialTheme.colorScheme.secondaryContainer
+        DocumentType.ORCAMENTO -> MaterialTheme.colorScheme.tertiaryContainer
+        DocumentType.RECIBO -> MaterialTheme.colorScheme.tertiaryContainer
     }
-    val label = when (type) {
-        "INVOICE" -> "FAT"
-        "INVOICE_RECEIPT" -> "FAT-REC"
-        "QUOTE" -> "COT"
-        "RECEIPT" -> "REC"
-        else -> type.take(3).uppercase()
-    }
-    return TypeStyle(label, container)
+    return TypeStyle(type.prefix, container)
 }
 
 data class StatusStyle(val labelRes: Int, val container: Color)
 
+@StringRes
+fun statusLabelRes(status: DocumentStatus): Int = when (status) {
+    DocumentStatus.PAGO -> R.string.status_paid
+    DocumentStatus.EMITIDO -> R.string.status_issued
+    DocumentStatus.PENDENTE -> R.string.status_pending
+    DocumentStatus.ANULADO -> R.string.status_cancelled
+}
+
 @Composable
-fun statusStyle(status: String): StatusStyle {
+fun statusStyle(status: DocumentStatus): StatusStyle {
     return when (status) {
-        "PAID" -> StatusStyle(R.string.status_paid, MaterialTheme.colorScheme.primaryContainer)
-        "OVERDUE" -> StatusStyle(R.string.status_overdue, MaterialTheme.colorScheme.errorContainer)
-        "SENT" -> StatusStyle(R.string.status_sent, MaterialTheme.colorScheme.secondaryContainer)
-        else -> StatusStyle(R.string.status_draft, MaterialTheme.colorScheme.surfaceContainerHighest)
+        DocumentStatus.PAGO -> StatusStyle(R.string.status_paid, MaterialTheme.colorScheme.primaryContainer)
+        DocumentStatus.EMITIDO -> StatusStyle(R.string.status_issued, MaterialTheme.colorScheme.secondaryContainer)
+        DocumentStatus.PENDENTE -> StatusStyle(R.string.status_pending, MaterialTheme.colorScheme.surfaceContainerHighest)
+        DocumentStatus.ANULADO -> StatusStyle(R.string.status_cancelled, MaterialTheme.colorScheme.errorContainer)
     }
 }

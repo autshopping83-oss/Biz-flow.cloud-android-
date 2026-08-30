@@ -38,6 +38,13 @@ import java.util.Locale
 import java.util.TimeZone
 import kotlin.math.max
 
+data class EditorItemUi(
+    val id: String,
+    val description: String,
+    val quantity: String,
+    val unitPrice: String,
+)
+
 @Composable
 fun SectionHeader(
     @StringRes titleRes: Int,
@@ -230,11 +237,11 @@ fun computeTotals(
 }
 
 @StringRes
-fun documentTypeLabelRes(type: String): Int = when (type) {
-    DocumentType.INVOICE_RECEIPT -> R.string.document_type_invoice_receipt
-    DocumentType.RECEIPT -> R.string.document_type_receipt
-    DocumentType.QUOTE -> R.string.document_type_quote
-    else -> R.string.document_type_invoice
+fun documentTypeLabelRes(type: DocumentType): Int = when (type) {
+    DocumentType.FATURA -> R.string.document_type_invoice
+    DocumentType.FATURA_RECIBO -> R.string.document_type_invoice_receipt
+    DocumentType.RECIBO -> R.string.document_type_receipt
+    DocumentType.ORCAMENTO -> R.string.document_type_quote
 }
 
 internal fun formatPickerDate(utcMillis: Long): String {

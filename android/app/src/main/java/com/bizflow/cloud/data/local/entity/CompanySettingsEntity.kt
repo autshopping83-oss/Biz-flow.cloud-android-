@@ -23,6 +23,9 @@ data class CompanySettingsEntity(
     val userEmail: String?,
     val updatedAt: Long,
     val documentTemplateId: String = DEFAULT_TEMPLATE_ID,
+    val logoPath: String? = null,
+    val stampPath: String? = null,
+    val defaultSignaturePath: String? = null,
 ) {
     companion object {
         const val DEFAULT_ID = "default"

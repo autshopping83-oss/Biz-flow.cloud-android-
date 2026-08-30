@@ -2,6 +2,7 @@ package com.bizflow.cloud.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.bizflow.cloud.data.local.dao.ClientDao
@@ -29,9 +30,10 @@ import com.bizflow.cloud.data.local.entity.TransactionEntity
         CompanySettingsEntity::class,
         SyncQueueEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun documentDao(): DocumentDao
     abstract fun lineItemDao(): LineItemDao
@@ -48,6 +50,15 @@ abstract class AppDatabase : RoomDatabase() {
                     "ALTER TABLE company_settings ADD COLUMN documentTemplateId " +
                         "TEXT NOT NULL DEFAULT '${CompanySettingsEntity.DEFAULT_TEMPLATE_ID}'"
                 )
+            }
+        }
+
+        val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE documents ADD COLUMN signaturePath TEXT")
+                db.execSQL("ALTER TABLE company_settings ADD COLUMN logoPath TEXT")
+                db.execSQL("ALTER TABLE company_settings ADD COLUMN stampPath TEXT")
+                db.execSQL("ALTER TABLE company_settings ADD COLUMN defaultSignaturePath TEXT")
             }
         }
     }

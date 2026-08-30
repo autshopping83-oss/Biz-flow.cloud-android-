@@ -44,7 +44,7 @@ val pdfTemplateOptions = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DocumentTemplatesBottomSheet(
+fun DocumentTemplateSelectorBottomSheet(
     selectedTemplateId: String,
     onTemplateSelected: (String) -> Unit,
     onDismiss: () -> Unit,
