@@ -39,4 +39,7 @@
     <string name="status_overdue">En retard</string>
 
     <string name="screen_under_construction">En construction</string>
+
+    <string name="more_settings">Paramètres</string>
+    <string name="settings_language">Langue</string>
 </resources>

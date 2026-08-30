@@ -20,6 +20,7 @@ import androidx.navigation.navDeepLink
 import com.bizflow.cloud.navigation.BottomDestination
 import com.bizflow.cloud.ui.screens.DocumentsScreen
 import com.bizflow.cloud.ui.screens.HomeScreen
+import com.bizflow.cloud.ui.screens.MoreScreen
 import com.bizflow.cloud.ui.screens.PlaceholderScreen
 
 @Composable
@@ -46,7 +47,7 @@ fun AppShell() {
                 PlaceholderScreen(titleRes = BottomDestination.FINANCE.labelRes)
             }
             composable(BottomDestination.MORE.route) {
-                PlaceholderScreen(titleRes = BottomDestination.MORE.labelRes)
+                MoreScreen()
             }
         }
     }
