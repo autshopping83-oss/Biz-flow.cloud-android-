@@ -95,6 +95,7 @@ fun ClientDropdown(
                 DropdownMenuItem(
                     text = { Text(text = stringResource(R.string.editor_no_clients)) },
                     enabled = false,
+                    onClick = {},
                 )
             }
             filtered.forEach { client ->
@@ -145,17 +146,23 @@ fun PaymentSelector(
     onSelect: (String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val cash = stringResource(R.string.payment_cash)
+    val card = stringResource(R.string.payment_card)
+    val transfer = stringResource(R.string.payment_transfer)
+    val mpesa = stringResource(R.string.payment_mpesa)
+    val emola = stringResource(R.string.payment_emola)
+    val none = stringResource(R.string.editor_payment_none)
     val options = listOf(
-        stringResource(R.string.payment_cash) to { onSelect(stringResource(R.string.payment_cash)) },
-        stringResource(R.string.payment_card) to { onSelect(stringResource(R.string.payment_card)) },
-        stringResource(R.string.payment_transfer) to { onSelect(stringResource(R.string.payment_transfer)) },
-        stringResource(R.string.payment_mpesa) to { onSelect(stringResource(R.string.payment_mpesa)) },
-        stringResource(R.string.payment_emola) to { onSelect(stringResource(R.string.payment_emola)) },
-        stringResource(R.string.editor_payment_none) to { onSelect(null) },
+        cash to { onSelect(cash) },
+        card to { onSelect(card) },
+        transfer to { onSelect(transfer) },
+        mpesa to { onSelect(mpesa) },
+        emola to { onSelect(emola) },
+        none to { onSelect(null) },
     )
     DropdownSelector(
         labelRes = R.string.editor_payment,
-        value = selected ?: stringResource(R.string.editor_payment_none),
+        value = selected ?: none,
         options = options,
         modifier = modifier,
     )

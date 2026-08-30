@@ -36,6 +36,3 @@ class BizFlowApplication : Application() {
         )
     }
 }
-
-val Context.bizFlowDatabase: AppDatabase
-    get() = (applicationContext as BizFlowApplication).database
