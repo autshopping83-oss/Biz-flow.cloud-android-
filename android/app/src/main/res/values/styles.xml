@@ -2,13 +2,13 @@
 <resources>
 
     <!-- Tema base (Compose assume o tema visual no app) -->
-    <style name="Theme.BizFlow" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.BizFlow" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowBackground">@android:color/white</item>
     </style>
 
     <!-- Lavagem do app: splash > Compose -->
-    <style name="Theme.BizFlow.Starting" parent="Theme.SplashScreen">
+    <style name="Theme.BizFlow.Starting" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
         <item name="postSplashScreenTheme">@style/Theme.BizFlow</item>
