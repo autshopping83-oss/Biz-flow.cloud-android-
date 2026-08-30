@@ -3,7 +3,10 @@
     <string name="app_name">Biz-flow.cloud</string>
     <string name="tagline_native">Android nativo</string>
     <string name="screen_under_construction">Em construção</string>
+    <string name="tab_home">Início</string>
     <string name="tab_documents">Documentos</string>
     <string name="tab_finance">Finanças</string>
     <string name="tab_more">Mais</string>
+    <string name="fab_add_document">Novo documento</string>
+    <string name="documents_empty">Nenhum documento por agora</string>
 </resources>

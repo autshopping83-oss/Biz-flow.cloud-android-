@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.bizflow.cloud.navigation.RootNavHost
+import com.bizflow.cloud.ui.shell.AppShell
 import com.bizflow.cloud.ui.theme.BizFlowTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BizFlowTheme {
-                RootNavHost()
+                AppShell()
             }
         }
     }
