@@ -13,6 +13,7 @@ import android.print.PrintDocumentAdapter
 import android.print.PrintManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.bizflow.cloud.core.util.formatDate
 import com.bizflow.cloud.core.util.formatMoney
 import com.bizflow.cloud.data.local.entity.DocumentEntity
 import com.bizflow.cloud.data.local.entity.LineItemEntity
@@ -74,12 +75,12 @@ class PdfGeneratorRepository(
     }
 
     private fun clientDetails(document: DocumentEntity): String {
-        return listOf(
-            document.clientLocation,
-            "NUIT: ${document.clientNuit}",
-            document.clientContact,
-            document.clientWhatsApp,
-        ).filter { it.isNotBlank() }.joinToString(" \u2022 ")
+        return buildList {
+            document.clientLocation.takeIf { it.isNotBlank() }?.let { add(it) }
+            document.clientNuit.takeIf { it.isNotBlank() }?.let { add("NUIT: $it") }
+            document.clientContact.takeIf { it.isNotBlank() }?.let { add(it) }
+            document.clientWhatsApp?.takeIf { it.isNotBlank() }?.let { add(it) }
+        }.joinToString(" \u2022 ")
     }
 
     private fun itemsTableRows(items: List<LineItemEntity>, currency: String): String {
@@ -145,7 +146,6 @@ class PdfGeneratorRepository(
                 val adapter = TrackedPrintDocumentAdapter(inner) {
                     webView.stopLoading()
                     webView.webChromeClient = null
-                    webView.webViewClient = null
                     webView.destroy()
                     activeWebView = null
                     printing.set(false)
