@@ -8,5 +8,15 @@
     <string name="tab_finance">Finanças</string>
     <string name="tab_more">Mais</string>
     <string name="fab_add_document">Novo documento</string>
-    <string name="documents_empty">Nenhum documento por agora</string>
+    <string name="documents_empty_title">Nenhum documento por agora</string>
+    <string name="documents_empty_body">Crie o seu primeiro documento clicando no botão +</string>
+    <string name="document_type_receipt">Recibo</string>
+    <string name="document_type_invoice">Factura</string>
+    <string name="document_type_invoice_receipt">Factura-Recibo</string>
+    <string name="document_type_quote">Cotação</string>
+    <string name="status_draft">Rascunho</string>
+    <string name="status_sent">Enviado</string>
+    <string name="status_paid">Pago</string>
+    <string name="status_overdue">Vencido</string>
+    <string name="documents_no_client">Sem cliente</string>
 </resources>
