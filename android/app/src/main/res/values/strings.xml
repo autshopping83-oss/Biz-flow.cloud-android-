@@ -1,7 +1,9 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Biz-flow.cloud</string>
-    <string name="title_activity_main">Biz-flow.cloud</string>
-    <string name="package_name">biz.flow.cloud</string>
-    <string name="custom_url_scheme">biz.flow.cloud</string>
+    <string name="tagline_native">Android nativo</string>
+    <string name="screen_under_construction">Em construção</string>
+    <string name="tab_documents">Documentos</string>
+    <string name="tab_finance">Finanças</string>
+    <string name="tab_more">Mais</string>
 </resources>
