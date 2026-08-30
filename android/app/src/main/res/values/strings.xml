@@ -19,4 +19,23 @@
     <string name="status_paid">Pago</string>
     <string name="status_overdue">Vencido</string>
     <string name="documents_no_client">Sem cliente</string>
+
+    <string name="home_title">Painel de Controle</string>
+    <string name="home_subtitle">Bem-vindo ao seu escritório digital.</string>
+    <string name="home_monthly_revenue">Receita Mensal</string>
+    <string name="home_action_invoice">Nova Fatura</string>
+    <string name="home_action_invoice_sub">Emitir fatura fiscal.</string>
+    <string name="home_action_receipt">Novo Recibo</string>
+    <string name="home_action_receipt_sub">Comprovativo.</string>
+    <string name="home_action_invoice_receipt">Fatura-Recibo</string>
+    <string name="home_action_invoice_receipt_sub">Pagamento imediato.</string>
+    <string name="home_action_quote">Novo Orçamento</string>
+    <string name="home_action_quote_sub">Criar cotação.</string>
+    <string name="home_add">Adicionar</string>
+    <string name="home_quick_expense">Nova Despesa</string>
+    <string name="home_quick_reports">Relatórios</string>
+    <string name="home_recent_title">Recentes</string>
+    <string name="home_view_history">Ver histórico</string>
+    <string name="home_recent_empty">Nenhum documento recente</string>
+    <string name="home_revenue_placeholder">MZN 0,00</string>
 </resources>
