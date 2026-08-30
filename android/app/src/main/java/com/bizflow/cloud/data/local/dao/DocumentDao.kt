@@ -34,4 +34,7 @@ interface DocumentDao {
 
     @Query("SELECT COUNT(*) FROM documents WHERE deletedAt IS NULL AND synced = 0")
     fun observePendingSyncCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM documents WHERE deletedAt IS NULL AND type = :type")
+    suspend fun countByType(type: String): Int
 }

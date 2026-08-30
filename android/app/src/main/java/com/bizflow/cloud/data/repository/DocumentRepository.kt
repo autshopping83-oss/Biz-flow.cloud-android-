@@ -5,6 +5,7 @@ import com.bizflow.cloud.data.local.dao.LineItemDao
 import com.bizflow.cloud.data.local.entity.DocumentEntity
 import com.bizflow.cloud.data.local.entity.LineItemEntity
 import com.bizflow.cloud.data.local.model.DocumentWithItems
+import com.bizflow.cloud.data.model.DocumentType
 import kotlinx.coroutines.flow.Flow
 
 class DocumentRepository(
@@ -16,6 +17,12 @@ class DocumentRepository(
     fun observeById(id: String): Flow<DocumentWithItems?> = documentDao.observeById(id)
 
     fun observePendingSyncCount(): Flow<Int> = documentDao.observePendingSyncCount()
+
+    suspend fun nextNumber(type: String): String {
+        val sequence = documentDao.countByType(type) + 1
+        val prefix = DocumentType.prefix(type)
+        return "$prefix-${sequence.toString().padStart(3, '0')}"
+    }
 
     suspend fun save(document: DocumentEntity, items: List<LineItemEntity>) {
         lineItemDao.deleteByDocument(document.id)

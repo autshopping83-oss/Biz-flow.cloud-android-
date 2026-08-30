@@ -17,4 +17,10 @@ interface CompanySettingsDao {
 
     @Query("SELECT * FROM company_settings WHERE id = 'default'")
     suspend fun get(): CompanySettingsEntity?
+
+    @Query("SELECT documentTemplateId FROM company_settings WHERE id = 'default'")
+    fun observeDocumentTemplateId(): Flow<String?>
+
+    @Query("UPDATE company_settings SET documentTemplateId = :templateId, updatedAt = :now WHERE id = 'default'")
+    suspend fun updateDocumentTemplateId(templateId: String, now: Long)
 }

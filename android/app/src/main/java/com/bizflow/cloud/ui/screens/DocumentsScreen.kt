@@ -31,14 +31,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bizflow.cloud.R
 import com.bizflow.cloud.data.local.model.DocumentWithItems
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DocumentsScreen(
     modifier: Modifier = Modifier,
+    onAddDocument: () -> Unit = {},
     viewModel: DocumentsViewModel = viewModel(factory = DocumentsViewModel.Factory),
 ) {
     val documents by viewModel.documents.collectAsStateWithLifecycle()
@@ -55,7 +53,7 @@ fun DocumentsScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { /* Fase 6: criar novo documento */ }) {
+            FloatingActionButton(onClick = onAddDocument) {
                 Icon(
                     imageVector = Icons.Filled.Add,
                     contentDescription = stringResource(R.string.fab_add_document),
@@ -127,27 +125,9 @@ private fun DocumentList(
     }
 }
 
-fun formatMoney(amount: Double, currency: String): String {
-    val formatted = String.format(Locale.US, "%,.2f", amount).replace(',', ' ')
-    return "$formatted $currency"
-}
+fun formatMoney(amount: Double, currency: String): String = com.bizflow.cloud.core.util.formatMoney(amount, currency)
 
-fun formatDate(date: String): String {
-    return try {
-        val parsed = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-            .apply { timeZone = TimeZone.getTimeZone("UTC") }
-            .parse(date)
-        if (parsed == null) {
-            date
-        } else {
-            SimpleDateFormat("dd/MM/yyyy", Locale.US)
-                .apply { timeZone = TimeZone.getTimeZone("UTC") }
-                .format(parsed)
-        }
-    } catch (_: Exception) {
-        date
-    }
-}
+fun formatDate(date: String): String = com.bizflow.cloud.core.util.formatDate(date)
 
 data class TypeStyle(val label: String, val container: Color)
 

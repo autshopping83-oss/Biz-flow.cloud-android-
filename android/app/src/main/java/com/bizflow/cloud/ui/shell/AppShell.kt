@@ -12,12 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.bizflow.cloud.data.model.DocumentType
 import com.bizflow.cloud.navigation.BottomDestination
+import com.bizflow.cloud.ui.screens.DocumentEditorScreen
 import com.bizflow.cloud.ui.screens.DocumentsScreen
 import com.bizflow.cloud.ui.screens.HomeScreen
 import com.bizflow.cloud.ui.screens.MoreScreen
@@ -38,10 +42,18 @@ fun AppShell() {
                 route = BottomDestination.HOME.route,
                 deepLinks = listOf(navDeepLink { uriPattern = "bizflow://auth" }),
             ) {
-                HomeScreen()
+                HomeScreen(
+                    onCreateDocument = { type ->
+                        navController.navigate("${EditorRoute.EDITOR}/$type")
+                    },
+                )
             }
             composable(BottomDestination.DOCUMENTS.route) {
-                DocumentsScreen()
+                DocumentsScreen(
+                    onAddDocument = {
+                        navController.navigate("${EditorRoute.EDITOR}/${DocumentType.INVOICE}")
+                    },
+                )
             }
             composable(BottomDestination.FINANCE.route) {
                 PlaceholderScreen(titleRes = BottomDestination.FINANCE.labelRes)
@@ -49,8 +61,20 @@ fun AppShell() {
             composable(BottomDestination.MORE.route) {
                 MoreScreen()
             }
+            composable(
+                route = "${EditorRoute.EDITOR}/{documentType}",
+                arguments = listOf(
+                    navArgument("documentType") { type = NavType.StringType },
+                ),
+            ) {
+                DocumentEditorScreen(onClose = { navController.popBackStack() })
+            }
         }
     }
+}
+
+private object EditorRoute {
+    const val EDITOR = "documentEditor"
 }
 
 @Composable

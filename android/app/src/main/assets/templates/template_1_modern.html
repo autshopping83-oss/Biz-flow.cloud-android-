@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page { size: A4; margin: 0; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; color: #333; font-size: 12px; }
+    .page { padding: 30px; position: relative; min-height: 297mm; }
+    .header-bar { background: #1E252B; color: #fff; padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 6px solid #8CBA22; margin: -30px -30px 30px -30px; }
+    .brand-title { font-size: 22px; font-weight: bold; color: #fff; }
+    .doc-type h1 { font-size: 26px; margin: 0; color: #8CBA22; text-transform: uppercase; }
+    .info-grid { display: flex; justify-content: space-between; margin-bottom: 25px; gap: 20px; }
+    .info-box { flex: 1; background: #F8F9FA; padding: 12px 15px; border-left: 3px solid #8CBA22; }
+    table.items-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+    table.items-table th { background: #8CBA22; color: #fff; text-align: left; padding: 10px; font-size: 11px; }
+    table.items-table td { padding: 10px; border-bottom: 1px solid #EAEAEA; }
+    .text-right { text-align: right; }
+    .summary-section { display: flex; justify-content: space-between; page-break-inside: avoid; }
+    .totals-box { width: 40%; }
+    .totals-row.final { background: #8CBA22; color: #fff; font-size: 15px; font-weight: bold; padding: 10px; border-radius: 4px; }
+    .footer { position: absolute; bottom: 30px; left: 30px; right: 30px; border-top: 1px solid #EAEAEA; padding-top: 15px; display: flex; justify-content: space-between; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header-bar">
+      <div>
+        {{COMPANY_LOGO_HTML}}
+        <div class="brand-title">{{COMPANY_NAME}}</div>
+        <div>{{COMPANY_DETAILS}}</div>
+      </div>
+      <div class="doc-type" style="text-align: right;">
+        <h1>{{DOC_TITLE}}</h1>
+        <div>Nº: <strong>{{DOC_NUMBER}}</strong></div>
+        <div>Data: <strong>{{DOC_DATE}}</strong></div>
+      </div>
+    </div>
+    <div class="info-grid">
+      <div class="info-box">
+        <div style="color:#8CBA22; font-weight:bold;">CLIENTE:</div>
+        <strong>{{CLIENT_NAME}}</strong>
+        <div>{{CLIENT_DETAILS}}</div>
+      </div>
+      <div class="info-box">
+        <div style="color:#8CBA22; font-weight:bold;">PAGAMENTO:</div>
+        <div>{{PAYMENT_METHOD_INFO}}</div>
+      </div>
+    </div>
+    <table class="items-table">
+      <thead><tr><th>Descrição</th><th class="text-right">Preço Un.</th><th class="text-right">Qtd</th><th class="text-right">Total</th></tr></thead>
+      <tbody>{{ITEMS_TABLE_ROWS}}</tbody>
+    </table>
+    <div class="summary-section">
+      <div style="width: 55%;"><strong>Observações:</strong><p>{{TERMS_AND_CONDITIONS}}</p></div>
+      <div class="totals-box">
+        <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>{{SUBTOTAL}}</span></div>
+        <div style="display:flex; justify-content:space-between;"><span>{{TAX_LABEL}}:</span><span>{{TAX_AMOUNT}}</span></div>
+        <div class="totals-row final" style="display:flex; justify-content:space-between;"><span>Total:</span><span>{{TOTAL_AMOUNT}}</span></div>
+      </div>
+    </div>
+    <div class="footer">
+      <div style="font-size: 9px; color: #777;">Processado por Biz-flow.cloud</div>
+      <div style="text-align: center;">{{SIGNATURE_HTML}}<div style="border-top:1px solid #333; margin-top:30px;">Assinatura Autorizada</div></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -22,8 +22,10 @@ data class CompanySettingsEntity(
     val userPhone: String?,
     val userEmail: String?,
     val updatedAt: Long,
+    val documentTemplateId: String = DEFAULT_TEMPLATE_ID,
 ) {
     companion object {
         const val DEFAULT_ID = "default"
+        const val DEFAULT_TEMPLATE_ID = "template_1_modern"
     }
 }

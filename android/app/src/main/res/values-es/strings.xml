@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="editor_total">Total</string>
+    <string name="editor_save">Guardar</string>
+    <string name="editor_cancel">Cancelar</string>
+    <string name="nav_back">Volver</string>
+    <string name="more_company_settings">Configuración de la Empresa</string>
+    <string name="more_pdf_template">Modelos de PDF</string>
+    <string name="pdf_template_sheet_title">Modelos de Documentos PDF</string>
+    <string name="template_1_modern_name">Verde Moderno</string>
+    <string name="template_2_classic_name">Azul Clásico</string>
+    <string name="template_3_vibrant_name">Naranja Vibrante</string>
     <string name="app_name">Biz-flow</string>
-
     <string name="nav_home">Inicio</string>
     <string name="nav_documents">Documentos</string>
     <string name="nav_finance">Finanzas</string>
     <string name="nav_more">Más</string>
-
     <string name="dashboard_title">Panel de Control</string>
     <string name="dashboard_subtitle">Bienvenido a su oficina digital.</string>
     <string name="monthly_revenue">Ingresos Mensuales</string>
     <string name="home_revenue_placeholder">MZN 0,00</string>
-
     <string name="action_new_invoice">Nueva Factura</string>
     <string name="action_new_invoice_sub">Emitir factura fiscal.</string>
     <string name="action_new_receipt">Nuevo Recibo</string>
@@ -20,26 +27,39 @@
     <string name="action_invoice_receipt_sub">Pago inmediato.</string>
     <string name="action_new_quote">Nuevo Presupuesto</string>
     <string name="action_new_quote_sub">Crear cotización.</string>
-
     <string name="home_add">Agregar</string>
     <string name="home_quick_expense">Nuevo Gasto</string>
     <string name="home_quick_reports">Informes</string>
     <string name="home_recent_title">Recientes</string>
     <string name="home_view_history">Ver historial</string>
     <string name="home_recent_empty">Sin documentos recientes</string>
-
     <string name="fab_add_document">Nuevo documento</string>
     <string name="documents_empty_title">Sin documentos por ahora</string>
     <string name="documents_empty_body">Cree su primer documento tocando el botón +</string>
     <string name="documents_no_client">Sin cliente</string>
-
     <string name="status_draft">Borrador</string>
     <string name="status_sent">Enviado</string>
     <string name="status_paid">Pagado</string>
     <string name="status_overdue">Vencido</string>
-
     <string name="screen_under_construction">En construcción</string>
-
     <string name="more_settings">Definiciones</string>
     <string name="settings_language">Idioma</string>
+    <string name="document_type_invoice">Factura</string>
+    <string name="document_type_invoice_receipt">Factura-Recibo</string>
+    <string name="document_type_receipt">Recibo</string>
+    <string name="document_type_quote">Presupuesto</string>
+    <string name="editor_client_name">Nombre del cliente</string>
+    <string name="editor_client_contact">Contacto</string>
+    <string name="editor_client_location">Ubicación</string>
+    <string name="editor_client_nuit">NUIT</string>
+    <string name="editor_date">Fecha</string>
+    <string name="editor_items">Artículos / Servicios</string>
+    <string name="editor_add_item">Agregar artículo</string>
+    <string name="editor_no_items">Sin artículos agregados</string>
+    <string name="editor_item_description">Descripción</string>
+    <string name="editor_item_quantity">Cantidad</string>
+    <string name="editor_item_price">Precio unitario</string>
+    <string name="editor_discount">Descuento (%)</string>
+    <string name="editor_subtotal">Subtotal</string>
+    <string name="editor_iva">IVA (16%)</string>
 </resources>

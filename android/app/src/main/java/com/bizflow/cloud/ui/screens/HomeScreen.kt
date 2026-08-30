@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bizflow.cloud.R
+import com.bizflow.cloud.data.model.DocumentType
 import com.bizflow.cloud.ui.components.ActionCard
 import com.bizflow.cloud.ui.components.QuickAccessChip
 import com.bizflow.cloud.ui.components.RecentDocumentRow
@@ -45,6 +46,7 @@ import com.bizflow.cloud.ui.theme.ReceiptEmerald
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
+    onCreateDocument: (String) -> Unit = {},
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
 ) {
     val recentDocuments by viewModel.recentDocuments.collectAsStateWithLifecycle()
@@ -90,7 +92,7 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
-                QuickActionsSection()
+                QuickActionsSection(onCreateDocument = onCreateDocument)
             }
             item {
                 QuickAccessSection()
@@ -135,7 +137,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun QuickActionsSection() {
+private fun QuickActionsSection(onCreateDocument: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             ActionCard(
@@ -143,8 +145,8 @@ private fun QuickActionsSection() {
                 subtitle = stringResource(R.string.action_new_invoice_sub),
                 containerColor = InvoiceBlue,
                 leadingIcon = Icons.Filled.Description,
-                onAdd = { /* Fase 6: nova fatura */ },
-                onClick = { /* Fase 6: nova fatura */ },
+                onAdd = { onCreateDocument(DocumentType.INVOICE) },
+                onClick = { onCreateDocument(DocumentType.INVOICE) },
                 modifier = Modifier.weight(1f),
             )
             ActionCard(
@@ -152,8 +154,8 @@ private fun QuickActionsSection() {
                 subtitle = stringResource(R.string.action_new_receipt_sub),
                 containerColor = ReceiptEmerald,
                 leadingIcon = Icons.Filled.Paid,
-                onAdd = { /* Fase 6: novo recibo */ },
-                onClick = { /* Fase 6: novo recibo */ },
+                onAdd = { onCreateDocument(DocumentType.RECEIPT) },
+                onClick = { onCreateDocument(DocumentType.RECEIPT) },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -163,8 +165,8 @@ private fun QuickActionsSection() {
                 subtitle = stringResource(R.string.action_invoice_receipt_sub),
                 containerColor = InvoiceReceiptViolet,
                 leadingIcon = Icons.Filled.RequestQuote,
-                onAdd = { /* Fase 6: nova factura-recibo */ },
-                onClick = { /* Fase 6: nova factura-recibo */ },
+                onAdd = { onCreateDocument(DocumentType.INVOICE_RECEIPT) },
+                onClick = { onCreateDocument(DocumentType.INVOICE_RECEIPT) },
                 modifier = Modifier.weight(1f),
             )
             ActionCard(
@@ -172,8 +174,8 @@ private fun QuickActionsSection() {
                 subtitle = stringResource(R.string.action_new_quote_sub),
                 containerColor = QuoteVioletDark,
                 leadingIcon = Icons.Filled.RequestQuote,
-                onAdd = { /* Fase 6: novo orcamento */ },
-                onClick = { /* Fase 6: novo orcamento */ },
+                onAdd = { onCreateDocument(DocumentType.QUOTE) },
+                onClick = { onCreateDocument(DocumentType.QUOTE) },
                 modifier = Modifier.weight(1f),
             )
         }

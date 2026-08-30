@@ -3,12 +3,14 @@ package com.bizflow.cloud.ui.screens
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -28,8 +30,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bizflow.cloud.R
 import com.bizflow.cloud.core.util.LocaleHelper
+import com.bizflow.cloud.ui.more.MoreViewModel
+import com.bizflow.cloud.ui.more.components.DocumentTemplatesBottomSheet
+import com.bizflow.cloud.ui.more.components.pdfTemplateOptions
 import java.util.Locale
 
 private val supportedLanguageTags = listOf(
@@ -49,11 +57,16 @@ private fun nativeName(tag: String): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MoreScreen(modifier: Modifier = Modifier) {
+fun MoreScreen(
+    modifier: Modifier = Modifier,
+    viewModel: MoreViewModel = viewModel(factory = MoreViewModel.Factory),
+) {
     val context = LocalContext.current
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showLanguages by rememberSaveable { mutableStateOf(false) }
+    var showTemplates by rememberSaveable { mutableStateOf(false) }
     val currentLanguage = LocaleHelper.getCurrentLanguageTag(context)
+    val selectedTemplateId by viewModel.documentTemplateId.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
@@ -72,6 +85,21 @@ fun MoreScreen(modifier: Modifier = Modifier) {
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
+            Text(
+                text = stringResource(R.string.more_company_settings),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            ListItem(
+                headlineContent = { Text(text = stringResource(R.string.more_pdf_template)) },
+                supportingContent = { Text(text = currentTemplateName(selectedTemplateId)) },
+                leadingContent = { Icon(Icons.Filled.Description, contentDescription = null) },
+                trailingContent = { Icon(Icons.Filled.ChevronRight, contentDescription = null) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showTemplates = true },
+            )
             ListItem(
                 headlineContent = { Text(text = stringResource(R.string.more_settings)) },
                 leadingContent = { Icon(Icons.Filled.Settings, contentDescription = null) },
@@ -81,6 +109,16 @@ fun MoreScreen(modifier: Modifier = Modifier) {
         }
     }
 
+    if (showTemplates) {
+        DocumentTemplatesBottomSheet(
+            selectedTemplateId = selectedTemplateId,
+            onTemplateSelected = { templateId ->
+                viewModel.setDocumentTemplateId(templateId)
+                showTemplates = false
+            },
+            onDismiss = { showTemplates = false },
+        )
+    }
     if (showSettings) {
         SettingsDialog(
             currentLanguage = currentLanguage,
@@ -101,6 +139,13 @@ fun MoreScreen(modifier: Modifier = Modifier) {
             onDismiss = { showLanguages = false },
         )
     }
+}
+
+@Composable
+private fun currentTemplateName(templateId: String): String {
+    val option = pdfTemplateOptions.firstOrNull { it.id == templateId }
+    return option?.let { stringResource(it.nameRes) }
+        ?: stringResource(R.string.template_1_modern_name)
 }
 
 @Composable

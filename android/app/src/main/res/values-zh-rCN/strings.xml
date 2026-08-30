@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="editor_total">总计</string>
+    <string name="editor_save">保存</string>
+    <string name="editor_cancel">取消</string>
+    <string name="nav_back">返回</string>
+    <string name="more_company_settings">公司设置</string>
+    <string name="more_pdf_template">PDF 模板</string>
+    <string name="pdf_template_sheet_title">PDF 文档模板</string>
+    <string name="template_1_modern_name">现代绿</string>
+    <string name="template_2_classic_name">经典蓝</string>
+    <string name="template_3_vibrant_name">活力橙</string>
     <string name="app_name">Biz-flow</string>
-
     <string name="nav_home">首页</string>
     <string name="nav_documents">文件</string>
     <string name="nav_finance">财务</string>
     <string name="nav_more">更多</string>
-
     <string name="dashboard_title">控制面板</string>
     <string name="dashboard_subtitle">欢迎来到您的数字办公室。</string>
     <string name="monthly_revenue">月收入</string>
     <string name="home_revenue_placeholder">MZN 0,00</string>
-
     <string name="action_new_invoice">新建发票</string>
     <string name="action_new_invoice_sub">开具税务发票。</string>
     <string name="action_new_receipt">新建收据</string>
@@ -20,26 +27,39 @@
     <string name="action_invoice_receipt_sub">立即付款。</string>
     <string name="action_new_quote">新建报价</string>
     <string name="action_new_quote_sub">创建报价。</string>
-
     <string name="home_add">添加</string>
     <string name="home_quick_expense">新支出</string>
     <string name="home_quick_reports">报告</string>
     <string name="home_recent_title">最近</string>
     <string name="home_view_history">查看历史记录</string>
     <string name="home_recent_empty">暂无最近文档</string>
-
     <string name="fab_add_document">新建文档</string>
     <string name="documents_empty_title">暂无文档</string>
     <string name="documents_empty_body">点击 + 按钮创建您的第一份文档</string>
     <string name="documents_no_client">无客户</string>
-
     <string name="status_draft">草稿</string>
     <string name="status_sent">已发送</string>
     <string name="status_paid">已支付</string>
     <string name="status_overdue">已逾期</string>
-
     <string name="screen_under_construction">建设中</string>
-
     <string name="more_settings">设置</string>
     <string name="settings_language">语言</string>
+    <string name="document_type_invoice">发票</string>
+    <string name="document_type_invoice_receipt">发票-收据</string>
+    <string name="document_type_receipt">收据</string>
+    <string name="document_type_quote">报价</string>
+    <string name="editor_client_name">客户名称</string>
+    <string name="editor_client_contact">联系方式</string>
+    <string name="editor_client_location">位置</string>
+    <string name="editor_client_nuit">NUIT</string>
+    <string name="editor_date">日期</string>
+    <string name="editor_items">项目 / 服务</string>
+    <string name="editor_add_item">添加项目</string>
+    <string name="editor_no_items">暂无项目</string>
+    <string name="editor_item_description">描述</string>
+    <string name="editor_item_quantity">数量</string>
+    <string name="editor_item_price">单价</string>
+    <string name="editor_discount">折扣 (%)</string>
+    <string name="editor_subtotal">小计</string>
+    <string name="editor_iva">增值税 (16%)</string>
 </resources>
