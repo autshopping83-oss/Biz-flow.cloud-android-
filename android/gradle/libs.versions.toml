@@ -1,6 +1,8 @@
 [versions]
 agp = "8.7.3"
 kotlin = "2.1.20"
+ksp = "2.1.20-1.0.31"
+room = "2.6.1"
 coreKtx = "1.15.0"
 activityCompose = "1.10.1"
 coreSplashScreen = "1.2.0"
@@ -31,8 +33,12 @@ androidx-compose-material-icons-extended = { group = "androidx.compose.material"
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
