@@ -99,10 +99,11 @@ class SyncRepository(
     }
 
     private suspend fun pull(): Boolean = try {
-        val since = prefs.getLong(lastPullKey(), 0L) - OVERLAP_MS
+        val uid = remoteSync.currentUserId()
+        val since = prefs.getLong(lastPullKey(uid), 0L) - OVERLAP_MS
         pullDocuments(since)
         pullClients(since)
-        prefs.edit().putLong(lastPullKey(), System.currentTimeMillis()).apply()
+        prefs.edit().putLong(lastPullKey(uid), System.currentTimeMillis()).apply()
         true
     } catch (e: CancellationException) {
         throw e
@@ -132,10 +133,7 @@ class SyncRepository(
         }
     }
 
-    private fun lastPullKey(): String {
-        val uid = runCatching { remoteSync.currentUserId() }.getOrNull() ?: "anon"
-        return "last_pull_$uid"
-    }
+    private fun lastPullKey(uid: String): String = "last_pull_$uid"
 
     companion object {
         private const val BATCH_SIZE = 50

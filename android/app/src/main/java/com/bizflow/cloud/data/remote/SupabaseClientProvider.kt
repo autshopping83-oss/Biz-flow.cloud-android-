@@ -3,7 +3,7 @@ package com.bizflow.cloud.data.remote
 import com.bizflow.cloud.BuildConfig
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.gotrue.GoTrue
+import io.github.jan.supabase.gotrue.Auth
 import io.github.jan.supabase.postgrest.Postgrest
 
 object SupabaseClientProvider {
@@ -18,7 +18,7 @@ object SupabaseClientProvider {
         if (url.isBlank() || key.isBlank()) return null
         return createSupabaseClient(url, key) {
             install(Postgrest)
-            install(GoTrue)
+            install(Auth)
         }
     }
 }
