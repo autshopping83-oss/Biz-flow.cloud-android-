@@ -80,6 +80,13 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
+tasks.withType<Test> {
+    testLogging {
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showStackTraces = true
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
