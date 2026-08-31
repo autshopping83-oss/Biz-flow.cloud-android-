@@ -77,6 +77,9 @@
     <string name="settings_logo_hint">Select image</string>
     <string name="settings_stamp">Company Stamp</string>
     <string name="settings_stamp_hint">Select image</string>
+    <string name="settings_currency">Currency (company base)</string>
+    <string name="settings_currency_search">Search by code, name, symbol or country</string>
+    <string name="settings_currency_empty">No currency found</string>
     <string name="login_title">Sign in to your account</string>
     <string name="login_email_hint">Email</string>
     <string name="login_password_hint">Password</string>

@@ -104,6 +104,11 @@ fun CompanySettingsScreen(
                     .fillMaxWidth()
                     .clickable { showTemplates = true },
             )
+            CurrencySelector(
+                selectedCode = ui.currency,
+                onSelect = viewModel::setCurrency,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
             SettingsImageRow(
                 labelRes = R.string.settings_logo,
                 hintRes = R.string.settings_logo_hint,

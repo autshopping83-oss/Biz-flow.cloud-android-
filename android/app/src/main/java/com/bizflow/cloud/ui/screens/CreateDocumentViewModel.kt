@@ -17,6 +17,7 @@ import com.bizflow.cloud.data.local.entity.LineItemEntity
 import com.bizflow.cloud.data.model.DocumentStatus
 import com.bizflow.cloud.data.model.DocumentType
 import com.bizflow.cloud.data.repository.ClientRepository
+import com.bizflow.cloud.data.repository.CompanySettingsRepository
 import com.bizflow.cloud.data.repository.DocumentRepository
 import com.bizflow.cloud.data.repository.PdfGeneratorRepositoryImpl
 import kotlinx.coroutines.Dispatchers
@@ -46,27 +47,29 @@ data class CreateDocumentUiState(
     val previewHtml: String? = null,
     val isSaving: Boolean = false,
     val isGeneratingPreview: Boolean = false,
+    val currency: String = "",
 )
 class CreateDocumentViewModel(
     private val documentRepository: DocumentRepository,
     private val clientRepository: ClientRepository,
     private val pdfGenerator: PdfGeneratorRepositoryImpl,
+    private val companySettingsRepository: CompanySettingsRepository,
     private val appContext: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
-    private val initialType: DocumentType =
-        DocumentType.fromCode(savedStateHandle.get<String>("documentType"))
-    private val _uiState = MutableStateFlow(
-        CreateDocumentUiState(type = initialType, date = todayIso()),
-    )
+    private val initialType: DocumentType = DocumentType.fromCode(savedStateHandle.get<String>("documentType"))
+    private val _uiState = MutableStateFlow(CreateDocumentUiState(type = initialType, date = todayIso()))
     val uiState: StateFlow<CreateDocumentUiState> = _uiState.asStateFlow()
     val clients: StateFlow<List<ClientEntity>> = clientRepository
         .observeAll()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList(),
-        )
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    init {
+        viewModelScope.launch {
+            val currency = companySettingsRepository.getCurrency()
+            if (_uiState.value.currency.isBlank()) _uiState.value = _uiState.value.copy(currency = currency)
+        }
+    }
 
     private val documentId = UUID.randomUUID().toString()
     private var previewNumber: String = ""
@@ -75,10 +78,8 @@ class CreateDocumentViewModel(
 
     fun selectClient(client: ClientEntity) {
         _uiState.value = _uiState.value.copy(
-            clientName = client.name,
-            clientContact = client.contact.orEmpty(),
-            clientLocation = client.location.orEmpty(),
-            clientNuit = client.nuit.orEmpty(),
+            clientName = client.name, clientContact = client.contact.orEmpty(),
+            clientLocation = client.location.orEmpty(), clientNuit = client.nuit.orEmpty(),
         )
     }
 
@@ -118,9 +119,7 @@ class CreateDocumentViewModel(
 
     fun saveSignature(bytes: ByteArray) {
         viewModelScope.launch {
-            val path = withContext(Dispatchers.IO) {
-                ImageFiles.saveSignaturePng(appContext, documentId, bytes)
-            }
+            val path = withContext(Dispatchers.IO) { ImageFiles.saveSignaturePng(appContext, documentId, bytes) }
             _uiState.value = _uiState.value.copy(signaturePath = path)
         }
     }
@@ -164,8 +163,8 @@ class CreateDocumentViewModel(
         _uiState.value = _uiState.value.copy(previewHtml = null)
     }
 
-    private fun buildItems(state: CreateDocumentUiState): List<LineItemEntity> {
-        return state.items
+    private fun buildItems(state: CreateDocumentUiState): List<LineItemEntity> =
+        state.items
             .filter { it.description.isNotBlank() }
             .map { item ->
                 val quantity = item.quantity.toDoubleOrNull() ?: 0.0
@@ -179,7 +178,6 @@ class CreateDocumentViewModel(
                     total = quantity * unitPrice,
                 )
             }
-    }
 
     private fun buildDocument(
         state: CreateDocumentUiState,
@@ -196,7 +194,7 @@ class CreateDocumentViewModel(
             number = number,
             date = state.date,
             dueDate = null,
-            currency = CURRENCY,
+            currency = state.currency.ifBlank { CURRENCY },
             language = Locale.getDefault().language,
             clientName = state.clientName.trim(),
             clientContact = state.clientContact.trim(),
@@ -238,6 +236,7 @@ class CreateDocumentViewModel(
                     documentRepository = app.documentRepository,
                     clientRepository = app.clientRepository,
                     pdfGenerator = app.pdfGeneratorRepository,
+                    companySettingsRepository = app.companySettingsRepository,
                     appContext = app.applicationContext,
                     savedStateHandle = createSavedStateHandle(),
                 )

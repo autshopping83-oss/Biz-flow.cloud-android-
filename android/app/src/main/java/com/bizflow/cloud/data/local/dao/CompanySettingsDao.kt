@@ -32,4 +32,10 @@ interface CompanySettingsDao {
 
     @Query("UPDATE company_settings SET defaultSignaturePath = :path, updatedAt = :now WHERE id = 'default'")
     suspend fun updateDefaultSignaturePath(path: String?, now: Long)
+
+    @Query("SELECT currency FROM company_settings WHERE id = 'default'")
+    fun observeCurrency(): Flow<String?>
+
+    @Query("UPDATE company_settings SET currency = :currency, updatedAt = :now WHERE id = 'default'")
+    suspend fun updateCurrency(currency: String, now: Long)
 }

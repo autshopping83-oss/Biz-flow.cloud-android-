@@ -77,6 +77,9 @@
     <string name="settings_logo_hint">Seleccionar imagen</string>
     <string name="settings_stamp">Sello de la Empresa</string>
     <string name="settings_stamp_hint">Seleccionar imagen</string>
+    <string name="settings_currency">Moneda (base de la empresa)</string>
+    <string name="settings_currency_search">Buscar por código, nombre, símbolo o país</string>
+    <string name="settings_currency_empty">No se encontró ninguna moneda</string>
     <string name="login_title">Inicia sesión en tu cuenta</string>
     <string name="login_email_hint">Correo electrónico</string>
     <string name="login_password_hint">Contraseña</string>

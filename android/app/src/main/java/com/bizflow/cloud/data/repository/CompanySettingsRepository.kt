@@ -2,6 +2,7 @@ package com.bizflow.cloud.data.repository
 
 import com.bizflow.cloud.data.local.dao.CompanySettingsDao
 import com.bizflow.cloud.data.local.entity.CompanySettingsEntity
+import com.bizflow.cloud.data.model.CurrencyCatalog
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -36,6 +37,16 @@ class CompanySettingsRepository(
         updateOrCreate { _, now -> dao.updateDefaultSignaturePath(path, now) }
     }
 
+    fun observeCurrency(): Flow<String> =
+        dao.observeCurrency().map { it ?: CurrencyCatalog.DEFAULT_CODE }
+
+    suspend fun getCurrency(): String =
+        dao.get()?.currency ?: CurrencyCatalog.DEFAULT_CODE
+
+    suspend fun setCurrency(currency: String) {
+        updateOrCreate { _, now -> dao.updateCurrency(currency, now) }
+    }
+
     private suspend fun updateOrCreate(update: suspend (CompanySettingsEntity?, Long) -> Unit) {
         val existing = dao.get()
         val now = System.currentTimeMillis()
@@ -55,7 +66,7 @@ class CompanySettingsRepository(
             contact = "",
             logo = null,
             defaultTaxRate = 0.16,
-            currency = "MZN",
+            currency = CurrencyCatalog.DEFAULT_CODE,
             language = "pt",
             theme = "",
             plan = "",

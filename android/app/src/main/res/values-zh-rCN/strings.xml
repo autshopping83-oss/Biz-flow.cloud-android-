@@ -77,6 +77,9 @@
     <string name="settings_logo_hint">选择图片</string>
     <string name="settings_stamp">公司印章</string>
     <string name="settings_stamp_hint">选择图片</string>
+    <string name="settings_currency">货币（公司基础）</string>
+    <string name="settings_currency_search">按代码、名称、符号或国家搜索</string>
+    <string name="settings_currency_empty">未找到货币</string>
     <string name="login_title">登录您的账户</string>
     <string name="login_email_hint">电子邮箱</string>
     <string name="login_password_hint">密码</string>

@@ -77,6 +77,9 @@
     <string name="settings_logo_hint">Choisir une image</string>
     <string name="settings_stamp">Cachet de l\'entreprise</string>
     <string name="settings_stamp_hint">Choisir une image</string>
+    <string name="settings_currency">Devise (base de l\'entreprise)</string>
+    <string name="settings_currency_search">Rechercher par code, nom, symbole ou pays</string>
+    <string name="settings_currency_empty">Aucune devise trouvée</string>
     <string name="login_title">Connectez-vous à votre compte</string>
     <string name="login_email_hint">E-mail</string>
     <string name="login_password_hint">Mot de passe</string>

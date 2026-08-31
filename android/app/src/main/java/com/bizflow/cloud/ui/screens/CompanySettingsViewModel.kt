@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.bizflow.cloud.BizFlowApplication
 import com.bizflow.cloud.core.util.ImageFiles
 import com.bizflow.cloud.data.local.entity.CompanySettingsEntity
+import com.bizflow.cloud.data.model.CurrencyCatalog
 import com.bizflow.cloud.data.repository.CompanySettingsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +24,7 @@ data class CompanySettingsUiState(
     val templateId: String = CompanySettingsEntity.DEFAULT_TEMPLATE_ID,
     val logoPath: String? = null,
     val stampPath: String? = null,
+    val currency: String = CurrencyCatalog.DEFAULT_CODE,
     val isSaving: Boolean = false,
 )
 
@@ -41,6 +43,7 @@ class CompanySettingsViewModel(
                 templateId = settings?.documentTemplateId ?: CompanySettingsEntity.DEFAULT_TEMPLATE_ID,
                 logoPath = settings?.logoPath,
                 stampPath = settings?.stampPath,
+                currency = settings?.currency ?: CurrencyCatalog.DEFAULT_CODE,
             )
         }
     }
@@ -49,6 +52,13 @@ class CompanySettingsViewModel(
         viewModelScope.launch {
             companySettingsRepository.setDocumentTemplateId(templateId)
             _uiState.value = _uiState.value.copy(templateId = templateId)
+        }
+    }
+
+    fun setCurrency(currency: String) {
+        viewModelScope.launch {
+            companySettingsRepository.setCurrency(currency)
+            _uiState.value = _uiState.value.copy(currency = currency)
         }
     }
 

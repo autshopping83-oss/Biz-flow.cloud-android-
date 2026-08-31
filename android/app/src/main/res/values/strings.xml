@@ -77,6 +77,9 @@
     <string name="settings_logo_hint">Selecionar imagem</string>
     <string name="settings_stamp">Carimbo da Empresa</string>
     <string name="settings_stamp_hint">Selecionar imagem</string>
+    <string name="settings_currency">Moeda (base da empresa)</string>
+    <string name="settings_currency_search">Pesquisar por código, nome, símbolo ou país</string>
+    <string name="settings_currency_empty">Nenhuma moeda encontrada</string>
     <string name="login_title">Entrar na sua conta</string>
     <string name="login_email_hint">Email</string>
     <string name="login_password_hint">Palavra-passe</string>
