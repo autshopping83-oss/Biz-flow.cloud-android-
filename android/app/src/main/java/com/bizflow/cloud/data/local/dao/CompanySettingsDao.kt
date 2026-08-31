@@ -38,4 +38,28 @@ interface CompanySettingsDao {
 
     @Query("UPDATE company_settings SET currency = :currency, updatedAt = :now WHERE id = 'default'")
     suspend fun updateCurrency(currency: String, now: Long)
+
+    @Query(
+        """UPDATE company_settings SET
+            name = :name, tradingName = :tradingName, address = :address,
+            city = :city, country = :country,
+            companyIdentifierType = :identifierType, companyIdentifierValue = :identifierValue,
+            contact = :contact, whatsApp = :whatsApp, email = :email, website = :website,
+            updatedAt = :now
+            WHERE id = 'default'""",
+    )
+    suspend fun updateCompanyProfile(
+        name: String,
+        tradingName: String?,
+        address: String,
+        city: String?,
+        country: String?,
+        identifierType: String?,
+        identifierValue: String?,
+        contact: String,
+        whatsApp: String?,
+        email: String?,
+        website: String?,
+        now: Long,
+    )
 }

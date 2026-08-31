@@ -25,7 +25,7 @@ import org.robolectric.annotation.Config
 class AppDatabaseMigrationTest {
 
     @Test
-    fun migrateV2ToV4_preservesDataRewritesClientIdsAndAddsColumns() = runBlocking {
+    fun migrateV2ToV5_preservesDataRewritesClientIdsAndAddsColumns() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "migration-test-v2.db"
         createV2Fixture(context, name)
@@ -35,10 +35,11 @@ class AppDatabaseMigrationTest {
                 AppDatabase.MIGRATION_1_2,
                 AppDatabase.MIGRATION_2_3,
                 AppDatabase.MIGRATION_3_4,
+                AppDatabase.MIGRATION_4_5,
             )
             .build()
 
-        assertEquals(4, db.openHelper.writableDatabase.version)
+        assertEquals(5, db.openHelper.writableDatabase.version)
 
         val doc = db.documentDao().getById("doc-1")
         assertNotNull(doc)
@@ -69,6 +70,16 @@ class AppDatabaseMigrationTest {
         assertTrue("logoPath", "logoPath" in settingsColumns)
         assertTrue("stampPath", "stampPath" in settingsColumns)
         assertTrue("defaultSignaturePath", "defaultSignaturePath" in settingsColumns)
+        assertTrue("tradingName", "tradingName" in settingsColumns)
+        assertTrue("country", "country" in settingsColumns)
+        assertTrue("companyIdentifierValue", "companyIdentifierValue" in settingsColumns)
+
+        val migratedDocumentColumns = db.openHelper.writableDatabase
+            .query("PRAGMA table_info(documents)")
+            .use { c -> columnNames(c) }
+        assertTrue("companyTradingName", "companyTradingName" in migratedDocumentColumns)
+        assertTrue("companyCountry", "companyCountry" in migratedDocumentColumns)
+        assertTrue("companyIdentifierValue", "companyIdentifierValue" in migratedDocumentColumns)
 
         db.close()
     }

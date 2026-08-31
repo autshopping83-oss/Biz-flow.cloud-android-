@@ -119,11 +119,25 @@ class PdfGeneratorRepositoryImpl(
     }
 
     private fun companyDetails(document: DocumentEntity): String {
-        return listOf(
-            document.companyAddress,
-            document.companyNuit,
-            document.companyContact,
-        ).filterNotNull().filter { it.isNotBlank() }.joinToString(" \u2022 ")
+        return buildList {
+            document.companyTradingName?.takeIf { it.isNotBlank() }?.let { add(it) }
+            document.companyAddress?.takeIf { it.isNotBlank() }?.let { add(it) }
+            listOf(document.companyCity, document.companyCountry)
+                .filter { !it.isNullOrBlank() }
+                .joinToString(", ")
+                .takeIf { it.isNotBlank() }?.let { add(it) }
+            (document.companyIdentifierValue?.takeIf { it.isNotBlank() } ?: document.companyNuit?.takeIf { it.isNotBlank() })
+                ?.let {
+                    val type = document.companyIdentifierType?.takeIf { it.isNotBlank() } ?: "ID"
+                    add("$type: $it")
+                }
+            listOf(
+                document.companyContact,
+                document.companyWhatsApp,
+                document.companyEmail,
+                document.companyWebsite,
+            ).filter { !it.isNullOrBlank() }.forEach { add(it) }
+        }.joinToString(" \u2022 ")
     }
 
     private fun clientDetails(document: DocumentEntity): String {

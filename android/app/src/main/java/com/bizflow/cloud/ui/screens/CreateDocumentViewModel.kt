@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.bizflow.cloud.BizFlowApplication
 import com.bizflow.cloud.core.util.ImageFiles
 import com.bizflow.cloud.data.local.entity.ClientEntity
+import com.bizflow.cloud.data.local.entity.CompanySettingsEntity
 import com.bizflow.cloud.data.local.entity.DocumentEntity
 import com.bizflow.cloud.data.local.entity.LineItemEntity
 import com.bizflow.cloud.data.model.DocumentStatus
@@ -68,9 +69,11 @@ class CreateDocumentViewModel(
         viewModelScope.launch {
             val currency = companySettingsRepository.getCurrency()
             if (_uiState.value.currency.isBlank()) _uiState.value = _uiState.value.copy(currency = currency)
+            companySnapshot = companySettingsRepository.getSettings()
         }
     }
 
+    private var companySnapshot: CompanySettingsEntity? = null
     private val documentId = UUID.randomUUID().toString()
     private var previewNumber: String = ""
 
@@ -93,24 +96,16 @@ class CreateDocumentViewModel(
     fun updatePaymentMethod(method: String?) { _uiState.value = _uiState.value.copy(paymentMethod = method) }
 
     fun addItem(description: String, quantity: String, unitPrice: String) {
-        val item = EditorItemUi(
-            id = UUID.randomUUID().toString(),
-            description = description.trim(),
-            quantity = quantity,
-            unitPrice = unitPrice,
-        )
+        val item = EditorItemUi(UUID.randomUUID().toString(), description.trim(), quantity, unitPrice)
         _uiState.value = _uiState.value.copy(items = _uiState.value.items + item)
     }
 
     fun updateItem(id: String, description: String, quantity: String, unitPrice: String) {
-        val items = _uiState.value.items.map {
-            if (it.id == id) {
-                it.copy(description = description.trim(), quantity = quantity, unitPrice = unitPrice)
-            } else {
-                it
-            }
-        }
-        _uiState.value = _uiState.value.copy(items = items)
+        _uiState.value = _uiState.value.copy(
+            items = _uiState.value.items.map {
+                if (it.id == id) it.copy(description = description.trim(), quantity = quantity, unitPrice = unitPrice) else it
+            },
+        )
     }
 
     fun removeItem(id: String) {
@@ -124,9 +119,7 @@ class CreateDocumentViewModel(
         }
     }
 
-    fun clearSignature() {
-        _uiState.value = _uiState.value.copy(signaturePath = null)
-    }
+    fun clearSignature() { _uiState.value = _uiState.value.copy(signaturePath = null) }
 
     fun save(onSaved: () -> Unit) {
         val state = _uiState.value
@@ -159,9 +152,7 @@ class CreateDocumentViewModel(
         pdfGenerator.printHtml(appContext, html, "Documento_$previewNumber")
     }
 
-    fun resetPreview() {
-        _uiState.value = _uiState.value.copy(previewHtml = null)
-    }
+    fun resetPreview() { _uiState.value = _uiState.value.copy(previewHtml = null) }
 
     private fun buildItems(state: CreateDocumentUiState): List<LineItemEntity> =
         state.items
@@ -201,11 +192,19 @@ class CreateDocumentViewModel(
             clientWhatsApp = null,
             clientLocation = state.clientLocation.trim(),
             clientNuit = state.clientNuit.trim(),
-            companyName = null,
-            companyAddress = null,
-            companyNuit = null,
-            companyContact = null,
-            companyLogo = null,
+            companyName = companySnapshot?.name?.takeIf { it.isNotBlank() },
+            companyAddress = companySnapshot?.address?.takeIf { it.isNotBlank() },
+            companyNuit = companySnapshot?.companyIdentifierValue?.takeIf { it.isNotBlank() } ?: companySnapshot?.nuit?.takeIf { it.isNotBlank() },
+            companyContact = companySnapshot?.contact?.takeIf { it.isNotBlank() },
+            companyLogo = companySnapshot?.logoPath?.takeIf { it.isNotBlank() } ?: companySnapshot?.logo?.takeIf { it.isNotBlank() },
+            companyTradingName = companySnapshot?.tradingName?.takeIf { it.isNotBlank() },
+            companyCity = companySnapshot?.city?.takeIf { it.isNotBlank() },
+            companyCountry = companySnapshot?.country?.takeIf { it.isNotBlank() },
+            companyWhatsApp = companySnapshot?.whatsApp?.takeIf { it.isNotBlank() },
+            companyEmail = companySnapshot?.email?.takeIf { it.isNotBlank() },
+            companyWebsite = companySnapshot?.website?.takeIf { it.isNotBlank() },
+            companyIdentifierType = companySnapshot?.companyIdentifierType?.takeIf { it.isNotBlank() },
+            companyIdentifierValue = companySnapshot?.companyIdentifierValue?.takeIf { it.isNotBlank() } ?: companySnapshot?.nuit?.takeIf { it.isNotBlank() },
             subtotal = subtotal,
             taxRate = TAX_RATE,
             taxAmount = taxAmount,

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -64,6 +65,9 @@ fun CompanySettingsScreen(
     val stampPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let(viewModel::saveStampImage)
     }
+    val signaturePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let(viewModel::saveSignatureImage)
+    }
 
     LaunchedEffect(Unit) { viewModel.refresh() }
 
@@ -104,24 +108,63 @@ fun CompanySettingsScreen(
                     .fillMaxWidth()
                     .clickable { showTemplates = true },
             )
+            IdentitySection(
+                logo = {
+                    SettingsImageRow(
+                        labelRes = R.string.settings_logo,
+                        hintRes = R.string.settings_logo_hint,
+                        path = ui.logoPath,
+                        icon = { Icon(Icons.Filled.Description, contentDescription = null) },
+                        onClick = { logoPicker.launch("image/*") },
+                    )
+                },
+                name = ui.name,
+                tradingName = ui.tradingName,
+                identifierType = ui.identifierType,
+                identifierValue = ui.identifierValue,
+                onName = viewModel::updateName,
+                onTradingName = viewModel::updateTradingName,
+                onIdentifierType = viewModel::updateIdentifierType,
+                onIdentifierValue = viewModel::updateIdentifierValue,
+            )
+            ContactsSection(
+                phone = ui.contact,
+                whatsApp = ui.whatsApp,
+                email = ui.email,
+                website = ui.website,
+                onPhone = viewModel::updateContact,
+                onWhatsApp = viewModel::updateWhatsApp,
+                onEmail = viewModel::updateEmail,
+                onWebsite = viewModel::updateWebsite,
+            )
+            LocationSection(
+                country = ui.country,
+                city = ui.city,
+                address = ui.address,
+                onCountry = viewModel::updateCountry,
+                onCity = viewModel::updateCity,
+                onAddress = viewModel::updateAddress,
+            )
+            ProfileSectionHeader(R.string.settings_section_finance)
             CurrencySelector(
                 selectedCode = ui.currency,
                 onSelect = viewModel::setCurrency,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
-            SettingsImageRow(
-                labelRes = R.string.settings_logo,
-                hintRes = R.string.settings_logo_hint,
-                path = ui.logoPath,
-                icon = { Icon(Icons.Filled.Description, contentDescription = null) },
-                onClick = { logoPicker.launch("image/*") },
-            )
+            ProfileSectionHeader(R.string.settings_section_documents)
             SettingsImageRow(
                 labelRes = R.string.settings_stamp,
                 hintRes = R.string.settings_stamp_hint,
                 path = ui.stampPath,
                 icon = { Icon(Icons.Filled.Badge, contentDescription = null) },
                 onClick = { stampPicker.launch("image/*") },
+            )
+            SettingsImageRow(
+                labelRes = R.string.settings_signature,
+                hintRes = R.string.settings_signature_hint,
+                path = ui.signaturePath,
+                icon = { Icon(Icons.Filled.Draw, contentDescription = null) },
+                onClick = { signaturePicker.launch("image/*") },
             )
         }
     }

@@ -31,7 +31,7 @@ import java.util.UUID
         CompanySettingsEntity::class,
         SyncQueueEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -85,6 +85,28 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 db.execSQL("DROP TABLE clients")
                 db.execSQL("ALTER TABLE clients_new RENAME TO clients")
+            }
+        }
+
+        val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE company_settings ADD COLUMN tradingName TEXT")
+                db.execSQL("ALTER TABLE company_settings ADD COLUMN city TEXT")
+                db.execSQL("ALTER TABLE company_settings ADD COLUMN country TEXT")
+                db.execSQL("ALTER TABLE company_settings ADD COLUMN whatsApp TEXT")
+                db.execSQL("ALTER TABLE company_settings ADD COLUMN email TEXT")
+                db.execSQL("ALTER TABLE company_settings ADD COLUMN website TEXT")
+                db.execSQL("ALTER TABLE company_settings ADD COLUMN companyIdentifierType TEXT")
+                db.execSQL("ALTER TABLE company_settings ADD COLUMN companyIdentifierValue TEXT")
+
+                db.execSQL("ALTER TABLE documents ADD COLUMN companyTradingName TEXT")
+                db.execSQL("ALTER TABLE documents ADD COLUMN companyCity TEXT")
+                db.execSQL("ALTER TABLE documents ADD COLUMN companyCountry TEXT")
+                db.execSQL("ALTER TABLE documents ADD COLUMN companyWhatsApp TEXT")
+                db.execSQL("ALTER TABLE documents ADD COLUMN companyEmail TEXT")
+                db.execSQL("ALTER TABLE documents ADD COLUMN companyWebsite TEXT")
+                db.execSQL("ALTER TABLE documents ADD COLUMN companyIdentifierType TEXT")
+                db.execSQL("ALTER TABLE documents ADD COLUMN companyIdentifierValue TEXT")
             }
         }
     }

@@ -26,6 +26,14 @@ data class CompanySettingsEntity(
     val logoPath: String? = null,
     val stampPath: String? = null,
     val defaultSignaturePath: String? = null,
+    val tradingName: String? = null,
+    val city: String? = null,
+    val country: String? = null,
+    val whatsApp: String? = null,
+    val email: String? = null,
+    val website: String? = null,
+    val companyIdentifierType: String? = null,
+    val companyIdentifierValue: String? = null,
 ) {
     companion object {
         const val DEFAULT_ID = "default"

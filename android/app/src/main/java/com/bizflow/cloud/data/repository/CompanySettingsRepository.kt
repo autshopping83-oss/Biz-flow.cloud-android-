@@ -47,6 +47,28 @@ class CompanySettingsRepository(
         updateOrCreate { _, now -> dao.updateCurrency(currency, now) }
     }
 
+    suspend fun setCompanyProfile(
+        name: String,
+        tradingName: String?,
+        address: String,
+        city: String?,
+        country: String?,
+        identifierType: String?,
+        identifierValue: String?,
+        contact: String,
+        whatsApp: String?,
+        email: String?,
+        website: String?,
+    ) {
+        updateOrCreate { _, now ->
+            dao.updateCompanyProfile(
+                name, tradingName, address, city, country,
+                identifierType, identifierValue, contact,
+                whatsApp, email, website, now,
+            )
+        }
+    }
+
     private suspend fun updateOrCreate(update: suspend (CompanySettingsEntity?, Long) -> Unit) {
         val existing = dao.get()
         val now = System.currentTimeMillis()

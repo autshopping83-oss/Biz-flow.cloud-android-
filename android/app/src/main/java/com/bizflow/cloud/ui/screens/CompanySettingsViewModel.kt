@@ -24,7 +24,19 @@ data class CompanySettingsUiState(
     val templateId: String = CompanySettingsEntity.DEFAULT_TEMPLATE_ID,
     val logoPath: String? = null,
     val stampPath: String? = null,
+    val signaturePath: String? = null,
     val currency: String = CurrencyCatalog.DEFAULT_CODE,
+    val name: String = "",
+    val tradingName: String = "",
+    val address: String = "",
+    val city: String = "",
+    val country: String = "",
+    val identifierType: String = "",
+    val identifierValue: String = "",
+    val contact: String = "",
+    val whatsApp: String = "",
+    val email: String = "",
+    val website: String = "",
     val isSaving: Boolean = false,
 )
 
@@ -38,12 +50,24 @@ class CompanySettingsViewModel(
 
     fun refresh() {
         viewModelScope.launch {
-            val settings = companySettingsRepository.getSettings()
+            val s = companySettingsRepository.getSettings()
             _uiState.value = CompanySettingsUiState(
-                templateId = settings?.documentTemplateId ?: CompanySettingsEntity.DEFAULT_TEMPLATE_ID,
-                logoPath = settings?.logoPath,
-                stampPath = settings?.stampPath,
-                currency = settings?.currency ?: CurrencyCatalog.DEFAULT_CODE,
+                templateId = s?.documentTemplateId ?: CompanySettingsEntity.DEFAULT_TEMPLATE_ID,
+                logoPath = s?.logoPath,
+                stampPath = s?.stampPath,
+                signaturePath = s?.defaultSignaturePath,
+                currency = s?.currency ?: CurrencyCatalog.DEFAULT_CODE,
+                name = s?.name.orEmpty(),
+                tradingName = s?.tradingName.orEmpty(),
+                address = s?.address.orEmpty(),
+                city = s?.city.orEmpty(),
+                country = s?.country.orEmpty(),
+                identifierType = s?.companyIdentifierType.orEmpty(),
+                identifierValue = (s?.companyIdentifierValue?.takeIf { it.isNotBlank() } ?: s?.nuit).orEmpty(),
+                contact = s?.contact.orEmpty(),
+                whatsApp = s?.whatsApp.orEmpty(),
+                email = s?.email.orEmpty(),
+                website = s?.website.orEmpty(),
             )
         }
     }
@@ -62,6 +86,37 @@ class CompanySettingsViewModel(
         }
     }
 
+    fun updateName(v: String) { _uiState.value = _uiState.value.copy(name = v); persistProfile() }
+    fun updateTradingName(v: String) { _uiState.value = _uiState.value.copy(tradingName = v); persistProfile() }
+    fun updateAddress(v: String) { _uiState.value = _uiState.value.copy(address = v); persistProfile() }
+    fun updateCity(v: String) { _uiState.value = _uiState.value.copy(city = v); persistProfile() }
+    fun updateCountry(v: String) { _uiState.value = _uiState.value.copy(country = v); persistProfile() }
+    fun updateIdentifierType(v: String) { _uiState.value = _uiState.value.copy(identifierType = v); persistProfile() }
+    fun updateIdentifierValue(v: String) { _uiState.value = _uiState.value.copy(identifierValue = v); persistProfile() }
+    fun updateContact(v: String) { _uiState.value = _uiState.value.copy(contact = v); persistProfile() }
+    fun updateWhatsApp(v: String) { _uiState.value = _uiState.value.copy(whatsApp = v); persistProfile() }
+    fun updateEmail(v: String) { _uiState.value = _uiState.value.copy(email = v); persistProfile() }
+    fun updateWebsite(v: String) { _uiState.value = _uiState.value.copy(website = v); persistProfile() }
+
+    private fun persistProfile() {
+        val s = _uiState.value
+        viewModelScope.launch {
+            companySettingsRepository.setCompanyProfile(
+                name = s.name,
+                tradingName = s.tradingName.ifBlank { null },
+                address = s.address,
+                city = s.city.ifBlank { null },
+                country = s.country.ifBlank { null },
+                identifierType = s.identifierType.ifBlank { null },
+                identifierValue = s.identifierValue.ifBlank { null },
+                contact = s.contact,
+                whatsApp = s.whatsApp.ifBlank { null },
+                email = s.email.ifBlank { null },
+                website = s.website.ifBlank { null },
+            )
+        }
+    }
+
     fun saveLogoImage(uri: Uri) {
         saveImage(uri, "company", "logo.png") { path ->
             _uiState.value = _uiState.value.copy(logoPath = path)
@@ -74,6 +129,12 @@ class CompanySettingsViewModel(
         }
     }
 
+    fun saveSignatureImage(uri: Uri) {
+        saveImage(uri, "company", "signature.png") { path ->
+            _uiState.value = _uiState.value.copy(signaturePath = path)
+        }
+    }
+
     private fun saveImage(uri: Uri, dir: String, file: String, onSaved: (String?) -> Unit) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSaving = true)
@@ -81,9 +142,10 @@ class CompanySettingsViewModel(
                 ImageFiles.savePngFromUri(appContext, uri, dir, file)
             }
             if (path != null) {
-                when (dir) {
-                    "company" -> companySettingsRepository.setLogoPath(path)
-                    else -> companySettingsRepository.setStampPath(path)
+                when (file) {
+                    "logo.png" -> companySettingsRepository.setLogoPath(path)
+                    "stamp.png" -> companySettingsRepository.setStampPath(path)
+                    else -> companySettingsRepository.setDefaultSignaturePath(path)
                 }
             }
             onSaved(path)
