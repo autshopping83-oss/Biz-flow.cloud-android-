@@ -130,8 +130,10 @@ class AppDatabaseMigrationTest {
         db.execSQL(
             "CREATE TABLE line_items (" +
                 "id TEXT NOT NULL PRIMARY KEY, documentId TEXT NOT NULL, description TEXT NOT NULL, " +
-                "quantity REAL NOT NULL, unitPrice REAL NOT NULL, total REAL NOT NULL)",
+                "quantity REAL NOT NULL, unitPrice REAL NOT NULL, total REAL NOT NULL, " +
+                "FOREIGN KEY(documentId) REFERENCES documents(id) ON UPDATE NO ACTION ON DELETE CASCADE)",
         )
+        db.execSQL("CREATE INDEX index_line_items_documentId ON line_items(documentId)")
         db.execSQL(
             "CREATE TABLE clients (" +
                 "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, " +
@@ -152,6 +154,7 @@ class AppDatabaseMigrationTest {
                 "date TEXT NOT NULL, timestamp INTEGER NOT NULL, receiptId TEXT, " +
                 "synced INTEGER NOT NULL, updatedAt INTEGER NOT NULL, deletedAt INTEGER)",
         )
+        db.execSQL("CREATE INDEX index_transactions_receiptId ON transactions(receiptId)")
         db.execSQL(
             "CREATE TABLE sync_queue (" +
                 "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, entityType TEXT NOT NULL, " +
@@ -159,6 +162,7 @@ class AppDatabaseMigrationTest {
                 "status TEXT NOT NULL, retryCount INTEGER NOT NULL, nextRetryAt INTEGER NOT NULL, " +
                 "createdAt INTEGER NOT NULL, lastError TEXT)",
         )
+        db.execSQL("CREATE INDEX index_sync_queue_entityType_entityId ON sync_queue(entityType, entityId)")
     }
 
     private fun seedV2Data(db: SupportSQLiteDatabase) {
