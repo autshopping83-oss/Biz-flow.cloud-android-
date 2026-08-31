@@ -6,8 +6,16 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val localProps by lazy {
+    val props = java.util.Properties()
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { props.load(it) }
+    props
+}
+
 fun resolveProperty(name: String): String =
-    (findProperty(name) as? String)?.takeIf { it.isNotBlank() }
+    localProps.getProperty(name)?.takeIf { it.isNotBlank() }
+        ?: (findProperty(name) as? String)?.takeIf { it.isNotBlank() }
         ?: System.getenv(name)
         ?: ""
 
@@ -24,9 +32,9 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val supabaseUrl = resolveProperty("SUPABASE_URL")
-        val supabaseAnonKey = resolveProperty("SUPABASE_ANON_KEY")
+        val supabasePublishableKey = resolveProperty("SUPABASE_PUBLISHABLE_KEY")
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
-        buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
+        buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\"$supabasePublishableKey\"")
     }
 
     signingConfigs {

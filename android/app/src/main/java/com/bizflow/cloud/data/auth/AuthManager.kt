@@ -65,6 +65,6 @@ class AuthManager(private val supabase: SupabaseClient?) {
     }
 
     object NotConfiguredException : Exception(
-        "Supabase nao configurado (SUPABASE_URL/SUPABASE_ANON_KEY ausentes no build)",
+        "Supabase nao configurado (SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY ausentes no build)",
     )
 }
