@@ -3,6 +3,7 @@ package com.bizflow.cloud.data.auth
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.gotrue.SessionStatus
 import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.gotrue.providers.Google
 import io.github.jan.supabase.gotrue.providers.builtin.Email
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,15 +45,31 @@ class AuthManager(private val supabase: SupabaseClient?) {
                 this.email = email
                 this.password = password
             }
-            client.auth.signInWith(Email) {
-                this.email = email
-                this.password = password
+            if (client.auth.currentSessionOrNull() == null) {
+                client.auth.signInWith(Email) {
+                    this.email = email
+                    this.password = password
+                }
             }
         }
     }
 
     suspend fun signOut() {
         supabase?.auth?.signOut()
+    }
+
+    suspend fun signInWithGoogle(): Result<Unit> {
+        val client = supabase ?: return Result.failure(NotConfiguredException)
+        return attempt {
+            client.auth.signInWith(Google)
+        }
+    }
+
+    suspend fun resetPasswordForEmail(email: String): Result<Unit> {
+        val client = supabase ?: return Result.failure(NotConfiguredException)
+        return attempt {
+            client.auth.resetPasswordForEmail(email)
+        }
     }
 
     private suspend fun attempt(block: suspend () -> Unit): Result<Unit> = try {

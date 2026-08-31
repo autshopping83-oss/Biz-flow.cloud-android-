@@ -84,5 +84,22 @@
     <string name="login_create_account">Create account</string>
     <string name="login_error_invalid">Invalid email or password</string>
     <string name="login_config_error">Server configuration missing. Try again later.</string>
+    <string name="login_google">Continue with Google</string>
+    <string name="login_forgot_password">Forgot password</string>
+    <string name="account_title">Account / Cloud</string>
+    <string name="account_not_connected">No account yet</string>
+    <string name="account_connected_as">Connected as %1$s</string>
+    <string name="account_local_note">Your data stays on this device until you connect an account.</string>
+    <string name="signup_title">Create account</string>
+    <string name="signup_confirm_password_hint">Confirm password</string>
+    <string name="signup_button">Create account</string>
+    <string name="signup_confirm_email">Account created. Check your email to finish signing up.</string>
+    <string name="signup_error_mismatch">Passwords do not match</string>
+    <string name="signup_error_failed">Could not create the account. Check your details.</string>
+    <string name="recover_title">Reset password</string>
+    <string name="recover_description">Enter your email and we will send a link to reset your password.</string>
+    <string name="recover_submit">Send link</string>
+    <string name="recover_sent">If the email exists, we have sent a reset link.</string>
+    <string name="recover_error_failed">Could not send the link. Try again.</string>
     <string name="more_sign_out">Sign out</string>
 </resources>

@@ -1,51 +1,42 @@
 package com.bizflow.cloud
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.bizflow.cloud.ui.auth.LoginScreen
 import com.bizflow.cloud.ui.shell.AppShell
 import com.bizflow.cloud.ui.theme.BizFlowTheme
-import io.github.jan.supabase.gotrue.SessionStatus
+import io.github.jan.supabase.annotations.SupabaseInternal
+import io.github.jan.supabase.gotrue.handleDeeplinks
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        handleAuthDeeplink(intent)
         setContent {
             BizFlowTheme {
-                AuthGate()
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    AppShell()
+                }
             }
         }
     }
-}
 
-@Composable
-private fun AuthGate() {
-    val authManager = (LocalContext.current.applicationContext as BizFlowApplication).authManager
-    val sessionStatus by authManager.sessionStatus.collectAsState()
-    when (sessionStatus) {
-        is SessionStatus.Authenticated -> AppShell()
-        SessionStatus.LoadingFromStorage -> AuthLoadingScreen()
-        else -> LoginScreen()
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleAuthDeeplink(intent)
     }
-}
 
-@Composable
-private fun AuthLoadingScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
+    @OptIn(SupabaseInternal::class)
+    private fun handleAuthDeeplink(intent: Intent) {
+        val client = (application as BizFlowApplication).supabaseClient ?: return
+        client.handleDeeplinks(intent)
     }
 }

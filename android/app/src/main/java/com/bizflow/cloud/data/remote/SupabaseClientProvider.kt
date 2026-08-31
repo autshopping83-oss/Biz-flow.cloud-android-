@@ -18,7 +18,10 @@ object SupabaseClientProvider {
         if (url.isBlank() || key.isBlank()) return null
         return createSupabaseClient(url, key) {
             install(Postgrest)
-            install(Auth)
+            install(Auth) {
+                scheme = "bizflowcloud"
+                host = "auth"
+            }
         }
     }
 }

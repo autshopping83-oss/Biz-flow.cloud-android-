@@ -14,57 +14,40 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class LoginUiState(
+data class RecoverUiState(
     val email: String = "",
-    val password: String = "",
     val isBusy: Boolean = false,
     val configError: Boolean = false,
+    val sent: Boolean = false,
     val errorRes: Int? = null,
 )
 
-class LoginViewModel(
+class RecoverViewModel(
     private val authManager: AuthManager,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(LoginUiState())
-    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(RecoverUiState())
+    val uiState: StateFlow<RecoverUiState> = _uiState.asStateFlow()
 
     fun onEmailChange(value: String) {
         _uiState.value = _uiState.value.copy(email = value, errorRes = null)
     }
 
-    fun onPasswordChange(value: String) {
-        _uiState.value = _uiState.value.copy(password = value, errorRes = null)
-    }
-
-    fun signIn() {
+    fun submit() {
         val current = _uiState.value
-        if (current.isBusy || email().isEmpty() || password().isEmpty()) return
-        val block: suspend () -> Result<Unit> = { authManager.signIn(email(), password()) }
-        execute(block)
-    }
-
-    fun signInWithGoogle() {
-        if (_uiState.value.isBusy) return
-        val block: suspend () -> Result<Unit> = { authManager.signInWithGoogle() }
-        execute(block)
-    }
-
-    private fun email(): String = _uiState.value.email.trim()
-    private fun password(): String = _uiState.value.password
-
-    private fun execute(block: suspend () -> Result<Unit>) {
-        val current = _uiState.value
+        val email = current.email.trim()
+        if (current.isBusy || email.isEmpty()) return
         if (!authManager.isConfigured) {
             _uiState.value = current.copy(configError = true)
             return
         }
         viewModelScope.launch {
             _uiState.value = current.copy(isBusy = true)
-            val result = block()
+            val result = authManager.resetPasswordForEmail(email)
             _uiState.value = _uiState.value.copy(
                 isBusy = false,
-                errorRes = if (result.isFailure) R.string.login_error_invalid else null,
+                sent = result.isSuccess,
+                errorRes = if (result.isFailure) R.string.recover_error_failed else null,
             )
         }
     }
@@ -73,7 +56,7 @@ class LoginViewModel(
         val Factory: Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as BizFlowApplication
-                LoginViewModel(app.authManager)
+                RecoverViewModel(app.authManager)
             }
         }
     }

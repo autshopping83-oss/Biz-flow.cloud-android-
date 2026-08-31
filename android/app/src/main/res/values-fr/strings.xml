@@ -84,5 +84,22 @@
     <string name="login_create_account">Créer un compte</string>
     <string name="login_error_invalid">E-mail ou mot de passe invalide</string>
     <string name="login_config_error">Configuration du serveur manquante. Réessayez plus tard.</string>
+    <string name="login_google">Continuer avec Google</string>
+    <string name="login_forgot_password">Mot de passe oublié</string>
+    <string name="account_title">Compte / Cloud</string>
+    <string name="account_not_connected">Pas encore de compte</string>
+    <string name="account_connected_as">Connecté en tant que %1$s</string>
+    <string name="account_local_note">Vos données restent sur cet appareil tant que vous ne connectez pas un compte.</string>
+    <string name="signup_title">Créer un compte</string>
+    <string name="signup_confirm_password_hint">Confirmer le mot de passe</string>
+    <string name="signup_button">Créer un compte</string>
+    <string name="signup_confirm_email">Compte créé. Confirmez votre e-mail pour terminer l\'inscription.</string>
+    <string name="signup_error_mismatch">Les mots de passe ne correspondent pas</string>
+    <string name="signup_error_failed">Impossible de créer le compte. Vérifiez vos informations.</string>
+    <string name="recover_title">Réinitialiser le mot de passe</string>
+    <string name="recover_description">Indiquez votre e-mail et nous enverrons un lien pour réinitialiser le mot de passe.</string>
+    <string name="recover_submit">Envoyer le lien</string>
+    <string name="recover_sent">Si l\'e-mail existe, nous avons envoyé un lien de réinitialisation.</string>
+    <string name="recover_error_failed">Impossible d\'envoyer le lien. Réessayez.</string>
     <string name="more_sign_out">Déconnexion</string>
 </resources>

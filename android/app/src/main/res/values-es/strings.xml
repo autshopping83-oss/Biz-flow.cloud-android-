@@ -84,5 +84,22 @@
     <string name="login_create_account">Crear cuenta</string>
     <string name="login_error_invalid">Correo o contraseña inválidos</string>
     <string name="login_config_error">Falta configuración del servidor. Inténtelo de nuevo más tarde.</string>
+    <string name="login_google">Continuar con Google</string>
+    <string name="login_forgot_password">He olvidado mi contraseña</string>
+    <string name="account_title">Cuenta / Cloud</string>
+    <string name="account_not_connected">Aún no tiene cuenta</string>
+    <string name="account_connected_as">Conectado como %1$s</string>
+    <string name="account_local_note">Sus datos se guardan solo en este dispositivo hasta que conecte una cuenta.</string>
+    <string name="signup_title">Crear cuenta</string>
+    <string name="signup_confirm_password_hint">Confirmar contraseña</string>
+    <string name="signup_button">Crear cuenta</string>
+    <string name="signup_confirm_email">Cuenta creada. Confirme su correo para terminar el registro.</string>
+    <string name="signup_error_mismatch">Las contraseñas no coinciden</string>
+    <string name="signup_error_failed">No se pudo crear la cuenta. Verifique los datos.</string>
+    <string name="recover_title">Recuperar contraseña</string>
+    <string name="recover_description">Indique su correo y le enviaremos un enlace para restablecer la contraseña.</string>
+    <string name="recover_submit">Enviar enlace</string>
+    <string name="recover_sent">Si el correo existe, hemos enviado un enlace de restablecimiento.</string>
+    <string name="recover_error_failed">No se pudo enviar el enlace. Inténtelo de nuevo.</string>
     <string name="more_sign_out">Cerrar sesión</string>
 </resources>

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -58,6 +59,7 @@ private fun nativeName(tag: String): String {
 fun MoreScreen(
     modifier: Modifier = Modifier,
     onOpenCompanySettings: () -> Unit = {},
+    onOpenAccount: () -> Unit = {},
     onSignOut: suspend () -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -96,6 +98,14 @@ fun MoreScreen(
                 leadingContent = { Icon(Icons.Filled.Settings, contentDescription = null) },
                 trailingContent = { Icon(Icons.Filled.ChevronRight, contentDescription = null) },
                 modifier = Modifier.clickable { showSettings = true },
+            )
+            ListItem(
+                headlineContent = { Text(text = stringResource(R.string.account_title)) },
+                leadingContent = { Icon(Icons.Filled.Cloud, contentDescription = null) },
+                trailingContent = { Icon(Icons.Filled.ChevronRight, contentDescription = null) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenAccount() },
             )
             ListItem(
                 headlineContent = { Text(text = stringResource(R.string.more_sign_out)) },
