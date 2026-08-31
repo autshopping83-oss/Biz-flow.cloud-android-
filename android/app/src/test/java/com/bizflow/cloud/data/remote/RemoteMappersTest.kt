@@ -150,9 +150,9 @@ class RemoteMappersTest {
 
     @Test
     fun `status mapeiam para nomes armazenaveis`() {
-        val emitted = sampleEntity(updatedAt = 1_800_000_000_000L).copy(
-            status = DocumentStatus.EMITIDO,
-        )
+        val emitted = sampleEntity().let {
+            it.copy(updatedAt = 1_800_000_000_000L, status = DocumentStatus.EMITIDO)
+        }
         val dto = emitted.toRemoteDoc(emptyList())
         assertEquals("EMITIDO", dto.status)
         assertEquals(DocumentStatus.EMITIDO, dto.toEntity().status)
