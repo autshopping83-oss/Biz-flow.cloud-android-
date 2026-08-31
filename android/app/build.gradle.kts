@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,11 +8,9 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-val localProps by lazy {
-    val props = java.util.Properties()
+val localProps: Properties = Properties().apply {
     val f = rootProject.file("local.properties")
-    if (f.exists()) f.inputStream().use { props.load(it) }
-    props
+    if (f.exists()) f.inputStream().use { load(it) }
 }
 
 fun resolveProperty(name: String): String =
