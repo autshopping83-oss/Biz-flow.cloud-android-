@@ -19,5 +19,5 @@ interface ClientDao {
     fun observeAll(): Flow<List<ClientEntity>>
 
     @Query("SELECT * FROM clients WHERE deletedAt IS NULL AND id = :id")
-    suspend fun getById(id: Long): ClientEntity?
+    suspend fun getById(id: String): ClientEntity?
 }

@@ -19,6 +19,7 @@ import com.bizflow.cloud.data.local.entity.LineItemEntity
 import com.bizflow.cloud.data.local.entity.ProductEntity
 import com.bizflow.cloud.data.local.entity.SyncQueueEntity
 import com.bizflow.cloud.data.local.entity.TransactionEntity
+import java.util.UUID
 
 @Database(
     entities = [
@@ -30,7 +31,7 @@ import com.bizflow.cloud.data.local.entity.TransactionEntity
         CompanySettingsEntity::class,
         SyncQueueEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -48,7 +49,7 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(
                     "ALTER TABLE company_settings ADD COLUMN documentTemplateId " +
-                        "TEXT NOT NULL DEFAULT '${CompanySettingsEntity.DEFAULT_TEMPLATE_ID}'"
+                        "TEXT NOT NULL DEFAULT '${CompanySettingsEntity.DEFAULT_TEMPLATE_ID}'",
                 )
             }
         }
@@ -61,5 +62,61 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE company_settings ADD COLUMN defaultSignaturePath TEXT")
             }
         }
+
+        val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+            private val CLIENT_COLUMNS =
+                "id, name, contact, nuit, location, userId, synced, createdAt, updatedAt, deletedAt"
+
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE clients_new (" +
+                        "id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL, contact TEXT NOT NULL, " +
+                        "nuit TEXT NOT NULL, location TEXT NOT NULL, userId TEXT, " +
+                        "synced INTEGER NOT NULL, createdAt INTEGER NOT NULL, " +
+                        "updatedAt INTEGER NOT NULL, deletedAt INTEGER)",
+                )
+                db.query("SELECT $CLIENT_COLUMNS FROM clients").use { cursor ->
+                    while (cursor.moveToNext()) {
+                        db.execSQL(
+                            "INSERT INTO clients_new ($CLIENT_COLUMNS) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            clientRowBindings(cursor),
+                        )
+                    }
+                }
+                db.execSQL("DROP TABLE clients")
+                db.execSQL("ALTER TABLE clients_new RENAME TO clients")
+            }
+        }
     }
 }
+
+private fun clientRowBindings(cursor: android.database.Cursor): Array<Any?> {
+    val oldId = cursor.getLong(cursor.getColumnIndexOrThrow("id"))
+    val userId = nullableString(cursor, "userId")
+    val deletedAt = nullableLong(cursor, "deletedAt")
+    return arrayOf(
+        stableClientUuid(oldId),
+        cursor.getString(cursor.getColumnIndexOrThrow("name")),
+        cursor.getString(cursor.getColumnIndexOrThrow("contact")),
+        cursor.getString(cursor.getColumnIndexOrThrow("nuit")),
+        cursor.getString(cursor.getColumnIndexOrThrow("location")),
+        userId,
+        cursor.getLong(cursor.getColumnIndexOrThrow("synced")),
+        cursor.getLong(cursor.getColumnIndexOrThrow("createdAt")),
+        cursor.getLong(cursor.getColumnIndexOrThrow("updatedAt")),
+        deletedAt,
+    )
+}
+
+private fun nullableString(cursor: android.database.Cursor, column: String): String? {
+    val index = cursor.getColumnIndex(column)
+    return if (index >= 0 && !cursor.isNull(index)) cursor.getString(index) else null
+}
+
+private fun nullableLong(cursor: android.database.Cursor, column: String): Long? {
+    val index = cursor.getColumnIndex(column)
+    return if (index >= 0 && !cursor.isNull(index)) cursor.getLong(index) else null
+}
+
+private fun stableClientUuid(oldId: Long): String =
+    UUID.nameUUIDFromBytes("bizflow-client:$oldId".toByteArray()).toString()

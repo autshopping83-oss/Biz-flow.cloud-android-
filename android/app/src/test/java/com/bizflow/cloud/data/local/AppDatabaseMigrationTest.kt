@@ -8,6 +8,7 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import com.bizflow.cloud.data.model.DocumentStatus
 import com.bizflow.cloud.data.model.DocumentType
+import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -24,16 +25,20 @@ import org.robolectric.annotation.Config
 class AppDatabaseMigrationTest {
 
     @Test
-    fun migrateV2ToV3_preservesDataAndAddsColumns() = runBlocking {
+    fun migrateV2ToV4_preservesDataRewritesClientIdsAndAddsColumns() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "migration-test-v2.db"
         createV2Fixture(context, name)
 
         val db = Room.databaseBuilder(context, AppDatabase::class.java, name)
-            .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
+            .addMigrations(
+                AppDatabase.MIGRATION_1_2,
+                AppDatabase.MIGRATION_2_3,
+                AppDatabase.MIGRATION_3_4,
+            )
             .build()
 
-        assertEquals(3, db.openHelper.writableDatabase.version)
+        assertEquals(4, db.openHelper.writableDatabase.version)
 
         val doc = db.documentDao().getById("doc-1")
         assertNotNull(doc)
@@ -47,6 +52,11 @@ class AppDatabaseMigrationTest {
         assertEquals("Minha Empresa", settings!!.name)
         assertEquals("template_1_modern", settings.documentTemplateId)
         assertNull(settings.logoPath)
+
+        val expectedClientId = UUID.nameUUIDFromBytes("bizflow-client:7".toByteArray()).toString()
+        val client = db.clientDao().getById(expectedClientId)
+        assertEquals(expectedClientId, client?.id)
+        assertEquals("Cliente A", client?.name)
 
         val documentColumns = db.openHelper.writableDatabase
             .query("PRAGMA table_info(documents)")
@@ -187,6 +197,10 @@ class AppDatabaseMigrationTest {
         db.execSQL(
             "INSERT INTO line_items (id, documentId, description, quantity, unitPrice, total) " +
                 "VALUES ('item-2', 'doc-1', 'Produto', 2, 10, 20)",
+        )
+        db.execSQL(
+            "INSERT INTO clients (id, name, contact, nuit, location, synced, createdAt, updatedAt) " +
+                "VALUES (7, 'Cliente A', '840000000', '111', 'Beira', 0, 1700000000000, 1700000000000)",
         )
     }
 }
