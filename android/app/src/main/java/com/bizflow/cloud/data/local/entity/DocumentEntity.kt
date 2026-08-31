@@ -9,6 +9,7 @@ import com.bizflow.cloud.data.model.DocumentType
 @Entity(tableName = "documents")
 data class DocumentEntity(
     @PrimaryKey val id: String,
+    val userId: String? = null,
     @ColumnInfo(name = "type") val documentType: DocumentType,
     val number: String,
     val date: String,

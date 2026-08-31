@@ -35,7 +35,8 @@ class SyncRepository(
     }
 
     private suspend fun pushPending(): Boolean {
-        val due = syncQueueDao.getDue(System.currentTimeMillis(), BATCH_SIZE)
+        val uid = remoteSync.currentUserId()
+        val due = syncQueueDao.getDue(uid, System.currentTimeMillis(), BATCH_SIZE)
         var allOk = true
         due.forEach { entry ->
             try {

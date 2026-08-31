@@ -49,6 +49,7 @@ fun DocumentEntity.toRemoteDoc(items: List<LineItemEntity>): RemoteDocumentDto =
 fun RemoteDocumentDto.toEntity(): DocumentEntity =
     DocumentEntity(
         id = id,
+        userId = userId.takeIf { it.isNotBlank() },
         documentType = DocumentType.fromCode(type),
         number = number,
         date = date,
@@ -112,7 +113,7 @@ fun RemoteClientDto.toEntity(): ClientEntity =
         contact = contact,
         nuit = nuit,
         location = location,
-        userId = null,
+        userId = userId.takeIf { it.isNotBlank() },
         synced = true,
         createdAt = isoToLong(createdAt ?: updatedAt ?: "1970-01-01T00:00:00Z"),
         updatedAt = isoToLong(updatedAt ?: createdAt ?: "1970-01-01T00:00:00Z"),

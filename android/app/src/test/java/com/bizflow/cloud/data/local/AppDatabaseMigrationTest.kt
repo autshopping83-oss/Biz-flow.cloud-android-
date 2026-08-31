@@ -36,10 +36,11 @@ class AppDatabaseMigrationTest {
                 AppDatabase.MIGRATION_2_3,
                 AppDatabase.MIGRATION_3_4,
                 AppDatabase.MIGRATION_4_5,
+                AppDatabase.MIGRATION_5_6,
             )
             .build()
 
-        assertEquals(5, db.openHelper.writableDatabase.version)
+        assertEquals(6, db.openHelper.writableDatabase.version)
 
         val doc = db.documentDao().getById("doc-1")
         assertNotNull(doc)
@@ -80,6 +81,13 @@ class AppDatabaseMigrationTest {
         assertTrue("companyTradingName", "companyTradingName" in migratedDocumentColumns)
         assertTrue("companyCountry", "companyCountry" in migratedDocumentColumns)
         assertTrue("companyIdentifierValue", "companyIdentifierValue" in migratedDocumentColumns)
+
+        assertTrue("userId", "userId" in migratedDocumentColumns)
+
+        val syncQueueColumns = db.openHelper.writableDatabase
+            .query("PRAGMA table_info(sync_queue)")
+            .use { c -> columnNames(c) }
+        assertTrue("user_id", "user_id" in syncQueueColumns)
 
         db.close()
     }

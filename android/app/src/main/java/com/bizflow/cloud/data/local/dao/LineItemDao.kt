@@ -19,4 +19,7 @@ interface LineItemDao {
 
     @Query("DELETE FROM line_items WHERE documentId = :documentId")
     suspend fun deleteByDocument(documentId: String)
+
+    @Query("DELETE FROM line_items WHERE documentId IN (SELECT id FROM documents WHERE userId = :userId)")
+    suspend fun clearForUser(userId: String)
 }

@@ -43,4 +43,7 @@ interface DocumentDao {
 
     @Query("SELECT COUNT(*) FROM documents WHERE deletedAt IS NULL AND type = :type")
     suspend fun countByType(type: String): Int
+
+    @Query("DELETE FROM documents WHERE userId = :userId")
+    suspend fun clearForUser(userId: String)
 }

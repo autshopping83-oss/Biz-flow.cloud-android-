@@ -14,6 +14,7 @@ class DocumentRepository(
     private val documentDao: DocumentDao,
     private val lineItemDao: LineItemDao,
     private val syncQueueDao: SyncQueueDao,
+    private val userIdProvider: () -> String? = { null },
 ) {
     fun observeAll(): Flow<List<DocumentWithItems>> = documentDao.observeAll()
 
@@ -27,10 +28,12 @@ class DocumentRepository(
     }
 
     suspend fun save(document: DocumentEntity, items: List<LineItemEntity>) {
-        lineItemDao.deleteByDocument(document.id)
-        documentDao.upsert(document)
+        val uid = userIdProvider()
+        val owned = if (uid != null && document.userId == null) document.copy(userId = uid) else document
+        lineItemDao.deleteByDocument(owned.id)
+        documentDao.upsert(owned)
         lineItemDao.upsertAll(items)
-        enqueue(document.id, SyncQueueEntity.OP_UPSERT)
+        enqueue(owned.id, SyncQueueEntity.OP_UPSERT)
     }
 
     suspend fun softDelete(id: String) {
@@ -41,6 +44,7 @@ class DocumentRepository(
     private suspend fun enqueue(entityId: String, operation: String) {
         syncQueueDao.insert(
             SyncQueueEntity.pending(
+                userId = userIdProvider(),
                 entityType = SyncQueueEntity.TYPE_DOCUMENT,
                 entityId = entityId,
                 operation = operation,

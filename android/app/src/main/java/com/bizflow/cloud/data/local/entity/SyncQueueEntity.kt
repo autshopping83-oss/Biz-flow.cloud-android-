@@ -1,5 +1,6 @@
 package com.bizflow.cloud.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -10,6 +11,7 @@ import androidx.room.PrimaryKey
 )
 data class SyncQueueEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @ColumnInfo(name = "user_id") val userId: String? = null,
     val entityType: String,
     val entityId: String,
     val operation: String,
@@ -31,8 +33,9 @@ data class SyncQueueEntity(
         const val TYPE_DOCUMENT = "DOCUMENT"
         const val TYPE_CLIENT = "CLIENT"
 
-        fun pending(entityType: String, entityId: String, operation: String, now: Long): SyncQueueEntity =
+        fun pending(userId: String?, entityType: String, entityId: String, operation: String, now: Long): SyncQueueEntity =
             SyncQueueEntity(
+                userId = userId,
                 entityType = entityType,
                 entityId = entityId,
                 operation = operation,

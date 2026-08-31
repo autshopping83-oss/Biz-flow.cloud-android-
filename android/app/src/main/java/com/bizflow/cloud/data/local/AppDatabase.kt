@@ -31,7 +31,7 @@ import java.util.UUID
         CompanySettingsEntity::class,
         SyncQueueEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -107,6 +107,13 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE documents ADD COLUMN companyWebsite TEXT")
                 db.execSQL("ALTER TABLE documents ADD COLUMN companyIdentifierType TEXT")
                 db.execSQL("ALTER TABLE documents ADD COLUMN companyIdentifierValue TEXT")
+            }
+        }
+
+        val MIGRATION_5_6: Migration = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE documents ADD COLUMN userId TEXT")
+                db.execSQL("ALTER TABLE sync_queue ADD COLUMN user_id TEXT")
             }
         }
     }

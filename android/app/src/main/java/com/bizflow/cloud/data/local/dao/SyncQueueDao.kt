@@ -12,9 +12,10 @@ interface SyncQueueDao {
     suspend fun insert(entry: SyncQueueEntity): Long
 
     @Query(
-        "SELECT * FROM sync_queue WHERE status IN ('PENDING','FAILED') AND nextRetryAt <= :now ORDER BY createdAt LIMIT :limit",
+        "SELECT * FROM sync_queue WHERE user_id = :userId AND status IN ('PENDING','FAILED') " +
+            "AND nextRetryAt <= :now ORDER BY createdAt LIMIT :limit",
     )
-    suspend fun getDue(now: Long, limit: Int): List<SyncQueueEntity>
+    suspend fun getDue(userId: String, now: Long, limit: Int): List<SyncQueueEntity>
 
     @Query(
         "UPDATE sync_queue SET status = :status, retryCount = retryCount + 1, " +
@@ -31,6 +32,9 @@ interface SyncQueueDao {
     @Query("DELETE FROM sync_queue WHERE status = 'SYNCED'")
     suspend fun clearSynced()
 
-    @Query("SELECT COUNT(*) FROM sync_queue WHERE status = 'PENDING'")
-    fun observePendingCount(): Flow<Int>
+    @Query("DELETE FROM sync_queue WHERE user_id = :userId")
+    suspend fun clearForUser(userId: String)
+
+    @Query("SELECT COUNT(*) FROM sync_queue WHERE user_id = :userId AND status = 'PENDING'")
+    fun observePendingCount(userId: String): Flow<Int>
 }

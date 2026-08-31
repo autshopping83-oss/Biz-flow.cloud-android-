@@ -18,6 +18,13 @@ class AuthManager(private val supabase: SupabaseClient?) {
 
     private val offlineStatus = MutableStateFlow<SessionStatus>(SessionStatus.NotAuthenticated(true))
 
+    /** Limpeza de dados locais executada antes do signOut, com o user_id atual. */
+    private var beforeSignOut: suspend (String) -> Unit = {}
+
+    fun registerSignOutCleanup(cleanup: suspend (String) -> Unit) {
+        beforeSignOut = cleanup
+    }
+
     val isConfigured: Boolean get() = supabase != null
 
     val sessionStatus: StateFlow<SessionStatus> = supabase?.auth?.sessionStatus ?: offlineStatus
@@ -55,6 +62,8 @@ class AuthManager(private val supabase: SupabaseClient?) {
     }
 
     suspend fun signOut() {
+        val uid = currentUserId()
+        if (uid != null) beforeSignOut(uid)
         supabase?.auth?.signOut()
     }
 
