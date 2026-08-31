@@ -4,6 +4,7 @@ import android.content.Context
 import com.bizflow.cloud.BuildConfig
 import com.bizflow.cloud.data.security.DeviceIdProvider
 import com.bizflow.cloud.data.security.EncryptedSessionManager
+import com.bizflow.cloud.data.security.InMemoryCodeVerifierCache
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.gotrue.Auth
@@ -28,6 +29,7 @@ object SupabaseClientProvider {
                 host = "auth"
                 autoLoadFromStorage = true
                 autoSaveToStorage = true
+                codeVerifierCache = InMemoryCodeVerifierCache()
                 sessionManager = EncryptedSessionManager(
                     context = context.applicationContext,
                     prefs = context.getSharedPreferences("bizflow_session", Context.MODE_PRIVATE),
