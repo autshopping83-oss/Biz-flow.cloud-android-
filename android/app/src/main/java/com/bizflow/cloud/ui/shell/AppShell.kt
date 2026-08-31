@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -31,6 +32,7 @@ import com.bizflow.cloud.ui.screens.PlaceholderScreen
 @Composable
 fun AppShell() {
     val navController = rememberNavController()
+    val app = LocalContext.current.applicationContext as BizFlowApplication
     Scaffold(
         bottomBar = { AppBottomBar(navController) },
     ) { innerPadding ->
@@ -64,6 +66,7 @@ fun AppShell() {
                     onOpenCompanySettings = {
                         navController.navigate(EditorRoute.COMPANY_SETTINGS)
                     },
+                    onSignOut = { app.authManager.signOut() },
                 )
             }
             composable(

@@ -8,11 +8,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -26,6 +26,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.bizflow.cloud.R
 import com.bizflow.cloud.core.util.LocaleHelper
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 private val supportedLanguageTags = listOf(
     "pt",
@@ -56,8 +58,10 @@ private fun nativeName(tag: String): String {
 fun MoreScreen(
     modifier: Modifier = Modifier,
     onOpenCompanySettings: () -> Unit = {},
+    onSignOut: suspend () -> Unit = {},
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showLanguages by rememberSaveable { mutableStateOf(false) }
     val currentLanguage = LocaleHelper.getCurrentLanguageTag(context)
@@ -92,6 +96,11 @@ fun MoreScreen(
                 leadingContent = { Icon(Icons.Filled.Settings, contentDescription = null) },
                 trailingContent = { Icon(Icons.Filled.ChevronRight, contentDescription = null) },
                 modifier = Modifier.clickable { showSettings = true },
+            )
+            ListItem(
+                headlineContent = { Text(text = stringResource(R.string.more_sign_out)) },
+                leadingContent = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) },
+                modifier = Modifier.clickable { scope.launch { onSignOut() } },
             )
         }
     }

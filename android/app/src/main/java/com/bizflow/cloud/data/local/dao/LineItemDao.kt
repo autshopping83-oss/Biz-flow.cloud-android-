@@ -11,6 +11,9 @@ interface LineItemDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(items: List<LineItemEntity>)
 
+    @Query("SELECT * FROM line_items WHERE documentId = :documentId")
+    suspend fun getByDocument(documentId: String): List<LineItemEntity>
+
     @Query("DELETE FROM line_items WHERE id = :id")
     suspend fun delete(id: String)
 

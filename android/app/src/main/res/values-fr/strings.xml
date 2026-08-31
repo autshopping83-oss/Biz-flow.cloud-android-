@@ -77,4 +77,12 @@
     <string name="settings_logo_hint">Choisir une image</string>
     <string name="settings_stamp">Cachet de l\'entreprise</string>
     <string name="settings_stamp_hint">Choisir une image</string>
+    <string name="login_title">Connectez-vous à votre compte</string>
+    <string name="login_email_hint">E-mail</string>
+    <string name="login_password_hint">Mot de passe</string>
+    <string name="login_sign_in">Se connecter</string>
+    <string name="login_create_account">Créer un compte</string>
+    <string name="login_error_invalid">E-mail ou mot de passe invalide</string>
+    <string name="login_config_error">Configuration du serveur manquante. Réessayez plus tard.</string>
+    <string name="more_sign_out">Déconnexion</string>
 </resources>

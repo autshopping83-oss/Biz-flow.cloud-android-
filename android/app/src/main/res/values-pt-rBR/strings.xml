@@ -77,4 +77,12 @@
     <string name="settings_logo_hint">Selecionar imagem</string>
     <string name="settings_stamp">Carimbo da Empresa</string>
     <string name="settings_stamp_hint">Selecionar imagem</string>
+    <string name="login_title">Entrar na sua conta</string>
+    <string name="login_email_hint">Email</string>
+    <string name="login_password_hint">Senha</string>
+    <string name="login_sign_in">Entrar</string>
+    <string name="login_create_account">Criar conta</string>
+    <string name="login_error_invalid">Email ou senha inválidos</string>
+    <string name="login_config_error">Configuração do servidor em falta. Volte a tentar mais tarde.</string>
+    <string name="more_sign_out">Sair</string>
 </resources>

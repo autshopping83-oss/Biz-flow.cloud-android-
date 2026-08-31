@@ -12,12 +12,15 @@ interface ClientDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(client: ClientEntity)
 
-    @Query("UPDATE clients SET deletedAt = :now, updatedAt = :now WHERE id = :id")
-    suspend fun softDelete(id: Long, now: Long)
-
     @Query("SELECT * FROM clients WHERE deletedAt IS NULL ORDER BY name COLLATE NOCASE")
     fun observeAll(): Flow<List<ClientEntity>>
 
     @Query("SELECT * FROM clients WHERE deletedAt IS NULL AND id = :id")
     suspend fun getById(id: String): ClientEntity?
+
+    @Query("SELECT * FROM clients WHERE id = :id")
+    suspend fun getByIdIncludingDeleted(id: String): ClientEntity?
+
+    @Query("UPDATE clients SET synced = 1, updatedAt = :now WHERE id = :id")
+    suspend fun markSynced(id: String, now: Long)
 }

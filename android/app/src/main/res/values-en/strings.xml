@@ -77,4 +77,12 @@
     <string name="settings_logo_hint">Select image</string>
     <string name="settings_stamp">Company Stamp</string>
     <string name="settings_stamp_hint">Select image</string>
+    <string name="login_title">Sign in to your account</string>
+    <string name="login_email_hint">Email</string>
+    <string name="login_password_hint">Password</string>
+    <string name="login_sign_in">Sign in</string>
+    <string name="login_create_account">Create account</string>
+    <string name="login_error_invalid">Invalid email or password</string>
+    <string name="login_config_error">Server configuration missing. Try again later.</string>
+    <string name="more_sign_out">Sign out</string>
 </resources>

@@ -32,6 +32,12 @@ interface DocumentDao {
     @Query("SELECT * FROM documents WHERE deletedAt IS NULL AND id = :id")
     suspend fun getById(id: String): DocumentWithItems?
 
+    @Query("SELECT * FROM documents WHERE id = :id")
+    suspend fun getEntityById(id: String): DocumentEntity?
+
+    @Query("UPDATE documents SET synced = 1, updatedAt = :now WHERE id = :id")
+    suspend fun markSynced(id: String, now: Long)
+
     @Query("SELECT COUNT(*) FROM documents WHERE deletedAt IS NULL AND synced = 0")
     fun observePendingSyncCount(): Flow<Int>
 

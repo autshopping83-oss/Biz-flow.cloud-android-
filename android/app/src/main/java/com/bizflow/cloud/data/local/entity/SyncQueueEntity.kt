@@ -13,12 +13,12 @@ data class SyncQueueEntity(
     val entityType: String,
     val entityId: String,
     val operation: String,
-    val payload: String?,
+    val payload: String? = null,
     val status: String,
     val retryCount: Int,
     val nextRetryAt: Long,
     val createdAt: Long,
-    val lastError: String?,
+    val lastError: String? = null,
 ) {
     companion object {
         const val OP_UPSERT = "UPSERT"
@@ -27,5 +27,19 @@ data class SyncQueueEntity(
         const val STATUS_SYNCING = "SYNCING"
         const val STATUS_SYNCED = "SYNCED"
         const val STATUS_FAILED = "FAILED"
+
+        const val TYPE_DOCUMENT = "DOCUMENT"
+        const val TYPE_CLIENT = "CLIENT"
+
+        fun pending(entityType: String, entityId: String, operation: String, now: Long): SyncQueueEntity =
+            SyncQueueEntity(
+                entityType = entityType,
+                entityId = entityId,
+                operation = operation,
+                status = STATUS_PENDING,
+                retryCount = 0,
+                nextRetryAt = 0L,
+                createdAt = now,
+            )
     }
 }

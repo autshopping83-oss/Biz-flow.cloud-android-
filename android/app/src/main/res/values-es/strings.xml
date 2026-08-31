@@ -77,4 +77,12 @@
     <string name="settings_logo_hint">Seleccionar imagen</string>
     <string name="settings_stamp">Sello de la Empresa</string>
     <string name="settings_stamp_hint">Seleccionar imagen</string>
+    <string name="login_title">Inicia sesión en tu cuenta</string>
+    <string name="login_email_hint">Correo electrónico</string>
+    <string name="login_password_hint">Contraseña</string>
+    <string name="login_sign_in">Iniciar sesión</string>
+    <string name="login_create_account">Crear cuenta</string>
+    <string name="login_error_invalid">Correo o contraseña inválidos</string>
+    <string name="login_config_error">Falta configuración del servidor. Inténtelo de nuevo más tarde.</string>
+    <string name="more_sign_out">Cerrar sesión</string>
 </resources>
