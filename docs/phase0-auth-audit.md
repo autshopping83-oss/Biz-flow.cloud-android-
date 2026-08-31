@@ -115,3 +115,31 @@ dispositivo/testes de produção:
 - E-mail de confirmação/recuperação (precisa de SMTP configurado).
 - Comportamento offline real (connectividade).
 Será reportado explicitamente ao fim.
+
+## 12. Implementado (iteração 8 — CI verde)
+
+- **Login opcional**: `AuthGate` removido; `MainActivity` renderiza sempre `AppShell`
+  (modo local default). Login deixou de ser o primeiro ecrã.
+- **`SupabaseClientProvider`**: `install(Auth) { scheme="bizflowcloud"; host="auth" }`
+  para o deep-link OAuth.
+- **`MainActivity`**: `onCreate` + `onNewIntent` → `auth.handleDeeplinks(intent)`
+  (importa a sessão no retorno do OAuth, fluxo IMPLICIT via fragment).
+- **`AuthManager`**: `signInWithGoogle()` (browser OAuth `signInWith(Google)`),
+  `resetPasswordForEmail(email)`; `signUp` corrigido (só faz auto-signin se a sessão
+  não foi criada no signUp — trata confirmação de email).
+- **Conta/Cloud**: `AccountScreen` + `LoginScreen` (com "Continuar com Google" e link
+  "Esqueci a palavra-passe") + `SignUpScreen` + `RecoverScreen`, acessíveis do
+  `MoreScreen`; o fluxo sai automaticamente quando a sessão fica Authenticated.
+- **Dados locais**: sem migração destrutiva; `documents` sem coluna local de owner —
+  ownership atribuída em push via `withUser(uid)`. `SyncWorker` continua no-op sem
+  sessão → modo local 100% offline; dados só sobem por opt-in (botão/sync explícito).
+- **i18n**: +17 chaves ×7 locales (102 consistentes).
+- **Teste**: `AuthManagerTest` (local-only → NotConfiguredException; sem sessão).
+
+### Validação
+- CI **verde**: `:app:testDebugUnitTest` passou + `:app:bundleRelease` (assinado,
+  `app-release.aab`) — commit `6b57847`.
+- **Não validável por CI** (requer dispositivo + consola): fluxo Google OAuth completo
+  (browser → deep-link → sessão), confirmação de email, e-mail de recuperação, e
+  comportamento offline real. A ligação de código ao Supabase já configurado está feita.
+
