@@ -31,7 +31,7 @@ import com.bizflow.cloud.data.local.entity.TransactionEntity
         SyncQueueEntity::class,
     ],
     version = 3,
-    exportSchema = false,
+    exportSchema = true,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {

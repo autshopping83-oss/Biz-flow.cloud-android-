@@ -3,6 +3,7 @@ node_modules
 
 # Capacitor / Android
 android/app/build/
+android/app/schemas/
 android/app/src/main/assets/public/
 android/capacitor-cordova-android-plugins/
 local.properties

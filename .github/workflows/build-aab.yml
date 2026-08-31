@@ -26,6 +26,11 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Run unit tests
+        run: |
+          cd android
+          ./gradlew testDebugUnitTest --no-daemon
+
       - name: Decode keystore from secret
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/bizflow-android.keystore
