@@ -27,3 +27,6 @@
 # --- OkHttp (engine Ktor) ---
 -dontwarn okhttp3.**
 -dontwarn okio.**
+
+# --- slf4j (referencia opcional do OkHttp) ---
+-dontwarn org.slf4j.impl.StaticLoggerBinder
