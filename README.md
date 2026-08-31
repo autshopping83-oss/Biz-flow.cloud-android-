@@ -1,6 +1,6 @@
-# 🧾 Biz-flow.cloud
+# 🧾 biz-flow.cloud
 
-**Biz-flow.cloud** é uma plataforma de gestão de negócios (Business OS) com aplicação **nativa Android** via Capacitor, emissão de documentos profissionais, controle financeiro e sincronização cloud opcional.
+**biz-flow.cloud** é uma plataforma de gestão de negócios (Business OS) com aplicação **nativa Android** via Capacitor, emissão de documentos profissionais, controle financeiro e sincronização cloud opcional.
 
 [![Android](https://img.shields.io/badge/Android-Native-3DDC84?logo=android)](https://play.google.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
@@ -108,4 +108,4 @@ VITE_SUPABASE_ANON_KEY=eyJhbGci...
 
 ## 📄 Licença
 
-MIT © Biz-flow.cloud
+MIT © biz-flow.cloud

@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Biz-flow.cloud"
+rootProject.name = "biz-flow.cloud"
 include(":app")

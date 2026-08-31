@@ -44,7 +44,7 @@ fun AppShell() {
         ) {
             composable(
                 route = BottomDestination.HOME.route,
-                deepLinks = listOf(navDeepLink { uriPattern = "bizflow://auth" }),
+                deepLinks = listOf(navDeepLink { uriPattern = "bizflowcloud://auth" }),
             ) {
                 HomeScreen(
                     onCreateDocument = { type ->
