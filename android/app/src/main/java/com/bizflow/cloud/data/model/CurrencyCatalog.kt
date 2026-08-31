@@ -141,7 +141,7 @@ object CurrencyCatalog {
         Currency("UAH", "Hryvnia", "₴", 2),
         Currency("UGX", "Uganda Shilling", "USh", 0),
         Currency("USD", "US Dollar", "$", 2),
-        Currency("UYU", "Uruguay Peso", "$U", 2),
+        Currency("UYU", "Uruguay Peso", "\$U", 2),
         Currency("UZS", "Uzbekistan Sum", "so'm", 2),
         Currency("VES", "Bolívar", "Bs", 2),
         Currency("VND", "Dong", "₫", 0),
