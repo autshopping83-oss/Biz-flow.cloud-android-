@@ -17,7 +17,7 @@ data class RemoteDocumentDto(
     val type: String,
     val number: String,
     val date: String,
-    val clientName: String,
+    @SerialName("client_name") val clientName: String,
     @SerialName("user_id") val userId: String = "",
     val currency: String = "MZN",
     val language: String = "pt",

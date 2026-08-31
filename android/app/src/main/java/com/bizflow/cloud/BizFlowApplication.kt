@@ -2,6 +2,7 @@ package com.bizflow.cloud
 
 import android.app.Application
 import androidx.room.Room
+import androidx.work.WorkManager
 import com.bizflow.cloud.data.auth.AuthManager
 import com.bizflow.cloud.data.local.AppDatabase
 import com.bizflow.cloud.data.remote.RemoteSync
@@ -69,6 +70,8 @@ class BizFlowApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         applicationScope.launch { authManager.awaitReady() }
-        SyncScheduler.schedule(this)
+        if (WorkManager.isInitialized()) {
+            SyncScheduler.schedule(this)
+        }
     }
 }
