@@ -89,7 +89,6 @@ class AppDatabaseMigrationTest {
         val helper: SupportSQLiteOpenHelper = FrameworkSQLiteOpenHelperFactory().create(
             SupportSQLiteOpenHelper.Configuration.builder(context)
                 .name(name)
-                .version(2)
                 .callback(object : SupportSQLiteOpenHelper.Callback(2) {
                     override fun onCreate(db: SupportSQLiteDatabase) = createV2Schema(db)
 
