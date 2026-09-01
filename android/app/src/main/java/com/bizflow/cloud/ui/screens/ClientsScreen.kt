@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -19,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -46,6 +49,16 @@ fun ClientsScreen(
     val clients by viewModel.clients.collectAsStateWithLifecycle()
     var showNew by rememberSaveable { mutableStateOf(false) }
     var editing by remember { mutableStateOf<ClientEntity?>(null) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val filtered = remember(clients, searchQuery) {
+        val q = searchQuery.trim()
+        if (q.isEmpty()) clients else clients.filter {
+            it.name.contains(q, ignoreCase = true) ||
+                it.contact.contains(q, ignoreCase = true) ||
+                it.location.contains(q, ignoreCase = true) ||
+                it.nuit.contains(q, ignoreCase = true)
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -79,7 +92,24 @@ fun ClientsScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            if (clients.isEmpty()) {
+            item {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text(text = stringResource(R.string.settings_currency_search)) },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Filled.Close, contentDescription = null)
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            if (filtered.isEmpty()) {
                 item {
                     Text(
                         text = stringResource(R.string.clients_empty),
@@ -88,7 +118,7 @@ fun ClientsScreen(
                     )
                 }
             }
-            items(clients, key = { it.id }) { client ->
+            items(filtered, key = { it.id }) { client ->
                 ListItem(
                     headlineContent = { Text(text = client.name) },
                     supportingContent = {
