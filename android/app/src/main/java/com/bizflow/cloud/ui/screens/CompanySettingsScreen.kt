@@ -204,11 +204,8 @@ private fun VatRateField(
 ) {
     var text by rememberSaveable { mutableStateOf(formatRatePercent(rate)) }
     LaunchedEffect(rate) {
-        val currentPercent = text.replace(',', '.').toDoubleOrNull()
-        val targetPercent = rate * 100.0
-        if (currentPercent == null || (currentPercent - targetPercent).let { it < -0.001 || it > 0.001 }) {
-            text = formatRatePercent(rate)
-        }
+        val expected = formatRatePercent(rate)
+        if (text != expected) text = expected
     }
     OutlinedTextField(
         value = text,
@@ -226,9 +223,11 @@ private fun VatRateField(
 
 private fun formatRatePercent(rate: Double): String {
     val percent = rate * 100.0
-    val whole = percent.toInt()
-    if (percent == whole.toDouble()) return whole.toString()
-    return percent.toString()
+    val rounded = Math.round(percent * 100.0) / 100.0
+    val whole = rounded.toLong()
+    if (rounded == whole.toDouble()) return whole.toString()
+    val s = rounded.toString()
+    return s.trimEnd('0').trimEnd('.')
 }
 
 @Composable

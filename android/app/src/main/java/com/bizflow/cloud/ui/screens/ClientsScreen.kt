@@ -44,7 +44,7 @@ fun ClientsScreen(
 ) {
     val clients by viewModel.clients.collectAsStateWithLifecycle()
     var showNew by rememberSaveable { mutableStateOf(false) }
-    var editing by rememberSaveable { mutableStateOf<ClientEntity?>(null) }
+    var editing by remember { mutableStateOf<ClientEntity?>(null) }
 
     Scaffold(
         modifier = modifier,

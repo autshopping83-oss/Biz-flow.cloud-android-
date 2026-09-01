@@ -89,8 +89,8 @@ class CompanySettingsViewModel(
     }
 
     fun updateDefaultTaxRate(rateText: String) {
-        val fraction = (rateText.replace(',', '.').toDoubleOrNull() ?: 0.0) / 100.0
-            .coerceIn(0.0, 1.0)
+        val parsed = rateText.replace(',', '.').toDoubleOrNull() ?: 0.0
+        val fraction = (parsed / 100.0).coerceIn(0.0, 1.0)
         viewModelScope.launch {
             companySettingsRepository.setDefaultTaxRate(fraction)
             _uiState.value = _uiState.value.copy(defaultTaxRate = fraction)
