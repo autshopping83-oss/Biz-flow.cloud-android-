@@ -3,6 +3,7 @@ package com.bizflow.cloud.ui.screens
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -84,16 +85,17 @@ fun DateField(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = {},
-        readOnly = true,
-        label = { Text(text = stringResource(labelRes)) },
-        trailingIcon = { Icon(Icons.Filled.CalendarToday, contentDescription = null) },
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-    )
+    Box(modifier = modifier.fillMaxWidth().clickable { onClick() }) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            readOnly = true,
+            enabled = false,
+            label = { Text(text = stringResource(labelRes)) },
+            trailingIcon = { Icon(Icons.Filled.CalendarToday, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
 
 @Composable
