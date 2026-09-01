@@ -136,4 +136,5 @@
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="clients_delete_confirm">Are you sure you want to delete client %1$s?</string>
+    <string name="edit">Edit</string>
 </resources>
