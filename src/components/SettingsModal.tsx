@@ -96,7 +96,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>
-            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block">IVA Padrão (%)</label>
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block">Taxa Fiscal Padrão (VAT) (%)</label>
             <input type="number" name="defaultTaxRate" value={companySettings.defaultTaxRate} onChange={onUpdate} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm dark:text-white transition-colors" />
           </div>
           <div>

@@ -132,4 +132,8 @@
     <string name="client_identifier">Tax ID / Document</string>
     <string name="clients_add">Add client</string>
     <string name="clients_empty">No clients yet</string>
+    <string name="documents_delete_confirm">Delete document %1$s?</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="clients_delete_confirm">Are you sure you want to delete client %1$s?</string>
 </resources>

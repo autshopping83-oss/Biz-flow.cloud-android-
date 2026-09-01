@@ -71,11 +71,23 @@ fun AppShell() {
                     onCreateDocument = { type ->
                         navController.navigate("${EditorRoute.EDITOR}/${type.code}")
                     },
+                    onViewHistory = {
+                        navController.navigate(BottomDestination.DOCUMENTS.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                 )
             }
             composable(BottomDestination.DOCUMENTS.route) {
                 DocumentsScreen(
                     onAddDocument = {
+                        navController.navigate("${EditorRoute.EDITOR}/${DocumentType.FATURA.code}")
+                    },
+                    onEditDocument = { type ->
+                        navController.navigate("${EditorRoute.EDITOR}/${type.code}")
+                    },
                         navController.navigate("${EditorRoute.EDITOR}/${DocumentType.FATURA.code}")
                     },
                 )

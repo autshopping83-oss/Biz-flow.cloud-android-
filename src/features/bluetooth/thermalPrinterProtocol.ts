@@ -1,6 +1,8 @@
 // src/features/bluetooth/thermalPrinterProtocol.ts
 // Protocolo ESC/POS para impressoras térmicas 58/80mm
 
+import { getTranslation } from '../../services/translationService';
+
 export class ThermalPrinter {
   private data: number[] = [];
 
@@ -119,10 +121,13 @@ export class ThermalPrinter {
     discount: number;
     total: number;
     currency?: string;
+    lang?: string;
     stampText?: string;
   }): this {
-    const curr = content.currency || 'MT';
-    const fmt = (v: number) => `${v.toLocaleString()} ${curr}`;
+    const lang = content.lang || '';
+    const t = (k: string) => getTranslation(lang, k);
+    const curr = content.currency || '';
+    const fmt = (v: number) => (curr ? `${v.toLocaleString()} ${curr}` : v.toLocaleString());
 
     this.initialize()
       .align('center')
@@ -133,7 +138,7 @@ export class ThermalPrinter {
       .bold(false);
 
     if (content.companyNuit) {
-      this.text(`NUIT: ${content.companyNuit}`);
+      this.text(`${t('taxId')}: ${content.companyNuit}`);
     }
 
     this.separator()
@@ -142,22 +147,22 @@ export class ThermalPrinter {
       .text(content.documentType)
       .fontSize(1, 1)
       .bold(false)
-      .text(`Nº ${content.documentNumber}`)
-      .text(`Data: ${content.date}`);
+      .text(`${t('reference')} ${content.documentNumber}`)
+      .text(`${t('date')}: ${content.date}`);
 
     if (content.clientName) {
       this.separator()
-        .bold(true).text('Cliente:').bold(false)
+        .bold(true).text(`${t('clientLabel')}:`).bold(false)
         .text(content.clientName);
       if (content.clientNuit) {
-        this.text(`NUIT: ${content.clientNuit}`);
+        this.text(`${t('taxId')}: ${content.clientNuit}`);
       }
     }
 
     this.separator()
       .align('left')
       .bold(true)
-      .text('Descrição          Qtd  Preço   Total')
+      .text(`${t('description')}          ${t('qty')}  ${t('unitPrice')}   ${t('total')}`)
       .bold(false);
 
     for (const item of content.items) {
@@ -168,19 +173,19 @@ export class ThermalPrinter {
 
     this.separator()
       .align('right')
-      .text(`Subtotal: ${fmt(content.subtotal)}`);
+      .text(`${t('subtotalLabel')}: ${fmt(content.subtotal)}`);
 
     if (content.taxRate > 0) {
-      this.text(`IVA (${content.taxRate}%): ${fmt(content.taxAmount)}`);
+      this.text(`${t('vat')} (${content.taxRate}%): ${fmt(content.taxAmount)}`);
     }
 
     if (content.discount > 0) {
-      this.text(`Desconto: -${fmt(content.discount)}`);
+      this.text(`${t('discount')}: -${fmt(content.discount)}`);
     }
 
     this.fontSize(2, 2)
       .bold(true)
-      .text(`TOTAL: ${fmt(content.total)}`)
+      .text(`${t('grandTotal')}: ${fmt(content.total)}`)
       .fontSize(1, 1)
       .bold(false);
 
@@ -194,8 +199,7 @@ export class ThermalPrinter {
 
     this.separator()
       .align('center')
-      .text('Obrigado pela preferência!')
-      .text('Gerado por Biz-flow')
+      .text(t('generatedBy'))
       .lineFeed(3)
       .cut();
 

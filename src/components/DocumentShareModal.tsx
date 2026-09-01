@@ -1,6 +1,7 @@
 // src/components/DocumentShareModal.tsx
 import { useState } from 'react';
 import { ReceiptData, CompanySettings } from '../types';
+import { getTranslation } from '../services/translationService';
 import { DocumentShareModalView } from './DocumentShareModalView';
 
 interface DocumentShareModalProps {
@@ -19,33 +20,38 @@ interface DocumentShareModalProps {
 
 type ShareMethod = 'email' | 'whatsapp' | 'download' | 'print' | 'nativeshare' | null;
 
-async function getPdfData(onGetPdfBlob: (() => Promise<{ blob: Blob; fileName: string } | null>) | undefined, fMoney: (val: number) => string, formData: ReceiptData): Promise<{ blob: Blob; fileName: string } | null> {
+async function getPdfData(onGetPdfBlob: (() => Promise<{ blob: Blob; fileName: string } | null>) | undefined, fMoney: (val: number) => string, formData: ReceiptData, lang: string): Promise<{ blob: Blob; fileName: string } | null> {
   try {
     if (onGetPdfBlob) {
       const data = await onGetPdfBlob();
       if (data) return data;
     }
-    return gerarPdfFallback(fMoney, formData);
+    return gerarPdfFallback(fMoney, formData, lang);
   } catch (e) {
     console.error('getPdfData FAIL:', e);
     return null;
   }
 }
 
-async function gerarPdfFallback(fMoney: (val: number) => string, formData: ReceiptData): Promise<{ blob: Blob; fileName: string } | null> {
+async function gerarPdfFallback(fMoney: (val: number) => string, formData: ReceiptData, lang: string): Promise<{ blob: Blob; fileName: string } | null> {
   try {
     const { jsPDF } = await import('jspdf');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const doc = formData;
-    const tipo = { INVOICE: 'FACTURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type;
+    const t = (k: string) => getTranslation(lang, k);
+    const tipo =
+      doc.type === 'INVOICE' ? t('invoice')
+      : doc.type === 'RECEIPT' ? t('receipt')
+      : doc.type === 'INVOICE_RECEIPT' ? t('invoiceReceipt')
+      : t('quote');
     let y = 20;
     pdf.setFontSize(18);
-    pdf.text(doc.companyName || 'Biz-flow', 105, y, { align: 'center' }); y += 10;
+    pdf.text(doc.companyName || 'biz-flow.cloud', 105, y, { align: 'center' }); y += 10;
     pdf.setFontSize(14);
     pdf.text(tipo + ' #' + doc.number, 105, y, { align: 'center' }); y += 8;
     pdf.setFontSize(10);
-    pdf.text('Data: ' + doc.date, 20, y); y += 8;
-    if (doc.clientName) { pdf.text('Cliente: ' + doc.clientName, 20, y); y += 6; }
+    pdf.text(`${t('issueDate')}: ` + doc.date, 20, y); y += 8;
+    if (doc.clientName) { pdf.text(`${t('clientLabel')}: ` + doc.clientName, 20, y); y += 6; }
     y += 4;
     pdf.setFontSize(8);
     doc.items.forEach(item => {
@@ -54,12 +60,12 @@ async function gerarPdfFallback(fMoney: (val: number) => string, formData: Recei
       pdf.text(line, 20, y); y += 6;
     });
     y += 4; pdf.setFontSize(12);
-    pdf.text('Subtotal: ' + fMoney(doc.subtotal), 190, y, { align: 'right' }); y += 7;
-    if (doc.taxRate > 0) { pdf.text('IVA (' + doc.taxRate + '%): ' + fMoney(doc.taxAmount), 190, y, { align: 'right' }); y += 7; }
-    if (doc.discount > 0) { pdf.text('Desconto: -' + fMoney(doc.discount), 190, y, { align: 'right' }); y += 7; }
+    pdf.text(`${t('subtotalLabel')}: ` + fMoney(doc.subtotal), 190, y, { align: 'right' }); y += 7;
+    if (doc.taxRate > 0) { pdf.text(`${t('vat')} (` + doc.taxRate + '%): ' + fMoney(doc.taxAmount), 190, y, { align: 'right' }); y += 7; }
+    if (doc.discount > 0) { pdf.text(`${t('discount')}: -` + fMoney(doc.discount), 190, y, { align: 'right' }); y += 7; }
     pdf.setFontSize(16);
     pdf.setTextColor(37, 99, 235);
-    pdf.text('Total: ' + fMoney(doc.total), 190, y + 4, { align: 'right' });
+    pdf.text(`${t('grandTotal')}: ` + fMoney(doc.total), 190, y + 4, { align: 'right' });
     const blob = pdf.output('blob');
     const fileName = (doc.number || 'documento').replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
     return { blob, fileName };
@@ -121,8 +127,10 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
 
   const isNative = typeof window !== 'undefined' && !!(window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
 
+  const qt = (key: string) => getTranslation(companySettings.language, key);
+
   // Gera PDF (html2canvas → jsPDF fallback)
-  const getPdf = async () => getPdfData(onGetPdfBlob, fMoney, formData);
+  const getPdf = async () => getPdfData(onGetPdfBlob, fMoney, formData, companySettings.language);
 
   // Native Share Sheet (Android share sheet com PDF anexado)
   const handleNativeShare = async () => {
@@ -130,7 +138,7 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
     setSendResult(null);
     const pdfData = await getPdf();
     if (!pdfData) {
-      setSendResult({ success: false, message: 'Erro ao gerar PDF.' });
+      setSendResult({ success: false, message: qt('pdfGenerateError') });
       setIsSending(false);
       return;
     }
@@ -138,13 +146,13 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
       const uri = await savePdfToCache(pdfData.blob, pdfData.fileName);
       if (uri) {
         const { Share } = await import('@capacitor/share');
-        await Share.share({ title: pdfData.fileName, url: uri, dialogTitle: 'Compartilhar Documento' });
-        setSendResult({ success: true, message: 'Documento partilhado!' });
+        await Share.share({ title: pdfData.fileName, url: uri, dialogTitle: qt('shareDocument') });
+        setSendResult({ success: true, message: qt('docShared') });
       } else {
-        setSendResult({ success: false, message: 'Erro ao preparar PDF.' });
+        setSendResult({ success: false, message: qt('pdfPrepareError') });
       }
     } catch {
-      setSendResult({ success: false, message: 'Partilha cancelada.' });
+      setSendResult({ success: false, message: qt('shareCancelled') });
     } finally {
       setIsSending(false);
     }
@@ -164,9 +172,9 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
     if (isNative) {
       const uri = await savePdfToDevice(pdfData.blob, pdfData.fileName);
       if (uri) {
-        setSendResult({ success: true, message: `PDF guardado em: Biz-flow/${pdfData.fileName}` });
+        setSendResult({ success: true, message: `${qt('pdfSavedAt')} Biz-flow/${pdfData.fileName}` });
       } else {
-        setSendResult({ success: false, message: 'Erro ao guardar PDF.' });
+        setSendResult({ success: false, message: qt('pdfSaveError') });
       }
     } else {
       // Web fallback: download
@@ -176,7 +184,7 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
       document.body.appendChild(a); a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      setSendResult({ success: true, message: `PDF "${pdfData.fileName}" descarregado!` });
+      setSendResult({ success: true, message: `${qt('pdfDownloaded')} "${pdfData.fileName}"` });
     }
     setIsSending(false);
   };
@@ -187,7 +195,7 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
       // Gerar PDF primeiro
       const pdfData = await getPdf();
       if (!pdfData) {
-        setSendResult({ success: false, message: 'Erro ao gerar PDF.' });
+        setSendResult({ success: false, message: qt('pdfGenerateError') });
         return;
       }
       try {
@@ -196,23 +204,24 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
         const cacheUri = await savePdfToCache(pdfData.blob, pdfData.fileName);
         // Abrir Share sheet nativo com o PDF
         const { Share } = await import('@capacitor/share');
+        const cuerpo = `${qt('msgGreeting')} ${recipientName}, ${qt('msgDocument').toLowerCase()} ${formData.number}`;
         await Share.share({
-          title: `Documento ${formData.number}`,
-          text: `Olá ${recipientName}, segue o documento ${formData.number}`,
+          title: formData.number,
+          text: cuerpo,
           url: cacheUri || uri || undefined,
-          dialogTitle: 'Enviar via WhatsApp',
+          dialogTitle: qt('shareViaWhatsApp'),
         });
-        setSendResult({ success: true, message: `Documento partilhado com ${recipientName}!` });
+        setSendResult({ success: true, message: `${qt('docSharedWith')} ${recipientName}!` });
       } catch (e: any) {
         const isCancel = e?.message === 'canceled' || e?.message?.includes('cancel');
-        setSendResult({ success: false, message: isCancel ? 'Partilha cancelada.' : 'Erro ao abrir WhatsApp.' });
+        setSendResult({ success: false, message: isCancel ? qt('shareCancelled') : qt('whatsAppOpenError') });
       }
     } else {
       // Web: wa.me com texto
       const cleanPhone = telefone.replace(/\D/g, '');
-      const texto = `Olá ${recipientName}, segue o documento ${formData.number} no valor de ${fMoney(formData.total)}. Biz-flow`;
+      const texto = `${qt('msgGreeting')} ${recipientName}, ${qt('msgDocument').toLowerCase()} ${formData.number} ${qt('msgTotal')} ${fMoney(formData.total)}. ${qt('msgBizFlow')}`;
       window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(texto)}`, '_blank');
-      setSendResult({ success: true, message: `WhatsApp aberto para ${recipientName}!` });
+      setSendResult({ success: true, message: `${qt('whatsAppOpened')} ${recipientName}!` });
     }
   };
 
@@ -221,49 +230,52 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
     if (isNative) {
       const pdfData = await getPdf();
       if (!pdfData) {
-        setSendResult({ success: false, message: 'Erro ao gerar PDF.' });
+        setSendResult({ success: false, message: qt('pdfGenerateError') });
         return;
       }
+      let deviceUri: string | null = null;
       try {
-        const deviceUri = await savePdfToDevice(pdfData.blob, pdfData.fileName);
+        deviceUri = await savePdfToDevice(pdfData.blob, pdfData.fileName);
         const cacheUri = await savePdfToCache(pdfData.blob, pdfData.fileName);
         if (cacheUri) {
           const { Share } = await import('@capacitor/share');
+          const bodyTxt = `${qt('msgGreeting')} ${recipientName},\n\n${qt('msgDocument').toLowerCase()} ${formData.number}.\n\n${qt('msgClosing')},\n${companySettings.name}`;
           await Share.share({
-            title: `Documento ${formData.number}`,
-            text: `Olá ${recipientName},\n\nSegue o documento ${formData.number}.\n\nCumprimentos,\n${companySettings.name}`,
+            title: formData.number,
+            text: bodyTxt,
             url: cacheUri,
-            dialogTitle: 'Enviar documento por email',
+            dialogTitle: qt('sendDocEmailDialog'),
           });
-          setSendResult({ success: true, message: `Documento partilhado com ${recipientName}!` });
+          setSendResult({ success: true, message: `${qt('docSharedWith')} ${recipientName}!` });
         } else {
-          throw new Error('Falha ao guardar PDF em cache. Verifique as permissoes de armazenamento.');
+          throw new Error(qt('cacheSaveError'));
         }
-      } catch (e: any) {
-        const isCancel = e?.message === 'canceled' || e?.message?.includes('cancel');
+      } catch (e) {
+        const err = e as { message?: string } | undefined;
+        const isCancel = err?.message === 'canceled' || err?.message?.includes('cancel');
         if (isCancel) {
-          setSendResult({ success: false, message: 'Partilha cancelada.' });
+          setSendResult({ success: false, message: qt('shareCancelled') });
         } else {
           // Fallback: abrir email nativo com destinatário preenchido
           try {
             const { AppLauncher } = await import('@capacitor/app-launcher');
-            const subject = `Documento ${formData.number}`;
-            const body = `Olá ${recipientName},\n\nSegue o documento ${formData.number}.\n\nCumprimentos,\n${companySettings.name}`;
+            const subject = `${formData.number}`;
+            const body = `${qt('msgGreeting')} ${recipientName},\n\n${qt('msgDocument').toLowerCase()} ${formData.number}.\n\n${qt('msgClosing')},\n${companySettings.name}`;
             const mailtoUrl = `mailto:${destinatario}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             await AppLauncher.openUrl({ url: mailtoUrl });
-            const savedMsg = deviceUri ? ` PDF guardado em Biz-flow/ para anexar.` : '';
-            setSendResult({ success: true, message: `Email aberto para ${recipientName}!${savedMsg}` });
+            const savedMsg = deviceUri ? qt('pdfSavedAppend') : '';
+            setSendResult({ success: true, message: `${qt('emailOpenedFor')} ${recipientName}!${savedMsg}` });
           } catch {
-            setSendResult({ success: false, message: 'Erro ao abrir o email.' });
+            setSendResult({ success: false, message: qt('emailOpenError') });
           }
         }
       }
     } else {
       // Web: mailto:
-      const subject = `Documento ${formData.number}`;
-      const body = `Olá ${recipientName},\n\nSegue o documento ${formData.number}.\n\nCumprimentos,\n${companySettings.name}`;
+      const subject = `${formData.number}`;
+      const body = `${qt('msgGreeting')} ${recipientName},\n\n${qt('msgDocument').toLowerCase()} ${formData.number}.\n\n${qt('msgClosing')},\n${companySettings.name}`;
       window.open(`mailto:${destinatario}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
-      setSendResult({ success: true, message: `Email aberto para ${recipientName}!` });
+      setSendResult({ success: true, message: `${qt('emailOpenedFor')} ${recipientName}!` });
     }
   };
 
@@ -289,7 +301,7 @@ export const DocumentShareModal: React.FC<DocumentShareModalProps> = ({
       try {
         await onPrintThermal();
       } catch {
-        setSendResult({ success: false, message: 'Conecte uma impressora Bluetooth primeiro.' });
+        setSendResult({ success: false, message: qt('printBluetoothError') });
         return;
       }
     } else {

@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import jsPDF from 'jspdf';
 import { validators } from '../../utils/validators';
-import { formatMoney } from '../../services/translationService';
+import { formatMoney, getTranslation } from '../../services/translationService';
 import { ReceiptData, CompanySettings } from '../../types';
 
 // Escape HTML entities para prevenir XSS em document.write
@@ -16,7 +16,13 @@ function buildDocumentHtml(formData: ReceiptData, companySettings: CompanySettin
   const e = escapeHtml;
   const doc = formData;
   const settings = companySettings;
-  const tipo = { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type;
+  const lang = companySettings.language || '';
+  const t = (k: string) => getTranslation(lang, k);
+  const tipo =
+    doc.type === 'INVOICE' ? t('invoice')
+    : doc.type === 'RECEIPT' ? t('receipt')
+    : doc.type === 'INVOICE_RECEIPT' ? t('invoiceReceipt')
+    : t('quote');
   const logo = doc.companyLogo || settings.logo;
 
   const itemsHtml = doc.items.map((item, i) => `
@@ -29,18 +35,18 @@ function buildDocumentHtml(formData: ReceiptData, companySettings: CompanySettin
 
   const taxHtml = doc.taxRate > 0 ? `
     <div class="finance-row">
-      <span>IVA (${doc.taxRate}%):</span>
+      <span>${t('vat')} (${doc.taxRate}%):</span>
       <span class="value">${fM(doc.taxAmount)}</span>
     </div>` : '';
 
   const discountHtml = doc.discount > 0 ? `
     <div class="finance-row">
-      <span>Desconto:</span>
+      <span>${t('discount')}:</span>
       <span class="value">- ${fM(doc.discount)}</span>
     </div>` : '';
 
   return `<!DOCTYPE html>
-<html lang="pt">
+<html lang="${e(lang).slice(0, 2) || 'en'}">
 <head>
 <meta charset="utf-8">
 <title>${tipo} ${doc.number}</title>
@@ -92,46 +98,46 @@ function buildDocumentHtml(formData: ReceiptData, companySettings: CompanySettin
   <div class="header">
     <div class="header-left">
       ${logo ? `<img class="logo" src="${logo}" alt="Logo" />` : ''}
-      <div class="company-name">${e(doc.companyName || settings.name || 'Biz-flow')}</div>
-      ${e(doc.companyNuit || settings.nuit || '') ? `<div class="company-detail">NUIT: ${e(doc.companyNuit || settings.nuit || '')}</div>` : ''}
+      <div class="company-name">${e(doc.companyName || settings.name || 'biz-flow.cloud')}</div>
+      ${e(doc.companyNuit || settings.nuit || '') ? `<div class="company-detail">${t('taxId')}: ${e(doc.companyNuit || settings.nuit || '')}</div>` : ''}
       <div class="company-detail">${e(doc.companyAddress || settings.address || '')}</div>
       <div class="company-detail">${e(doc.companyContact || settings.contact || '')}</div>
     </div>
     <div class="header-right">
       <div class="doc-type">${tipo}</div>
-      <div class="doc-number">Nº ${e(doc.number)}</div>
-      <div class="doc-date">Emissão: ${e(doc.date)}</div>
-      ${doc.dueDate ? `<div class="doc-date">Vencimento: ${e(doc.dueDate)}</div>` : ''}
+      <div class="doc-number">${t('reference')} ${e(doc.number)}</div>
+      <div class="doc-date">${t('issueDate')}: ${e(doc.date)}</div>
+      ${doc.dueDate ? `<div class="doc-date">${t('paymentDue')}: ${e(doc.dueDate)}</div>` : ''}
     </div>
   </div>
   <hr class="divider" />
   ${doc.clientName ? `
   <div class="client-section">
-    <div><div class="label">Cliente</div><div class="value">${e(doc.clientName)}</div></div>
-    ${doc.clientNuit ? `<div><div class="label">NUIT</div><div class="value">${e(doc.clientNuit)}</div></div>` : ''}
-    ${doc.clientContact ? `<div><div class="label">Contacto</div><div class="value">${e(doc.clientContact)}</div></div>` : ''}
-    ${doc.clientLocation ? `<div><div class="label">Localização</div><div class="value">${e(doc.clientLocation)}</div></div>` : ''}
+    <div><div class="label">${t('clientLabel')}</div><div class="value">${e(doc.clientName)}</div></div>
+    ${doc.clientNuit ? `<div><div class="label">${t('taxId')}</div><div class="value">${e(doc.clientNuit)}</div></div>` : ''}
+    ${doc.clientContact ? `<div><div class="label">${t('contact')}</div><div class="value">${e(doc.clientContact)}</div></div>` : ''}
+    ${doc.clientLocation ? `<div><div class="label">${t('location')}</div><div class="value">${e(doc.clientLocation)}</div></div>` : ''}
   </div>` : ''}
   <table class="items">
     <thead>
-      <tr><th class="col-desc">Descrição</th><th class="col-qty">Qtd</th><th class="col-price">Preço Unit.</th><th class="col-total">Total</th></tr>
+      <tr><th class="col-desc">${t('description')}</th><th class="col-qty">${t('qty')}</th><th class="col-price">${t('unitPrice')}</th><th class="col-total">${t('total')}</th></tr>
     </thead>
     <tbody>${itemsHtml}</tbody>
   </table>
   <div class="finance-wrapper">
     <div class="finance-box">
-      <div class="finance-row"><span>Subtotal</span><span class="value">${fM(doc.subtotal)}</span></div>
+      <div class="finance-row"><span>${t('subtotalLabel')}</span><span class="value">${fM(doc.subtotal)}</span></div>
       ${taxHtml}
       ${discountHtml}
-      <div class="total-row"><span class="label">Total ${tipo === 'ORÇAMENTO' ? 'Estimado' : 'a Pagar'}</span><span class="value">${fM(doc.total)}</span></div>
+      <div class="total-row"><span class="label">${t('grandTotal')}</span><span class="value">${fM(doc.total)}</span></div>
     </div>
   </div>
   ${doc.signatureData || settings.customStamp ? `
   <div class="footer-section">
-    ${doc.signatureData ? `<div><div style="font-size:8px;color:#888;margin-bottom:2px">Assinatura</div><img class="signature-area" src="${doc.signatureData}" alt="Assinatura" /></div>` : ''}
-    ${settings.customStamp ? `<div><img class="stamp-area" src="${settings.customStamp}" alt="Carimbo" /></div>` : ''}
+    ${doc.signatureData ? `<div><div style="font-size:8px;color:#888;margin-bottom:2px">${t('signature')}</div><img class="signature-area" src="${doc.signatureData}" alt="${t('signature')}" /></div>` : ''}
+    ${settings.customStamp ? `<div><img class="stamp-area" src="${settings.customStamp}" alt="Stamp" /></div>` : ''}
   </div>` : ''}
-  <div class="footer-note">Gerado por Biz-flow.cloud — Documento processado electronicamente</div>
+  <div class="footer-note">${t('generatedBy')}</div>
 </body>
 </html>`;
 }
@@ -141,7 +147,13 @@ function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySetting
   try {
     const doc = formData;
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const tipo = { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type;
+    const lang = companySettings.language || '';
+    const t = (k: string) => getTranslation(lang, k);
+    const tipo =
+      doc.type === 'INVOICE' ? t('invoice')
+      : doc.type === 'RECEIPT' ? t('receipt')
+      : doc.type === 'INVOICE_RECEIPT' ? t('invoiceReceipt')
+      : t('quote');
     const pageW = 185;
     const margin = 12;
     let y = margin;
@@ -158,16 +170,16 @@ function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySetting
 
     pdf.setFontSize(16); pdf.setTextColor(0, 0, 0); pdf.setFont('Helvetica', 'bold');
     pdf.text(tipo, margin + pageW, y + 4, { align: 'right' });
-    pdf.setFontSize(11); pdf.text('Nº ' + doc.number, margin + pageW, y + 9, { align: 'right' });
+    pdf.setFontSize(11); pdf.text(`${t('reference')} ${doc.number}`, margin + pageW, y + 9, { align: 'right' });
     pdf.setFontSize(8); pdf.setTextColor(80, 80, 80); pdf.setFont('Helvetica', 'normal');
-    pdf.text('Emissão: ' + doc.date, margin + pageW, y + 13, { align: 'right' });
-    if (doc.dueDate) pdf.text('Vencimento: ' + doc.dueDate, margin + pageW, y + 17, { align: 'right' });
+    pdf.text(`${t('issueDate')}: ${doc.date}`, margin + pageW, y + 13, { align: 'right' });
+    if (doc.dueDate) pdf.text(`${t('paymentDue')}: ${doc.dueDate}`, margin + pageW, y + 17, { align: 'right' });
 
     y = headerY > margin ? headerY : y + 14;
     pdf.setFontSize(12); pdf.setTextColor(0, 0, 0); pdf.setFont('Helvetica', 'bold');
-    pdf.text(doc.companyName || companySettings.name || 'Biz-flow', margin, y); y += 5;
+    pdf.text(doc.companyName || companySettings.name || 'biz-flow.cloud', margin, y); y += 5;
     pdf.setFontSize(8); pdf.setTextColor(80, 80, 80); pdf.setFont('Helvetica', 'normal');
-    if (doc.companyNuit || companySettings.nuit) { pdf.text('NUIT: ' + (doc.companyNuit || companySettings.nuit || ''), margin, y); y += 4; }
+    if (doc.companyNuit || companySettings.nuit) { pdf.text(`${t('taxId')}: ` + (doc.companyNuit || companySettings.nuit || ''), margin, y); y += 4; }
     if (doc.companyAddress || companySettings.address) { pdf.text(doc.companyAddress || companySettings.address || '', margin, y); y += 4; }
     if (doc.companyContact || companySettings.contact) { pdf.text(doc.companyContact || companySettings.contact || '', margin, y); y += 4; }
 
@@ -179,11 +191,11 @@ function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySetting
       pdf.setFillColor(245, 245, 245); pdf.rect(margin, y, pageW, 16, 'F');
       const cliY = y; y += 5;
       pdf.setFontSize(7); pdf.setTextColor(100, 100, 100); pdf.setFont('Helvetica', 'bold');
-      pdf.text('CLIENTE', margin + 4, y); y += 5;
+      pdf.text(t('clientLabel').toUpperCase(), margin + 4, y); y += 5;
       pdf.setFontSize(10); pdf.setTextColor(0, 0, 0); pdf.setFont('Helvetica', 'bold');
       pdf.text(doc.clientName, margin + 4, y);
       pdf.setFontSize(8); pdf.setTextColor(80, 80, 80); pdf.setFont('Helvetica', 'normal');
-      if (doc.clientNuit) { pdf.text('NUIT: ' + doc.clientNuit, margin + 90, y); }
+      if (doc.clientNuit) { pdf.text(`${t('taxId')}: ` + doc.clientNuit, margin + 90, y); }
       y = cliY + 20;
     }
 
@@ -192,10 +204,10 @@ function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySetting
 
     pdf.setFillColor(30, 30, 30); pdf.rect(tX, y, pageW, 7, 'F');
     pdf.setFontSize(8); pdf.setTextColor(255, 255, 255); pdf.setFont('Helvetica', 'bold');
-    pdf.text('Descrição', tX + 2, y + 4.5);
-    pdf.text('Qtd', tX + colDesc + colQtd - 2, y + 4.5, { align: 'right' });
-    pdf.text('Preço Unit.', tX + colDesc + colQtd + colPreco - 2, y + 4.5, { align: 'right' });
-    pdf.text('Total', tX + pageW - 2, y + 4.5, { align: 'right' });
+    pdf.text(t('description'), tX + 2, y + 4.5);
+    pdf.text(t('qty'), tX + colDesc + colQtd - 2, y + 4.5, { align: 'right' });
+    pdf.text(t('unitPrice'), tX + colDesc + colQtd + colPreco - 2, y + 4.5, { align: 'right' });
+    pdf.text(t('total'), tX + pageW - 2, y + 4.5, { align: 'right' });
     y += 7;
 
     pdf.setFontSize(9); pdf.setTextColor(0, 0, 0); pdf.setFont('Helvetica', 'normal');
@@ -215,20 +227,20 @@ function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySetting
 
     const finX = 110;
     pdf.setFontSize(9); pdf.setTextColor(80, 80, 80); pdf.setFont('Helvetica', 'normal');
-    pdf.text('Subtotal', finX, y); pdf.text(fMoney(doc.subtotal), margin + pageW, y, { align: 'right' }); y += 5;
+    pdf.text(t('subtotalLabel'), finX, y); pdf.text(fMoney(doc.subtotal), margin + pageW, y, { align: 'right' }); y += 5;
     if (doc.taxRate > 0) {
-      pdf.text('IVA (' + doc.taxRate + '%)', finX, y);
+      pdf.text(`${t('vat')} (${doc.taxRate}%)`, finX, y);
       pdf.text(fMoney(doc.taxAmount), margin + pageW, y, { align: 'right' }); y += 5;
     }
     if (doc.discount > 0) {
-      pdf.text('Desconto', finX, y);
+      pdf.text(t('discount'), finX, y);
       pdf.text('- ' + fMoney(doc.discount), margin + pageW, y, { align: 'right' }); y += 5;
     }
     y += 2;
 
     pdf.setFillColor(0, 0, 0); pdf.rect(finX, y, margin + pageW - finX, 8, 'F');
     pdf.setTextColor(255, 255, 255); pdf.setFont('Helvetica', 'bold');
-    pdf.setFontSize(9); pdf.text('TOTAL ' + (tipo === 'ORÇAMENTO' ? 'ESTIMADO' : 'A PAGAR'), finX + 2, y + 5.5);
+    pdf.setFontSize(9); pdf.text(t('grandTotal'), finX + 2, y + 5.5);
     pdf.setFontSize(12); pdf.text(fMoney(doc.total), margin + pageW - 2, y + 5.5, { align: 'right' });
     pdf.setTextColor(0, 0, 0); y += 12;
 
@@ -246,7 +258,7 @@ function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySetting
     if (doc.signatureData) {
       pdf.setDrawColor(180, 180, 180); pdf.setLineWidth(0.2); pdf.line(margin, y - 2, margin + 40, y - 2);
       pdf.setFontSize(7); pdf.setTextColor(100, 100, 100); pdf.setFont('Helvetica', 'bold');
-      pdf.text('Assinatura', margin, y + 2);
+      pdf.text(t('signature'), margin, y + 2);
       try {
         const cleanSig = doc.signatureData.includes('base64,') ? (doc.signatureData.split('base64,').at(1) ?? doc.signatureData) : doc.signatureData;
         pdf.addImage(cleanSig, 'PNG', margin, y + 4, 30, 12);
@@ -260,7 +272,7 @@ function generatePdfJsPDF(formData: ReceiptData, companySettings: CompanySetting
     }
 
     pdf.setFontSize(7); pdf.setTextColor(150, 150, 150); pdf.setFont('Helvetica', 'normal');
-    pdf.text('Gerado por Biz-flow.cloud — Documento processado electronicamente', 105, 288, { align: 'center' });
+    pdf.text(`${t('generatedBy')}`, 105, 288, { align: 'center' });
 
     const sanitizedNumber = validators.fileName(formData.number);
     const sanitizedClientName = validators.fileName(formData.clientName);
@@ -288,6 +300,13 @@ async function blobToBase64(blob: Blob): Promise<string> {
 // Constante: path da pasta Biz-flow no dispositivo
 const APP_FOLDER = 'Biz-flow';
 
+interface UseDocumentActionsParams {
+  formData: ReceiptData;
+  companySettings: CompanySettings;
+  notify: (msg: string, type: 'success' | 'error' | 'info') => void;
+  handleSave: (silent?: boolean) => Promise<void>;
+}
+
 export const useDocumentActions = ({
   formData,
   companySettings,
@@ -298,8 +317,11 @@ export const useDocumentActions = ({
   const [isSharing, setIsSharing] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
 
-  // Helper: formatar dinheiro com i18n
-  const fMoney = (val: number) => formatMoney(val, (formData.currency || 'MZN'), (formData.language || 'pt'));
+  // Helper: formatar dinheiro com i18n (moeda da empresa como fonte de verdade)
+  const fMoney = (val: number) => formatMoney(val, companySettings.currency, companySettings.language);
+
+  // Helper: tradução global (idioma da empresa como fonte de verdade)
+  const t = (k: string) => getTranslation(companySettings.language, k);
 
   // Helper: Guardar no dispositivo (pastas Biz-flow/)
   const saveToDevice = async (blob: Blob, fileName: string): Promise<string | null> => {
@@ -346,49 +368,49 @@ export const useDocumentActions = ({
 
   const handleGeneratePDF = useCallback(async () => {
     setIsGeneratingPdf(true);
-    notify('A gerar PDF...', 'info');
+    notify(t('generatingPdf'), 'info');
 
     try {
       const pdfData = await generatePDFBlob();
-      if (!pdfData) throw new Error('Falha ao gerar PDF.');
+      if (!pdfData) throw new Error(t('pdfGenerateError'));
       const { blob, fileName } = pdfData;
 
       if (isCapacitor) {
         const uri = await saveToDevice(blob, fileName);
         if (uri) {
-          notify(`PDF guardado em ${APP_FOLDER}/${fileName}`, 'success');
+          notify(`${t('pdfSavedIn')} ${APP_FOLDER}/${fileName}`, 'success');
         } else {
-          notify('Erro ao guardar PDF.', 'error');
+          notify(t('pdfSaveError'), 'error');
         }
       } else {
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = fileName;
         link.click();
-        notify('Documento descarregado!', 'success');
+        notify(t('docDownloaded'), 'success');
       }
       await handleSave(true);
     } catch {
-      notify('Erro na geração do PDF.', 'error');
+      notify(t('pdfGenerateError'), 'error');
     } finally {
       setIsGeneratingPdf(false);
     }
-  }, [formData, generatePDFBlob, handleSave, notify]);
+  }, [formData, generatePDFBlob, handleSave, notify, t]);
 
   // WhatsApp: GERA PDF → GUARDA LOCAL → SHARE SHEET com PDF anexado
   const handleShareWhatsApp = useCallback(async () => {
     if (isSharing) return;
     setIsSharing(true);
-    notify('A preparar documento...', 'info');
+    notify(t('preparingDoc'), 'info');
 
     try {
       const pdfData = await generatePDFBlob();
-      if (!pdfData) throw new Error('Erro ao gerar PDF.');
+      if (!pdfData) throw new Error(t('pdfGenerateError'));
 
       if (isCapacitor) {
         // 1. Guardar PDF na pasta Biz-flow (persistente)
         const uri = await saveToDevice(pdfData.blob, pdfData.fileName);
-        if (!uri) throw new Error('Erro ao guardar PDF.');
+        if (!uri) throw new Error(t('pdfSaveError'));
 
         // 1.5. Salvar documento no histórico (silencioso)
         await handleSave(true);
@@ -399,32 +421,33 @@ export const useDocumentActions = ({
         // 3. Abrir Share sheet nativo com o PDF anexado
         const { Share } = await import('@capacitor/share');
         await Share.share({
-          title: `Documento ${formData.number}`,
-          text: `Segue o documento ${formData.number}`,
+          title: formData.number,
+          text: `${t('msgDocument').toLowerCase()} ${formData.number}`,
           url: cacheUri || uri,
-          dialogTitle: 'Compartilhar Documento',
+          dialogTitle: t('shareDocument'),
         });
-        notify('Documento partilhado!', 'success');
+        notify(t('docShared'), 'success');
       } else {
         // Web: navigator.share
         const file = new File([pdfData.blob], pdfData.fileName, { type: 'application/pdf' });
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({ files: [file], title: pdfData.fileName, text: formData.number });
-          notify('Partilha concluída!', 'success');
+          notify(t('shareCompleted'), 'success');
         } else if (formData.clientContact && validators.phone(formData.clientContact)) {
           const cleanPhone = formData.clientContact.replace(/\D/g, '');
-          window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Olá, segue o documento ${formData.number}.`)}`, '_blank');
-          notify('WhatsApp aberto!', 'success');
+          window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(`${t('msgGreeting')}, ${t('msgDocument').toLowerCase()} ${formData.number}.`)}`, '_blank');
+          notify(t('whatsappOpened'), 'success');
         }
       }
-    } catch (e: any) {
-      if (e?.message !== 'canceled') {
-        notify('Erro ao partilhar: ' + (e?.message || ''), 'error');
+    } catch (e) {
+      const err = e as { message?: string } | undefined;
+      if (err?.message !== 'canceled') {
+        notify(`${t('shareError')} ` + (err?.message || ''), 'error');
       }
     } finally {
       setIsSharing(false);
     }
-  }, [formData, generatePDFBlob, isSharing, notify]);
+  }, [formData, generatePDFBlob, isSharing, notify, t]);
 
   // Impressão Térmica
   const handlePrintThermal = useCallback(async () => {
@@ -442,27 +465,32 @@ export const useDocumentActions = ({
 
           // Scanear e conectar se necessário
           if (!BLEPrinterService.isConnected()) {
-            notify('A procurar impressoras Bluetooth...', 'info');
+            notify(t('searchingPrinters'), 'info');
             const devices = await BLEPrinterService.scanDevices(8000);
             if (devices.length === 0) {
-              notify('Nenhuma impressora encontrada. Verifique se está ligada.', 'error');
+              notify(t('noPrinterFound'), 'error');
               setIsPrinting(false);
               return;
             }
             await BLEPrinterService.connect(devices[0]!.deviceId);
-            notify(`Conectado a: ${devices[0]!.name}`, 'success');
+            notify(`${t('printerConnected')} ${devices[0]!.name}`, 'success');
           }
 
           const printer = new ThermalPrinter();
+          const docTypeLabel =
+            doc.type === 'INVOICE' ? getTranslation(companySettings.language, 'invoice')
+            : doc.type === 'RECEIPT' ? getTranslation(companySettings.language, 'receipt')
+            : doc.type === 'INVOICE_RECEIPT' ? getTranslation(companySettings.language, 'invoiceReceipt')
+            : getTranslation(companySettings.language, 'quote');
           const data = printer.buildDocument({
-            companyName: doc.companyName || 'Biz-flow',
+            companyName: doc.companyName || 'biz-flow.cloud',
             companyNuit: doc.companyNuit,
-            documentType: { INVOICE: 'FATURA', RECEIPT: 'RECIBO', INVOICE_RECEIPT: 'FACTURA-RECIBO', QUOTE: 'ORÇAMENTO' }[doc.type] || doc.type,
+            documentType: docTypeLabel,
             documentNumber: doc.number,
             date: doc.date,
             clientName: doc.clientName,
             clientNuit: doc.clientNuit,
-            items: doc.items.map(i => ({
+            items: doc.items.map((i) => ({
               description: i.description,
               quantity: i.quantity,
               unitPrice: i.unitPrice,
@@ -473,7 +501,8 @@ export const useDocumentActions = ({
             taxAmount: doc.taxAmount,
             discount: doc.discount,
             total: doc.total,
-            currency: doc.currency,
+            currency: companySettings.currency,
+            lang: companySettings.language,
             stampText: doc.stampText,
           }).getData();
 
@@ -481,32 +510,33 @@ export const useDocumentActions = ({
           await BLEPrinterService.print(data);
           await handleSave(true);
 
-          notify('Documento enviado para impressão!', 'success');
-        } catch (e: any) {
-          notify('Erro na impressão: ' + (e?.message || 'Verifique a impressora.'), 'error');
+          notify(t('docSentToPrint'), 'success');
+        } catch (e) {
+          const err = e as { message?: string } | undefined;
+          notify(`${t('printErrorMsg')} ` + (err?.message || 'Verifique a impressora.'), 'error');
         }
       } else {
         // Web: browser print with professional layout
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
-          notify('Bloqueador de pop-ups ativo.', 'error');
+          notify(t('popupBlocked'), 'error');
           setIsPrinting(false);
           return;
         }
-        const fM = (val: number) => formatMoney(val, (doc.currency || 'MZN'), (doc.language || 'pt'));
+        const fM = (val: number) => formatMoney(val, companySettings.currency, companySettings.language);
         printWindow.document.write(buildDocumentHtml(formData, companySettings, fM));
         printWindow.document.close();
         printWindow.focus();
         setTimeout(() => { printWindow.print(); }, 500);
-        notify('Talão enviado para impressão.', 'success');
+        notify(t('slipSentToPrint'), 'success');
       }
     } catch (erro) {
       console.error('Erro impressão:', erro);
-      notify('Erro ao imprimir.', 'error');
+      notify(t('generalPrintError'), 'error');
     } finally {
       setIsPrinting(false);
     }
-  }, [isPrinting, formData, companySettings, notify]);
+  }, [isPrinting, formData, companySettings, notify, t]);
 
   return {
     isGeneratingPdf,

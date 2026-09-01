@@ -42,8 +42,8 @@ const thermalStyle: React.CSSProperties = {
 // --- COMPONENT ---
 
 const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, companySettings, captureId = "receipt-capture-area", layout = 'a4' }, ref) => {
-  const lang = data.language || 'pt';
-  const currency = data.currency || 'MZN';
+  const lang = companySettings?.language || data.language || '';
+  const currency = companySettings?.currency || data.currency || '';
   const theme = data.documentTheme || 'color';
 
   const t = (key: string) => getTranslation(lang, key);
@@ -66,7 +66,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, Props>(({ data, companySettin
   if (data.type === 'INVOICE_RECEIPT') title = t('invoiceReceipt');
   if (data.type === 'QUOTE') title = t('quote');
 
-  const displayCompanyName = data.companyName || 'BIZ-FLOW';
+  const displayCompanyName = data.companyName || 'biz-flow.cloud';
 
   // ======== LAYOUT TÉRMICO (58/80mm) ========
   if (layout === 'thermal') {

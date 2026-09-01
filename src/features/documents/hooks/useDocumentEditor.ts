@@ -11,10 +11,11 @@ import { generateNextReceiptNumber, saveReceipt, deleteReceipt } from '../../../
 import { db } from '../../../services/db';
 import { useSignatureCanvas } from '../../../app/hooks/useSignatureCanvas';
 import { useDocumentActions } from '../../../app/hooks/useDocumentActions';
+import { getTranslation } from '../../../services/translationService';
 
 const InitialReceipt: ReceiptData = {
   id: '', type: 'RECEIPT', number: '', date: new Date().toISOString().slice(0, 10),
-  currency: 'MZN', language: 'pt', clientName: '', clientContact: '', clientLocation: '', clientNuit: '',
+  currency: '', language: '', clientName: '', clientContact: '', clientLocation: '', clientNuit: '',
   items: [], subtotal: 0, taxRate: 0, taxAmount: 0, discount: 0, total: 0,
   stampText: 'PAGO', signatureData: '', documentTheme: 'color', createdAt: Date.now(),
 };
@@ -37,6 +38,8 @@ export function useDocumentEditor({
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+
+  const t = (key: string) => getTranslation(companySettings.language, key);
 
   const receiptRef = useRef<HTMLDivElement>(null);
   const ghostReceiptRef = useRef<HTMLDivElement>(null);
@@ -67,7 +70,7 @@ export function useDocumentEditor({
     if (!formData.clientName && formData.items.length === 0) return;
     if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
     autoSaveRef.current = setTimeout(() => {
-      db.settings.put({ id: DRAFT_ID, draftData: JSON.stringify(formData) }).catch(() => {});
+      db.settings.put({ id: DRAFT_ID, draftData: JSON.stringify(formData) } as CompanySettings & { id: string; draftData?: string }).catch(() => {});
     }, 3000);
     return () => {
       if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
@@ -85,7 +88,7 @@ export function useDocumentEditor({
       const newHistory = await saveReceipt(formData, 'local');
       setHistory(newHistory);
       await db.settings.delete(DRAFT_ID);
-      if (!silent) notify('Documento guardado e painel atualizado!', 'success');
+      if (!silent) notify(t('docSavedPanel'), 'success');
     },
   });
 
@@ -97,7 +100,7 @@ export function useDocumentEditor({
       type,
       number: generateNextReceiptNumber(history, type),
       date: today,
-      taxRate: type === 'INVOICE' ? companySettings.defaultTaxRate || 0 : 0,
+      taxRate: companySettings.defaultTaxRate || 0,
       currency: companySettings.currency,
       language: companySettings.language,
       companyName: companySettings.name,
@@ -116,10 +119,10 @@ export function useDocumentEditor({
       ...newDoc,
       id: crypto.randomUUID(),
       number: generateNextReceiptNumber(history, doc.type),
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString().split('T')[0] ?? '',
     });
     setCurrentView('app');
-    notify('Documento duplicado com novo número e data.', 'info');
+    notify(t('docDuplicated'), 'info');
   };
 
   const handleFormDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -167,7 +170,7 @@ export function useDocumentEditor({
 
   const handleEnhanceDescription = async () => {
     // AI enhancement disabled - no external API
-    notify('Funcionalidade de IA não disponível.', 'info');
+    notify(t('aiUnavailable'), 'info');
   };
 
   const handleClearClient = () => {
@@ -185,13 +188,13 @@ export function useDocumentEditor({
     blank.width = canvas.width;
     blank.height = canvas.height;
     if (canvas.toDataURL() === blank.toDataURL()) {
-      notify('A assinatura está vazia.', 'info');
+      notify(t('signatureEmpty'), 'info');
       return;
     }
     const dataUrl = canvas.toDataURL('image/png');
     setFormData(p => ({ ...p, signatureData: dataUrl }));
     setShowSignatureModal(false);
-    notify('Assinatura guardada!', 'success');
+    notify(t('signatureSaved'), 'success');
   };
 
   const clearSignature = () => {

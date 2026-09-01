@@ -48,6 +48,7 @@ import com.bizflow.cloud.ui.theme.ReceiptEmerald
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onCreateDocument: (DocumentType) -> Unit = {},
+    onViewHistory: () -> Unit = {},
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
 ) {
     val recentDocuments by viewModel.recentDocuments.collectAsStateWithLifecycle()
@@ -117,7 +118,7 @@ fun HomeScreen(
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.clickable { /* Fase 6: ver historico */ },
+                            modifier = Modifier.clickable { onViewHistory() },
                         )
                     }
                     if (recentDocuments.isEmpty()) {

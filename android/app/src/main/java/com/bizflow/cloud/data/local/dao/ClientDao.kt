@@ -24,6 +24,9 @@ interface ClientDao {
     @Query("UPDATE clients SET synced = 1, updatedAt = :now WHERE id = :id")
     suspend fun markSynced(id: String, now: Long)
 
+    @Query("UPDATE clients SET deletedAt = :now, updatedAt = :now WHERE id = :id")
+    suspend fun softDelete(id: String, now: Long)
+
     @Query("DELETE FROM clients WHERE userId = :userId")
     suspend fun clearForUser(userId: String)
 }

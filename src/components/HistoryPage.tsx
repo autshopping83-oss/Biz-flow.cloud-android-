@@ -69,7 +69,7 @@ export const HistoryPage: React.FC<Props> = ({ history, onBack, onLoadDocument, 
       </div>
       <div className="flex items-center gap-4 w-full sm:w-auto">
         <p className="font-extrabold text-slate-800 dark:text-slate-100 text-lg tabular-nums flex-1 sm:flex-none">
-          {formatMoney(doc.total, doc.currency, lang)}
+          {formatMoney(doc.total, currency, lang)}
         </p>
         <div className="flex items-center gap-1">
           <button onClick={() => onDuplicateDocument(doc)} title="Duplicar" className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-blue-600 transition-colors">

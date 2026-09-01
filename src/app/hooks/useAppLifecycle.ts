@@ -70,7 +70,9 @@ export const useAppLifecycle = ({
           document.documentElement.classList.add('dark');
         }
 
-        // 1ª execução: detetar idioma e moeda do dispositivo
+        // 1ª execução: detetar idioma do dispositivo (preferência, não fiscal).
+        // A moeda não é inferida a partir da localização — é definida apenas
+        // pelo utilizador nas Configurações da Empresa.
         if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.()) {
           try {
             const { Device } = await import('@capacitor/device');
@@ -81,17 +83,6 @@ export const useAppLifecycle = ({
             if (lang && lang.length === 2) {
               setCompanySettings(prev => ({ ...prev, language: lang }));
             }
-
-            // Moeda: mapear país → moeda
-            const countryMap: Record<string, string> = {
-              MZ: 'MZN', BR: 'BRL', US: 'USD', PT: 'EUR', AO: 'AOA',
-              GB: 'GBP', CA: 'CAD', CH: 'CHF', JP: 'JPY', CN: 'CNY',
-              IN: 'INR', ZA: 'ZAR', NG: 'NGN', KE: 'KES', FR: 'EUR',
-              DE: 'EUR', IT: 'EUR', ES: 'EUR', NL: 'EUR',
-            };
-            const country = (locale || '').split('-')[1]?.toUpperCase() || '';
-            const currency = countryMap[country] || 'MZN';
-            setCompanySettings(prev => ({ ...prev, currency }));
           } catch {}
         }
       }

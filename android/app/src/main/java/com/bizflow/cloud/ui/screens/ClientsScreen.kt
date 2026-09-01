@@ -13,7 +13,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -24,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -49,6 +52,7 @@ fun ClientsScreen(
     val clients by viewModel.clients.collectAsStateWithLifecycle()
     var showNew by rememberSaveable { mutableStateOf(false) }
     var editing by remember { mutableStateOf<ClientEntity?>(null) }
+    var deleteTarget by remember { mutableStateOf<ClientEntity?>(null) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
     val filtered = remember(clients, searchQuery) {
         val q = searchQuery.trim()
@@ -124,6 +128,15 @@ fun ClientsScreen(
                     supportingContent = {
                         Text(text = clientSubtitle(client))
                     },
+                    trailingContent = {
+                        IconButton(onClick = { deleteTarget = client }) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = stringResource(R.string.delete),
+                                tint = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { editing = client },
@@ -166,6 +179,31 @@ fun ClientsScreen(
                 ) { showNew = false }
             },
             onDismiss = { showNew = false },
+        )
+    }
+
+    deleteTarget?.let { client ->
+        AlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            title = { Text(text = stringResource(R.string.delete)) },
+            text = {
+                Text(
+                    text = stringResource(R.string.clients_delete_confirm, client.name),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.delete(client.id)
+                    deleteTarget = null
+                }) {
+                    Text(text = stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteTarget = null }) {
+                    Text(text = stringResource(R.string.cancel))
+                }
+            },
         )
     }
 }

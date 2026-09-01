@@ -61,7 +61,8 @@ export const NativeFileService = {
   async readFile(path: string, directory: Directory = Directory.Documents): Promise<string | null> {
     try {
       const result = await Filesystem.readFile({ path, directory });
-      return result.data;
+      const data = result.data;
+      return typeof data === 'string' ? data : null;
     } catch {
       return null;
     }

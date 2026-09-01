@@ -52,6 +52,10 @@ class ClientsViewModel(
         }
     }
 
+    fun delete(id: String) {
+        viewModelScope.launch { clientRepository.softDelete(id) }
+    }
+
     companion object {
         val Factory: Factory = viewModelFactory {
             initializer {

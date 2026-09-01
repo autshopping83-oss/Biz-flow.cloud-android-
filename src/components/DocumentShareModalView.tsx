@@ -31,8 +31,8 @@ interface DocumentShareModalViewProps {
   isNative?: boolean;
 }
 
-const documentTypeLabel = (type: string) =>
-  type === 'INVOICE' ? 'Fatura' : type === 'INVOICE_RECEIPT' ? 'Fatura-Recibo' : type === 'QUOTE' ? 'Orçamento' : 'Recibo';
+const documentTypeLabel = (t: (k: string) => string, type: string) =>
+  type === 'INVOICE' ? t('invoice') : type === 'INVOICE_RECEIPT' ? t('invoiceReceipt') : type === 'QUOTE' ? t('quote') : t('receipt');
 
 export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
   formData, isGeneratingPdf, isPrinting, onClose, t, fMoney,
@@ -49,9 +49,9 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
         <div className="p-6 border-b dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold dark:text-white">Compartilhar Documento</h2>
+              <h2 className="text-xl font-bold dark:text-white">{t('shareDocument')}</h2>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                {documentTypeLabel(formData.type)} <span className="font-mono font-bold">#{formData.number}</span>
+                {documentTypeLabel(t, formData.type)} <span className="font-mono font-bold">#{formData.number}</span>
               </p>
             </div>
             <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
@@ -67,7 +67,7 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
                 <i className="fa-solid fa-file-invoice"></i>
               </div>
               <div>
-                <p className="text-sm font-bold dark:text-white">{formData.clientName || 'Cliente'}</p>
+                <p className="text-sm font-bold dark:text-white">{formData.clientName || t('clientLabel')}</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{formData.date}</p>
               </div>
             </div>
@@ -79,7 +79,7 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
         </div>
 
         <div className="p-6 space-y-3">
-          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">Opções do Documento</p>
+          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">{t('documentOptions')}</p>
 
           <button onClick={handleDownload} disabled={isGeneratingPdf || isSending}
             className="w-full flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all group disabled:opacity-50">
@@ -87,8 +87,8 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
               <i className="fa-solid fa-file-pdf text-xl"></i>
             </div>
             <div className="flex-1 text-left">
-              <p className="font-bold dark:text-white">{isNative ? 'Guardar PDF' : 'Baixar PDF'}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{isNative ? 'Guarda o PDF no dispositivo' : 'Gera e descarrega o PDF'}</p>
+              <p className="font-bold dark:text-white">{isNative ? t('savePdf') : t('downloadPdf')}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{isNative ? t('savePdfDesc') : t('downloadPdfDesc')}</p>
             </div>
             {isGeneratingPdf ? <i className="fa-solid fa-spinner animate-spin text-purple-500"></i> : <i className="fa-solid fa-chevron-right text-slate-300 dark:text-slate-600 group-hover:text-purple-500 transition-colors"></i>}
           </button>
@@ -99,8 +99,8 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
               <i className="fa-solid fa-receipt text-xl"></i>
             </div>
             <div className="flex-1 text-left">
-              <p className="font-bold dark:text-white">Imprimir Talão Térmico</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Imprime em bobina 58/80mm via Bluetooth</p>
+              <p className="font-bold dark:text-white">{t('printThermal')}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{t('printThermalDesc')}</p>
             </div>
             {isPrinting ? <i className="fa-solid fa-spinner animate-spin text-slate-500"></i> : <i className="fa-solid fa-chevron-right text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors"></i>}
           </button>
@@ -110,7 +110,7 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
           <div className="px-6 pb-0">
             <div className={`rounded-xl p-4 text-sm ${sendResult.success ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'}`}>
               <div className="font-bold mb-1 flex items-center gap-2">
-                {sendResult.success ? <><i className="fa-solid fa-check-circle text-emerald-500"></i> Sucesso</> : <><i className="fa-solid fa-exclamation-circle text-red-500"></i> Erro</>}
+                {sendResult.success ? <><i className="fa-solid fa-check-circle text-emerald-500"></i> {t('success')}</> : <><i className="fa-solid fa-exclamation-circle text-red-500"></i> {t('error')}</>}
               </div>
               <p className="text-xs opacity-80">{sendResult.message}</p>
             </div>
@@ -118,7 +118,7 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
         )}
 
         <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t dark:border-slate-800">
-          <button onClick={onClose} className="w-full py-3 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition-colors">Cancelar</button>
+          <button onClick={onClose} className="w-full py-3 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition-colors">{t('cancel')}</button>
         </div>
       </div>
     </div>
@@ -157,48 +157,48 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
               <i className="fa-solid fa-arrow-left text-xs"></i>
             </button>
             <div>
-              <h2 className="text-lg font-bold dark:text-white">{isEmail ? 'Enviar por Email' : 'Enviar por WhatsApp'}</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{documentTypeLabel(formData.type)} #{formData.number}</p>
+              <h2 className="text-lg font-bold dark:text-white">{t(isEmail ? 'sendViaEmail' : 'sendViaWhatsApp')}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{documentTypeLabel(t, formData.type)} #{formData.number}</p>
             </div>
           </div>
         </div>
 
         <div className="p-6 space-y-4">
           <div>
-            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">Nome do Destinatário</label>
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">{t('recipientNameLabel')}</label>
             <div className="relative">
               <i className="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-              <input type="text" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Nome do cliente"
+              <input type="text" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder={t('recipientNamePlaceholder')}
                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-3 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
             </div>
           </div>
 
           {isEmail ? (
             <div>
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">Email do Destinatário</label>
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">{t('recipientEmailLabel')}</label>
               <div className="relative">
                 <i className="fa-solid fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                <input type="email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} placeholder="cliente@exemplo.com"
+                <input type="email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} placeholder={t('recipientEmailPlaceholder')}
                   className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-3 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
               </div>
             </div>
           ) : (
             <div>
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">Telefone do Destinatário (WhatsApp)</label>
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">{t('recipientPhoneLabel')}</label>
               <div className="relative">
                 <i className="fa-brands fa-whatsapp absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                <input type="tel" value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)} placeholder="258840000000"
+                <input type="tel" value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)} placeholder={t('recipientPhonePlaceholder')}
                   className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-3 text-sm dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
               </div>
             </div>
           )}
 
           <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-2">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Resumo do Documento</p>
-            <div className="flex justify-between text-sm"><span className="text-slate-500 dark:text-slate-400">Número</span><span className="font-bold dark:text-white font-mono">#{formData.number}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-slate-500 dark:text-slate-400">Cliente</span><span className="font-bold dark:text-white">{recipientName || formData.clientName || '---'}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-slate-500 dark:text-slate-400">Data</span><span className="font-bold dark:text-white">{formData.date}</span></div>
-            <div className="flex justify-between text-sm pt-2 border-t border-slate-200 dark:border-slate-700"><span className="text-slate-500 dark:text-slate-400">Total</span><span className="font-black text-blue-600 dark:text-blue-400">{fMoney(formData.total)}</span></div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('documentSummary')}</p>
+            <div className="flex justify-between text-sm"><span className="text-slate-500 dark:text-slate-400">{t('numberLabel')}</span><span className="font-bold dark:text-white font-mono">#{formData.number}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-slate-500 dark:text-slate-400">{t('clientLabel')}</span><span className="font-bold dark:text-white">{recipientName || formData.clientName || '---'}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-slate-500 dark:text-slate-400">{t('date')}</span><span className="font-bold dark:text-white">{formData.date}</span></div>
+            <div className="flex justify-between text-sm pt-2 border-t border-slate-200 dark:border-slate-700"><span className="text-slate-500 dark:text-slate-400">{t('total')}</span><span className="font-black text-blue-600 dark:text-blue-400">{fMoney(formData.total)}</span></div>
             {formData.items.length > 0 && (
               <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Itens</p>
@@ -207,7 +207,7 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
                     <span className="truncate max-w-[200px]">{item.description}</span><span>{item.quantity}x {fMoney(item.unitPrice)}</span>
                   </div>
                 ))}
-                {formData.items.length > 3 && <p className="text-xs text-slate-400 mt-1">+{formData.items.length - 3} itens</p>}
+                {formData.items.length > 3 && <p className="text-xs text-slate-400 mt-1">+{formData.items.length - 3} {t('itemsCount')}</p>}
               </div>
             )}
           </div>
@@ -215,7 +215,7 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
           {sendResult && (
             <div className={`rounded-xl p-4 text-sm ${sendResult.success ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'}`}>
               <div className="font-bold mb-1 flex items-center gap-2">
-                {sendResult.success ? <><i className="fa-solid fa-check-circle text-emerald-500"></i> Sucesso</> : <><i className="fa-solid fa-exclamation-circle text-red-500"></i> Erro</>}
+                {sendResult.success ? <><i className="fa-solid fa-check-circle text-emerald-500"></i> {t('success')}</> : <><i className="fa-solid fa-exclamation-circle text-red-500"></i> {t('error')}</>}
               </div>
               <p className="text-xs opacity-80">{sendResult.message}</p>
             </div>
@@ -225,10 +225,10 @@ export const DocumentShareModalView: React.FC<DocumentShareModalViewProps> = ({
             <button onClick={() => handleSend(isEmail ? 'email' : 'whatsapp')}
               disabled={isSending || !(isEmail ? recipientEmail : recipientPhone) || !recipientName}
               className={`flex-1 ${isEmail ? 'bg-blue-600 hover:bg-blue-700' : 'bg-emerald-600 hover:bg-emerald-700'} text-white rounded-xl py-3 text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2`}>
-              {isSending ? <><i className="fa-solid fa-spinner animate-spin"></i> Enviando...</> : <><i className={`fa-solid ${isEmail ? 'fa-paper-plane' : 'fa-brands fa-whatsapp'}`}></i> {isEmail ? 'Enviar Email' : 'Enviar WhatsApp'}</>}
+              {isSending ? <><i className="fa-solid fa-spinner animate-spin"></i> {t('sending')}</> : <><i className={`fa-solid ${isEmail ? 'fa-paper-plane' : 'fa-brands fa-whatsapp'}`}></i> {isEmail ? t('sendEmail') : t('sendWhatsApp')}</>}
             </button>
             <button onClick={() => setSelectedMethod(null)} disabled={isSending}
-              className="px-6 py-3 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50">Voltar</button>
+              className="px-6 py-3 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50">{t('back')}</button>
           </div>
         </div>
       </div>

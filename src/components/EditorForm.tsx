@@ -78,12 +78,12 @@ export const EditorForm: React.FC<EditorFormProps> = (props) => {
         const updated = await getSavedProducts(userId);
         onUpdateProducts(updated);
       }
-      notify(`Produto "${pendingItem.description}" salvo no catálogo`, 'success');
+      notify(`${t('productSaved')} "${pendingItem.description}"`, 'success');
       setShowSaveProductModal(false);
       setPendingItem(null);
       onAddItem();
     } catch {
-      notify('Erro ao salvar produto', 'error');
+      notify(t('productSaveError'), 'error');
     } finally {
       setIsSavingProduct(false);
     }
@@ -110,15 +110,15 @@ export const EditorForm: React.FC<EditorFormProps> = (props) => {
 
   const handleSendWhatsApp = async () => {
     if (!formData.clientWhatsApp && !formData.clientContact) {
-      notify("Adicione o WhatsApp do cliente nos campos acima", "error");
+      notify(t('addClientWhatsapp'), "error");
       return;
     }
-    notify("Use o botão 'Compartilhar' no topo para enviar o PDF via WhatsApp", "info");
+    notify(t('useShareBtnWhatsapp'), "info");
   };
 
   const handleSendEmail = async () => {
-    if (!formData.clientContact) { notify("Adicione um email do cliente primeiro", "error"); return; }
-    notify("Use o botão 'Compartilhar' no topo para enviar", "info");
+    if (!formData.clientContact) { notify(t('addClientEmail'), "error"); return; }
+    notify(t('useShareBtn'), "info");
   };
 
   const viewProps = {

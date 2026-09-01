@@ -39,7 +39,7 @@ const PageLoader = () => (
 
 const DefaultSettings: CompanySettings = {
   name: '', address: '', contact: '', nuit: '', logo: '',
-  defaultTaxRate: 16, currency: 'MZN', language: 'pt',
+  currency: '', language: '',
   theme: 'light', plan: 'PRO', isAdmin: false,
 };
 
@@ -109,12 +109,12 @@ const App: React.FC = () => {
     blank.width = canvas.width;
     blank.height = canvas.height;
     if (canvas.toDataURL() === blank.toDataURL()) {
-      notify('A assinatura está vazia.', 'info');
+      notify(t('signatureEmpty'), 'info');
       return;
     }
     const dataUrl = canvas.toDataURL('image/png');
     setCompanySettings(p => ({ ...p, signature: dataUrl }));
-    notify('Assinatura guardada!', 'success');
+    notify(t('signatureSaved'), 'success');
   };
 
   const handleSettingsClearSignature = () => {
@@ -134,12 +134,12 @@ const App: React.FC = () => {
       const { syncToSupabase } = await import('../services/syncService');
       const result = await syncToSupabase(userId);
       if (result.errors.length > 0) {
-        notify(`Sincronizado com alguns erros: ${result.errors.join(', ')}`, 'error');
+        notify(`${t('syncPartialErrors')} ${result.errors.join(', ')}`, 'error');
       } else {
-        notify(`Sincronizado! ${result.documents} docs, ${result.clients} clientes, ${result.products} produtos`, 'success');
+        notify(`${t('syncComplete')} ${result.documents} docs, ${result.clients} ${t('clientLabel').toLowerCase()}s, ${result.products} products`, 'success');
       }
     } catch (e) {
-      notify('Erro ao sincronizar: ' + (e as Error).message, 'error');
+      notify(`${t('syncError')} ${(e as Error).message}`, 'error');
     } finally {
       setSyncing(false);
     }
@@ -243,7 +243,7 @@ const App: React.FC = () => {
       {showConnectModal && (
         <ConnectAccountModal
           onClose={() => setShowConnectModal(false)}
-          onConnected={() => notify('Conta conectada! Os dados serão sincronizados.', 'success')}
+          onConnected={() => notify(t('accountConnected'), 'success')}
         />
       )}
       {showSettingsModal && (
@@ -252,7 +252,7 @@ const App: React.FC = () => {
           onLogoChange={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onloadend = () => setCompanySettings(p => ({ ...p, logo: r.result as string })); r.readAsDataURL(f); }}
           onStampUpload={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onloadend = () => setCompanySettings(p => ({ ...p, customStamp: r.result as string })); r.readAsDataURL(f); }}
           onRequestFolderPermission={async () => {}}
-          onSaveSettings={async () => { const { saveCompanySettings } = await import('../services/storageService'); await saveCompanySettings(companySettings, userId); notify('Definições guardadas!', 'success'); setShowSettingsModal(false); }}
+          onSaveSettings={async () => { const { saveCompanySettings } = await import('../services/storageService'); await saveCompanySettings(companySettings, userId); notify(t('settingsSaved'), 'success'); setShowSettingsModal(false); }}
           isSavingSettings={false} localDirHandle={null}
           onSaveSignature={handleSettingsSaveSignature} onClearSignature={handleSettingsClearSignature}
           settingsSignatureCanvasRef={settingsCanvasRef as React.RefObject<HTMLCanvasElement | null>}

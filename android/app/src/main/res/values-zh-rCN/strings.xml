@@ -132,4 +132,8 @@
     <string name="client_identifier">税号/证件</string>
     <string name="clients_add">添加客户</string>
     <string name="clients_empty">暂无客户</string>
+    <string name="documents_delete_confirm">Delete document %1$s?</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="clients_delete_confirm">您确定要删除客户 %1$s 吗？</string>
 </resources>

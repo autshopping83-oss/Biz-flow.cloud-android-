@@ -132,4 +132,8 @@
     <string name="client_identifier">NIF / Documento</string>
     <string name="clients_add">Adicionar cliente</string>
     <string name="clients_empty">Ainda não há clientes</string>
+    <string name="documents_delete_confirm">Delete document %1$s?</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="clients_delete_confirm">Tem certeza que deseja eliminar o cliente %1$s?</string>
 </resources>

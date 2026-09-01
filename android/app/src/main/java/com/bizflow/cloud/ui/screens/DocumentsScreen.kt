@@ -6,23 +6,34 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -40,9 +51,21 @@ import com.bizflow.cloud.data.model.DocumentType
 fun DocumentsScreen(
     modifier: Modifier = Modifier,
     onAddDocument: () -> Unit = {},
+    onEditDocument: (DocumentType) -> Unit = {},
     viewModel: DocumentsViewModel = viewModel(factory = DocumentsViewModel.Factory),
 ) {
     val documents by viewModel.documents.collectAsStateWithLifecycle()
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var deleteTarget by remember { mutableStateOf<DocumentWithItems?>(null) }
+
+    val filtered = remember(documents, searchQuery) {
+        val q = searchQuery.trim()
+        if (q.isEmpty()) documents else documents.filter {
+            it.document.clientName.contains(q, ignoreCase = true) ||
+                it.document.number.contains(q, ignoreCase = true) ||
+                it.document.documentType.prefix.contains(q, ignoreCase = true)
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -64,20 +87,66 @@ fun DocumentsScreen(
             }
         },
     ) { innerPadding ->
-        if (documents.isEmpty()) {
-            DocumentsEmptyState(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text(text = stringResource(R.string.settings_currency_search)) },
+                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Filled.Close, contentDescription = null)
+                        }
+                    }
+                },
+                singleLine = true,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
             )
-        } else {
-            DocumentList(
-                documents = documents,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-            )
+            if (filtered.isEmpty()) {
+                DocumentsEmptyState(
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                DocumentList(
+                    documents = filtered,
+                    onEditDocument = onEditDocument,
+                    onDeleteDocument = { deleteTarget = it },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
+    }
+
+    deleteTarget?.let { doc ->
+        AlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            title = { Text(text = stringResource(R.string.delete)) },
+            text = {
+                Text(
+                    text = stringResource(R.string.documents_delete_confirm, doc.document.number),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.delete(doc.document.id)
+                    deleteTarget = null
+                }) {
+                    Text(text = stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteTarget = null }) {
+                    Text(text = stringResource(R.string.cancel))
+                }
+            },
+        )
     }
 }
 
@@ -115,6 +184,8 @@ private fun DocumentsEmptyState(modifier: Modifier = Modifier) {
 @Composable
 private fun DocumentList(
     documents: List<DocumentWithItems>,
+    onEditDocument: (DocumentType) -> Unit = {},
+    onDeleteDocument: (DocumentWithItems) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -123,7 +194,11 @@ private fun DocumentList(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(documents, key = { it.document.id }) { item ->
-            DocumentCard(document = item.document)
+            DocumentCard(
+                document = item.document,
+                onEdit = { onEditDocument(item.document.documentType) },
+                onDelete = { onDeleteDocument(item) },
+            )
         }
     }
 }

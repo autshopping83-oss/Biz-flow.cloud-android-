@@ -198,7 +198,7 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId, lang, ref
       setTransactions(data);
     } catch (error: any) {
       console.error('Error fetching transactions:', error);
-      notify('Erro ao carregar finanças', 'error');
+      notify(t('financeLoadError'), 'error');
     } finally {
       setIsLoading(false);
     }
@@ -209,7 +209,7 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId, lang, ref
     if (!newTrans.amount || !newTrans.description) return;
 
     try {
-      const t: Transaction = {
+      const tx: Transaction = {
         id: crypto.randomUUID(),
         type: newTrans.type,
         amount: parseFloat(newTrans.amount),
@@ -219,14 +219,14 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId, lang, ref
         timestamp: Date.now()
       };
 
-      const updated = await addTransaction(t, userId);
+      const updated = await addTransaction(tx, userId);
       setTransactions(updated);
 
-      notify('Transação adicionada com sucesso!', 'success');
+      notify(t('transactionAdded'), 'success');
       setNewTrans({ ...newTrans, amount: '', description: '', category: '' });
       setShowForm(false);
     } catch (error: any) {
-      notify('Erro ao salvar transação: ' + error.message, 'error');
+      notify(`${t('txSaveError')} ` + error.message, 'error');
     }
   };
 
@@ -236,18 +236,18 @@ export const FinanceManager: React.FC<Props> = ({ currency, t, userId, lang, ref
 
     setIsScanning(true);
     setShowForm(true);
-    notify("Funcionalidade de IA não disponível. Preencha manualmente.", "info");
+    notify(t('aiUnavailableFill'), "info");
     setIsScanning(false);
   };
 
   const handleDelete = async (id: string) => {
-    if(confirm('Remover esta transação?')) {
+    if(confirm(t('confirmDeleteTransaction'))) {
       try {
         const updated = await deleteTransaction(id, userId);
         setTransactions(updated);
-        notify('Transação removida.', 'info');
+        notify(t('transactionRemoved'), 'info');
       } catch (error: any) {
-        notify('Erro ao remover: ' + error.message, 'error');
+        notify(`${t('txRemoveError')} ` + error.message, 'error');
       }
     }
   };

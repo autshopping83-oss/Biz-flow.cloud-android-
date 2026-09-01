@@ -327,7 +327,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                   }`}>
                                       {doc.stampText || 'DRAFT'}
                                   </span>
-                                  <p className="font-black text-slate-900 dark:text-white text-lg tabular-nums">{formatMoney(doc.total, doc.currency)}</p>
+                                  <p className="font-black text-slate-900 dark:text-white text-lg tabular-nums">{formatMoney(doc.total, companySettings.currency)}</p>
                                   <div className="flex items-center gap-2">
                                      {onDeleteDocument && (
                                          <button 

@@ -29,4 +29,8 @@ class ClientRepository(
             ),
         )
     }
+
+    suspend fun softDelete(id: String) {
+        clientDao.softDelete(id, System.currentTimeMillis())
+    }
 }
