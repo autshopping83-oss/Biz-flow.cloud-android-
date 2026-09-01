@@ -47,6 +47,16 @@ class CompanySettingsRepository(
         updateOrCreate { _, now -> dao.updateCurrency(currency, now) }
     }
 
+    fun observeDefaultTaxRate(): Flow<Double> =
+        dao.observeDefaultTaxRate().map { it ?: NO_TAX_RATE }
+
+    suspend fun getDefaultTaxRate(): Double =
+        dao.get()?.defaultTaxRate ?: NO_TAX_RATE
+
+    suspend fun setDefaultTaxRate(rate: Double) {
+        updateOrCreate { _, now -> dao.updateDefaultTaxRate(rate.coerceIn(0.0, MAX_TAX_RATE), now) }
+    }
+
     suspend fun setCompanyProfile(
         name: String,
         tradingName: String?,
@@ -87,7 +97,7 @@ class CompanySettingsRepository(
             nuit = "",
             contact = "",
             logo = null,
-            defaultTaxRate = 0.16,
+            defaultTaxRate = NO_TAX_RATE,
             currency = CurrencyCatalog.DEFAULT_CODE,
             language = "pt",
             theme = "",
@@ -99,5 +109,10 @@ class CompanySettingsRepository(
             userEmail = null,
             updatedAt = now,
         )
+    }
+
+    companion object {
+        const val NO_TAX_RATE = 0.0
+        const val MAX_TAX_RATE = 1.0
     }
 }

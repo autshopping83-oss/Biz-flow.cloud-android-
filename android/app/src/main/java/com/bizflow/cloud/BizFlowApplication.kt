@@ -45,7 +45,11 @@ class BizFlowApplication : Application() {
     }
 
     val clientRepository: ClientRepository by lazy {
-        ClientRepository(database.clientDao())
+        ClientRepository(
+            clientDao = database.clientDao(),
+            syncQueueDao = database.syncQueueDao(),
+            userIdProvider = { authManager.currentUserId() },
+        )
     }
 
     val companySettingsRepository: CompanySettingsRepository by lazy {

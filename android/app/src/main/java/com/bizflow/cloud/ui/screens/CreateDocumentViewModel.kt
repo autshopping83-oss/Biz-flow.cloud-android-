@@ -49,6 +49,7 @@ data class CreateDocumentUiState(
     val isSaving: Boolean = false,
     val isGeneratingPreview: Boolean = false,
     val currency: String = "",
+    val taxRate: Double = 0.0,
 )
 class CreateDocumentViewModel(
     private val documentRepository: DocumentRepository,
@@ -67,9 +68,14 @@ class CreateDocumentViewModel(
 
     init {
         viewModelScope.launch {
-            val currency = companySettingsRepository.getCurrency()
-            if (_uiState.value.currency.isBlank()) _uiState.value = _uiState.value.copy(currency = currency)
-            companySnapshot = companySettingsRepository.getSettings()
+            val settings = companySettingsRepository.getSettings()
+            if (_uiState.value.currency.isBlank() && settings?.currency != null) {
+                _uiState.value = _uiState.value.copy(currency = settings.currency)
+            }
+            if (settings?.defaultTaxRate != null) {
+                _uiState.value = _uiState.value.copy(taxRate = settings.defaultTaxRate)
+            }
+            companySnapshot = settings
         }
     }
 
@@ -84,6 +90,27 @@ class CreateDocumentViewModel(
             clientName = client.name, clientContact = client.contact.orEmpty(),
             clientLocation = client.location.orEmpty(), clientNuit = client.nuit.orEmpty(),
         )
+    }
+
+    fun saveClient(name: String, contact: String, location: String, nuit: String) {
+        val cleanName = name.trim()
+        if (cleanName.isEmpty()) return
+        val client = ClientEntity(
+            id = UUID.randomUUID().toString(),
+            name = cleanName,
+            contact = contact.trim(),
+            location = location.trim(),
+            nuit = nuit.trim(),
+            userId = null,
+            synced = false,
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis(),
+            deletedAt = null,
+        )
+        viewModelScope.launch {
+            clientRepository.save(client)
+            selectClient(client)
+        }
     }
 
     fun updateClientName(value: String) { _uiState.value = _uiState.value.copy(clientName = value) }
@@ -177,7 +204,7 @@ class CreateDocumentViewModel(
     ): DocumentEntity {
         val now = System.currentTimeMillis()
         val subtotal = items.sumOf { it.total }
-        val taxAmount = subtotal * TAX_RATE
+        val taxAmount = subtotal * state.taxRate
         val discount = state.discount.toDoubleOrNull() ?: 0.0
         return DocumentEntity(
             id = documentId,
@@ -185,7 +212,7 @@ class CreateDocumentViewModel(
             number = number,
             date = state.date,
             dueDate = null,
-            currency = state.currency.ifBlank { CURRENCY },
+            currency = state.currency,
             language = Locale.getDefault().language,
             clientName = state.clientName.trim(),
             clientContact = state.clientContact.trim(),
@@ -206,7 +233,7 @@ class CreateDocumentViewModel(
             companyIdentifierType = companySnapshot?.companyIdentifierType?.takeIf { it.isNotBlank() },
             companyIdentifierValue = companySnapshot?.companyIdentifierValue?.takeIf { it.isNotBlank() } ?: companySnapshot?.nuit?.takeIf { it.isNotBlank() },
             subtotal = subtotal,
-            taxRate = TAX_RATE,
+            taxRate = state.taxRate,
             taxAmount = taxAmount,
             discount = discount,
             total = kotlin.math.max(0.0, subtotal + taxAmount - discount),
@@ -225,9 +252,6 @@ class CreateDocumentViewModel(
     }
 
     companion object {
-        private const val TAX_RATE = 0.16
-        private const val CURRENCY = "MZN"
-
         val Factory: Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as BizFlowApplication

@@ -26,6 +26,7 @@ data class CompanySettingsUiState(
     val stampPath: String? = null,
     val signaturePath: String? = null,
     val currency: String = CurrencyCatalog.DEFAULT_CODE,
+    val defaultTaxRate: Double = 0.0,
     val name: String = "",
     val tradingName: String = "",
     val address: String = "",
@@ -57,6 +58,7 @@ class CompanySettingsViewModel(
                 stampPath = s?.stampPath,
                 signaturePath = s?.defaultSignaturePath,
                 currency = s?.currency ?: CurrencyCatalog.DEFAULT_CODE,
+                defaultTaxRate = s?.defaultTaxRate ?: 0.0,
                 name = s?.name.orEmpty(),
                 tradingName = s?.tradingName.orEmpty(),
                 address = s?.address.orEmpty(),
@@ -83,6 +85,15 @@ class CompanySettingsViewModel(
         viewModelScope.launch {
             companySettingsRepository.setCurrency(currency)
             _uiState.value = _uiState.value.copy(currency = currency)
+        }
+    }
+
+    fun updateDefaultTaxRate(rateText: String) {
+        val fraction = (rateText.replace(',', '.').toDoubleOrNull() ?: 0.0) / 100.0
+            .coerceIn(0.0, 1.0)
+        viewModelScope.launch {
+            companySettingsRepository.setDefaultTaxRate(fraction)
+            _uiState.value = _uiState.value.copy(defaultTaxRate = fraction)
         }
     }
 

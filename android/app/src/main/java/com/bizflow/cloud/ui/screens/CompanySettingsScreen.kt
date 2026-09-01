@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,12 +24,14 @@ import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Draw
+import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -37,15 +40,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bizflow.cloud.R
 import com.bizflow.cloud.ui.more.components.DocumentTemplateSelectorBottomSheet
 import com.bizflow.cloud.ui.more.components.pdfTemplateOptions
@@ -151,6 +155,11 @@ fun CompanySettingsScreen(
                 onSelect = viewModel::setCurrency,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
+            VatRateField(
+                rate = ui.defaultTaxRate,
+                onRate = viewModel::updateDefaultTaxRate,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            )
             ProfileSectionHeader(R.string.settings_section_documents)
             SettingsImageRow(
                 labelRes = R.string.settings_stamp,
@@ -185,6 +194,41 @@ fun CompanySettingsScreen(
 private fun currentTemplateName(templateId: String): Int {
     return pdfTemplateOptions.firstOrNull { it.id == templateId }?.nameRes
         ?: R.string.template_1_modern_name
+}
+
+@Composable
+private fun VatRateField(
+    rate: Double,
+    onRate: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var text by rememberSaveable { mutableStateOf(formatRatePercent(rate)) }
+    LaunchedEffect(rate) {
+        val currentPercent = text.replace(',', '.').toDoubleOrNull()
+        val targetPercent = rate * 100.0
+        if (currentPercent == null || (currentPercent - targetPercent).let { it < -0.001 || it > 0.001 }) {
+            text = formatRatePercent(rate)
+        }
+    }
+    OutlinedTextField(
+        value = text,
+        onValueChange = { input ->
+            text = input.filter { it.isDigit() || it == '.' || it == ',' }
+            onRate(text)
+        },
+        label = { Text(text = stringResource(R.string.settings_vat_rate)) },
+        trailingIcon = { Icon(Icons.Filled.Percent, contentDescription = null) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        modifier = modifier.fillMaxWidth(),
+    )
+}
+
+private fun formatRatePercent(rate: Double): String {
+    val percent = rate * 100.0
+    val whole = percent.toInt()
+    if (percent == whole.toDouble()) return whole.toString()
+    return percent.toString()
 }
 
 @Composable

@@ -176,20 +176,22 @@ fun TotalsSection(
     discount: Double,
     total: Double,
     currency: String,
+    taxRate: Double,
     modifier: Modifier = Modifier,
 ) {
+    val vatLabel = stringResource(R.string.editor_iva_format, (taxRate * 100.0).toInt())
     Column(modifier = modifier.fillMaxWidth()) {
-        TotalsRow(R.string.editor_subtotal, subtotal, currency)
-        TotalsRow(R.string.editor_iva, taxAmount, currency)
-        TotalsRow(R.string.editor_discount, discount, currency)
+        TotalsRow(stringResource(R.string.editor_subtotal), subtotal, currency)
+        TotalsRow(vatLabel, taxAmount, currency)
+        TotalsRow(stringResource(R.string.editor_discount), discount, currency)
         Spacer(modifier = Modifier.height(4.dp))
-        TotalsRow(R.string.editor_total, total, currency, emphasized = true)
+        TotalsRow(stringResource(R.string.editor_total), total, currency, emphasized = true)
     }
 }
 
 @Composable
 private fun TotalsRow(
-    @StringRes labelRes: Int,
+    label: String,
     value: Double,
     currency: String,
     emphasized: Boolean = false,
@@ -199,7 +201,7 @@ private fun TotalsRow(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = stringResource(labelRes),
+            text = label,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = if (emphasized) FontWeight.Bold else FontWeight.Normal,
         )
@@ -223,7 +225,7 @@ data class DocumentTotals(
 fun computeTotals(
     items: List<EditorItemUi>,
     discount: String,
-    taxRate: Double = 0.16,
+    taxRate: Double,
 ): DocumentTotals {
     val subtotal = items.sumOf { computeItemTotal(it.quantity, it.unitPrice) }
     val discountValue = discount.toDoubleOrNull() ?: 0.0

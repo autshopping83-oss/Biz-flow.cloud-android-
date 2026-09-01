@@ -81,7 +81,7 @@ class PdfGeneratorRepositoryImpl(
             .replace("{{PAYMENT_METHOD_INFO}}", html(document.paymentMethod ?: "\u2014"))
             .replace("{{ITEMS_TABLE_ROWS}}", itemsTableRows(items, document.currency))
             .replace("{{SUBTOTAL}}", formatMoney(document.subtotal, document.currency))
-            .replace("{{TAX_LABEL}}", "IVA (${(document.taxRate * 100).toInt()}%)")
+            .replace("{{TAX_LABEL}}", "VAT (${(document.taxRate * 100).toInt()}%)")
             .replace("{{TAX_AMOUNT}}", formatMoney(document.taxAmount, document.currency))
             .replace("{{TOTAL_AMOUNT}}", formatMoney(document.total, document.currency))
             .replace("{{STATUS_SEAL_HTML}}", statusSealHtml(document.status))

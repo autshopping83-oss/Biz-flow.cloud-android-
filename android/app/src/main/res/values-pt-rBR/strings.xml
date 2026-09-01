@@ -58,7 +58,6 @@
     <string name="editor_item_price">Preço unitário</string>
     <string name="editor_discount">Desconto (%)</string>
     <string name="editor_subtotal">Subtotal</string>
-    <string name="editor_iva">IVA (16%)</string>
     <string name="editor_preview">Pré-visualizar PDF</string>
     <string name="editor_print">Imprimir / Salvar PDF</string>
     <string name="editor_sign">Assinar documento</string>
@@ -78,6 +77,7 @@
     <string name="settings_stamp">Carimbo da Empresa</string>
     <string name="settings_stamp_hint">Selecionar imagem</string>
     <string name="settings_currency">Moeda (base da empresa)</string>
+    <string name="settings_vat_rate">Taxa de imposto (%)</string>
     <string name="settings_currency_search">Pesquisar por código, nome, símbolo ou país</string>
     <string name="settings_currency_empty">Nenhuma moeda encontrada</string>
     <string name="settings_section_identity">Identificação</string>
@@ -123,4 +123,13 @@
     <string name="recover_sent">Se o email existir, enviámos um link de redefinição.</string>
     <string name="recover_error_failed">Não foi possível enviar o link. Tente novamente.</string>
     <string name="more_sign_out">Sair</string>
+    <string name="editor_iva_format">IVA (%1$d%)</string>
+    <string name="nav_clients">Clientes</string>
+    <string name="client_new">Novo Cliente</string>
+    <string name="client_name">Nome</string>
+    <string name="client_contact">Contato</string>
+    <string name="client_location">Localização</string>
+    <string name="client_identifier">CNPJ / Documento</string>
+    <string name="clients_add">Adicionar cliente</string>
+    <string name="clients_empty">Ainda não há clientes</string>
 </resources>

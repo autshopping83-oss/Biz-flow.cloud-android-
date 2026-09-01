@@ -32,6 +32,7 @@ import com.bizflow.cloud.ui.screens.CreateDocumentScreen
 import com.bizflow.cloud.ui.screens.DocumentsScreen
 import com.bizflow.cloud.ui.screens.HomeScreen
 import com.bizflow.cloud.ui.screens.MoreScreen
+import com.bizflow.cloud.ui.screens.ClientsScreen
 import com.bizflow.cloud.ui.screens.PlaceholderScreen
 import io.github.jan.supabase.gotrue.SessionStatus
 import kotlinx.coroutines.flow.collectLatest
@@ -78,6 +79,9 @@ fun AppShell() {
                         navController.navigate("${EditorRoute.EDITOR}/${DocumentType.FATURA.code}")
                     },
                 )
+            }
+            composable(BottomDestination.CLIENTS.route) {
+                ClientsScreen(onBack = { navController.popBackStack() })
             }
             composable(BottomDestination.FINANCE.route) {
                 PlaceholderScreen(titleRes = BottomDestination.FINANCE.labelRes)

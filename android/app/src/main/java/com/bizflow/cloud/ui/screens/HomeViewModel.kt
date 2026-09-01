@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.bizflow.cloud.BizFlowApplication
 import com.bizflow.cloud.data.local.model.DocumentWithItems
+import com.bizflow.cloud.data.repository.CompanySettingsRepository
 import com.bizflow.cloud.data.repository.DocumentRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 
 class HomeViewModel(
     private val repository: DocumentRepository,
+    private val companySettingsRepository: CompanySettingsRepository,
 ) : ViewModel() {
 
     val recentDocuments: StateFlow<List<DocumentWithItems>> = repository.observeAll()
@@ -34,13 +36,20 @@ class HomeViewModel(
             initialValue = 0,
         )
 
+    val currency: StateFlow<String> = companySettingsRepository.observeCurrency()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = "",
+        )
+
     companion object {
         private const val MAX_RECENT = 5
 
         val Factory: Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as BizFlowApplication
-                HomeViewModel(app.documentRepository)
+                HomeViewModel(app.documentRepository, app.companySettingsRepository)
             }
         }
     }

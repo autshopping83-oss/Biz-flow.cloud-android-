@@ -51,7 +51,8 @@ fun CreateDocumentScreen(
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var editingItem by rememberSaveable { mutableStateOf<EditorItemUi?>(null) }
     var showSignaturePad by remember { mutableStateOf(false) }
-    val totals = computeTotals(ui.items, ui.discount)
+    var showClientDialog by rememberSaveable { mutableStateOf(false) }
+    val totals = computeTotals(ui.items, ui.discount, ui.taxRate)
     val canSave = ui.clientName.isNotBlank() && ui.items.isNotEmpty() && !ui.isSaving
     Scaffold(
         modifier = modifier,
@@ -101,6 +102,7 @@ fun CreateDocumentScreen(
                     clients = clients,
                     selectedName = ui.clientName,
                     onSelect = viewModel::selectClient,
+                    onAddRequested = { showClientDialog = true },
                 )
             }
             item {
@@ -171,7 +173,8 @@ fun CreateDocumentScreen(
                     taxAmount = totals.taxAmount,
                     discount = totals.discount,
                     total = totals.total,
-                    currency = "MZN",
+                    currency = ui.currency,
+                    taxRate = ui.taxRate,
                 )
             }
             item {
@@ -229,6 +232,16 @@ fun CreateDocumentScreen(
                 editingItem = null
             },
             onDismiss = { editingItem = null },
+        )
+    }
+    if (showClientDialog) {
+        ClientFormDialog(
+            initial = ClientFormData("", "", "", ""),
+            onConfirm = { data ->
+                viewModel.saveClient(data.name, data.contact, data.location, data.identifier)
+                showClientDialog = false
+            },
+            onDismiss = { showClientDialog = false },
         )
     }
     if (showSignaturePad) {

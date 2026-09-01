@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bizflow.cloud.R
+import com.bizflow.cloud.data.model.CurrencyCatalog
 import com.bizflow.cloud.data.model.DocumentType
 import com.bizflow.cloud.ui.components.ActionCard
 import com.bizflow.cloud.ui.components.QuickAccessChip
@@ -50,6 +51,8 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
 ) {
     val recentDocuments by viewModel.recentDocuments.collectAsStateWithLifecycle()
+    val currency by viewModel.currency.collectAsStateWithLifecycle()
+    val displayCurrency = currency.ifBlank { CurrencyCatalog.DEFAULT_CODE }
 
     Scaffold(
         modifier = modifier,
@@ -73,7 +76,7 @@ fun HomeScreen(
                 actions = {
                     RevenueBadge(
                         label = stringResource(R.string.monthly_revenue),
-                        value = stringResource(R.string.home_revenue_placeholder),
+                        value = formatMoney(0.0, displayCurrency),
                         modifier = Modifier.padding(end = 12.dp),
                     )
                 },

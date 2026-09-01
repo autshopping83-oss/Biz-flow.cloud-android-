@@ -39,6 +39,12 @@ interface CompanySettingsDao {
     @Query("UPDATE company_settings SET currency = :currency, updatedAt = :now WHERE id = 'default'")
     suspend fun updateCurrency(currency: String, now: Long)
 
+    @Query("SELECT defaultTaxRate FROM company_settings WHERE id = 'default'")
+    fun observeDefaultTaxRate(): Flow<Double?>
+
+    @Query("UPDATE company_settings SET defaultTaxRate = :rate, updatedAt = :now WHERE id = 'default'")
+    suspend fun updateDefaultTaxRate(rate: Double, now: Long)
+
     @Query(
         """UPDATE company_settings SET
             name = :name, tradingName = :tradingName, address = :address,

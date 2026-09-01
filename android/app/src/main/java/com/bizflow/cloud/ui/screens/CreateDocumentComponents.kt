@@ -57,6 +57,7 @@ fun ClientDropdown(
     clients: List<ClientEntity>,
     selectedName: String,
     onSelect: (ClientEntity) -> Unit,
+    onAddRequested: () -> Unit = {},
 ) {
     var expanded by remember { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf(selectedName) }
@@ -114,6 +115,14 @@ fun ClientDropdown(
                     },
                 )
             }
+            DropdownMenuItem(
+                text = { Text(text = stringResource(R.string.clients_add)) },
+                onClick = {
+                    expanded = false
+                    query = selectedName
+                    onAddRequested()
+                },
+            )
         }
     }
 }
