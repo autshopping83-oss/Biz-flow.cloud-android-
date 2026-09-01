@@ -88,8 +88,6 @@ fun AppShell() {
                     onEditDocument = { type ->
                         navController.navigate("${EditorRoute.EDITOR}/${type.code}")
                     },
-                        navController.navigate("${EditorRoute.EDITOR}/${DocumentType.FATURA.code}")
-                    },
                 )
             }
             composable(BottomDestination.CLIENTS.route) {
