@@ -163,7 +163,7 @@ private fun AppBottomBar(navController: NavHostController) {
                 },
                 icon = { Icon(destination.icon, contentDescription = label) },
                 label = { Text(text = label) },
-                modifier = Modifier.weight(1f),
+                alwaysShowLabel = false,
             )
         }
     }
