@@ -18,11 +18,15 @@ import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,11 +43,18 @@ fun CurrencySelector(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
+    val searchFocusRequester = remember { FocusRequester() }
     val selected = remember(selectedCode) {
         CurrencyCatalog.byCode(selectedCode) ?: CurrencyCatalog.byCode(CurrencyCatalog.DEFAULT_CODE)!!
     }
     val results = remember(expanded, query) {
         if (expanded) CurrencyCatalog.search(query) else emptyList()
+    }
+
+    LaunchedEffect(expanded) {
+        if (expanded) {
+            searchFocusRequester.requestFocus()
+        }
     }
 
     ExposedDropdownMenuBox(
@@ -74,7 +85,8 @@ fun CurrencySelector(
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .focusRequester(searchFocusRequester),
             )
             Column(
                 modifier = Modifier
