@@ -123,7 +123,7 @@
     <string name="recover_sent">If the email exists, we have sent a reset link.</string>
     <string name="recover_error_failed">Could not send the link. Try again.</string>
     <string name="more_sign_out">Sign out</string>
-    <string name="editor_iva_format">VAT (%1$d%)</string>
+    <string name="editor_iva_format">VAT (%1$d%%)</string>
     <string name="nav_clients">Clients</string>
     <string name="client_new">New Client</string>
     <string name="client_name">Name</string>

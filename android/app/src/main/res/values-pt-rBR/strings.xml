@@ -123,7 +123,7 @@
     <string name="recover_sent">Se o email existir, enviámos um link de redefinição.</string>
     <string name="recover_error_failed">Não foi possível enviar o link. Tente novamente.</string>
     <string name="more_sign_out">Sair</string>
-    <string name="editor_iva_format">IVA (%1$d%)</string>
+    <string name="editor_iva_format">IVA (%1$d%%)</string>
     <string name="nav_clients">Clientes</string>
     <string name="client_new">Novo Cliente</string>
     <string name="client_name">Nome</string>
