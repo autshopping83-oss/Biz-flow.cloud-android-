@@ -37,10 +37,11 @@ class AppDatabaseMigrationTest {
                 AppDatabase.MIGRATION_3_4,
                 AppDatabase.MIGRATION_4_5,
                 AppDatabase.MIGRATION_5_6,
+                AppDatabase.MIGRATION_6_7,
             )
             .build()
 
-        assertEquals(6, db.openHelper.writableDatabase.version)
+        assertEquals(7, db.openHelper.writableDatabase.version)
 
         val doc = db.documentDao().getById("doc-1")
         assertNotNull(doc)
