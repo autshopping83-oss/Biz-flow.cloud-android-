@@ -50,7 +50,6 @@ object FileDetector {
         "docx" to DocumentType.DOCX,
         "xlsx" to DocumentType.XLSX,
         "csv" to DocumentType.CSV,
-        "ods" to DocumentType.XLSX,
     )
 
     fun detect(context: Context, uri: Uri, intentMimeType: String?): DocumentType {

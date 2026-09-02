@@ -23,7 +23,7 @@ class DocumentViewerActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "DocViewer"
         private const val VIEWER_BASE = "file:///android_asset/documentviewer/"
-        private const val MAX_FILE_SIZE = 100L * 1024 * 1024 // 100MB
+        private const val MAX_FILE_SIZE = 25L * 1024 * 1024 // 25MB — ~90MB RAM pico
     }
 
     private lateinit var webView: WebView
@@ -158,7 +158,8 @@ class DocumentViewerActivity : AppCompatActivity() {
         val viewerUrl = VIEWER_BASE + fileType.viewerHtml
         webView.loadUrl(viewerUrl)
         webView.postDelayed({
-            val js = "javascript:${fileType.jsEntryPoint}('$base64', '$fileName')"
+            val escapedFileName = fileName.replace("\\", "\\\\").replace("'", "\\'")
+            val js = "javascript:${fileType.jsEntryPoint}('$base64', '$escapedFileName')"
             webView.evaluateJavascript(js, null)
             webView.visibility = View.VISIBLE
             progressBar.visibility = View.GONE
