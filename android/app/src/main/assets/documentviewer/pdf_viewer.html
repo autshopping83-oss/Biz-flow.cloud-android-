@@ -2,17 +2,18 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>PDF Viewer</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #525659; font-family: sans-serif; overflow: hidden; }
+html, body { width: 100%; max-width: 100%; margin: 0; padding: 0; overflow-x: hidden; background: #525659; font-family: sans-serif; }
+body { overflow: hidden; }
 #toolbar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #323639; color: #fff; display: flex; align-items: center; padding: 0 12px; z-index: 100; }
 #toolbar span { flex: 1; text-align: center; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#viewerContainer { position: fixed; top: 48px; bottom: 0; left: 0; right: 0; overflow: auto; }
-#viewer { margin: 0 auto; }
+#viewerContainer { position: fixed; top: 48px; bottom: 0; left: 0; right: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
+#viewer { margin: 0 auto; width: 100%; max-width: 100vw; }
 .page { margin: 8px auto; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-canvas { display: block; }
+.page canvas { display: block; width: 100%; height: auto; }
 #loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #fff; font-size: 16px; z-index: 200; }
 #error { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #ff6b6b; font-size: 14px; text-align: center; display: none; z-index: 200; }
 </style>
@@ -41,7 +42,6 @@ canvas { display: block; }
     errorDiv.style.display = 'block';
   }
 
-  // Receive file data from Android
   window.loadPdfFromBase64 = function(base64Data, fileName) {
     titleEl.textContent = fileName || 'PDF Viewer';
     try {
@@ -58,29 +58,49 @@ canvas { display: block; }
 
   function renderPdf(data) {
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.min.js';
-    var loadingTask = pdfjsLib.getDocument({data: data});
-    loadingTask.promise.then(function(pdf) {
+    var dpr = window.devicePixelRatio || 1;
+
+    pdfjsLib.getDocument({data: data}).promise.then(function(pdf) {
       loading.style.display = 'none';
       titleEl.textContent = (titleEl.textContent || 'PDF') + ' (' + pdf.numPages + ' pages)';
-      var scale = 1.5;
-      for (var i = 1; i <= pdf.numPages; i++) {
-        (function(pageNum) {
-          pdf.getPage(pageNum).then(function(page) {
-            var viewport = page.getViewport({scale: scale});
-            var div = document.createElement('div');
-            div.className = 'page';
-            div.id = 'page-' + pageNum;
-            div.style.width = viewport.width + 'px';
-            div.style.height = viewport.height + 'px';
-            var canvas = document.createElement('canvas');
-            var ctx = canvas.getContext('2d');
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            div.appendChild(canvas);
-            viewer.appendChild(div);
-            page.render({canvasContext: ctx, viewport: viewport});
+
+      var containerWidth = viewerContainer.clientWidth;
+      var rendered = 0;
+      var totalPages = pdf.numPages;
+
+      function renderPage(pageNum) {
+        pdf.getPage(pageNum).then(function(page) {
+          var unscaledViewport = page.getViewport({scale: 1});
+          var fitToWidthScale = containerWidth / unscaledViewport.width;
+          var renderScale = fitToWidthScale * dpr;
+
+          var viewport = page.getViewport({scale: renderScale});
+
+          var div = document.createElement('div');
+          div.className = 'page';
+          div.id = 'page-' + pageNum;
+
+          var canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          canvas.style.width = Math.floor(viewport.width / dpr) + 'px';
+          canvas.style.height = Math.floor(viewport.height / dpr) + 'px';
+
+          div.appendChild(canvas);
+          viewer.appendChild(div);
+
+          page.render({canvasContext: canvas.getContext('2d'), viewport: viewport}).promise.then(function() {
+            rendered++;
+            if (rendered === totalPages) {
+              viewerContainer.style.visibility = 'visible';
+            }
           });
-        })(i);
+        });
+      }
+
+      viewerContainer.style.visibility = 'hidden';
+      for (var i = 1; i <= totalPages; i++) {
+        renderPage(i);
       }
     }, function(err) {
       showError('PDF error: ' + err.message);

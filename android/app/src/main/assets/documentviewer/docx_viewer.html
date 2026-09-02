@@ -2,20 +2,22 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>DOCX Viewer</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: sans-serif; background: #f5f5f5; }
+html, body { width: 100%; max-width: 100%; margin: 0; padding: 0; overflow-x: hidden; background: #f5f5f5; font-family: sans-serif; }
+body { overflow: hidden; }
 #toolbar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #2b5797; color: #fff; display: flex; align-items: center; padding: 0 12px; z-index: 100; }
 #toolbar span { flex: 1; text-align: center; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#content { position: fixed; top: 48px; bottom: 0; left: 0; right: 0; overflow: auto; padding: 16px; background: white; }
+#content { position: fixed; top: 48px; bottom: 0; left: 0; right: 0; overflow: auto; padding: 16px; background: white; -webkit-overflow-scrolling: touch; }
 #loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #333; font-size: 16px; z-index: 200; }
 #error { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #ff6b6b; font-size: 14px; text-align: center; display: none; z-index: 200; }
-.docx-wrapper { max-width: 800px; margin: 0 auto; }
-.docx-wrapper table { border-collapse: collapse; width: 100%; }
-.docx-wrapper td, .docx-wrapper th { border: 1px solid #ccc; padding: 4px 8px; }
-.docx-wrapper img { max-width: 100%; }
+.docx-wrapper { width: 100%; max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; }
+.docx-wrapper table { border-collapse: collapse; width: 100%; max-width: 100%; table-layout: auto; }
+.docx-wrapper td, .docx-wrapper th { border: 1px solid #ccc; padding: 4px 8px; max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; }
+.docx-wrapper img { max-width: 100%; height: auto; display: block; }
+.docx-wrapper p, .docx-wrapper div { max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; }
 </style>
 </head>
 <body>
