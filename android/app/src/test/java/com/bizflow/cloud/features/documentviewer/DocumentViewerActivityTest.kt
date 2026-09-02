@@ -288,22 +288,22 @@ class DocumentViewerActivityTest {
     // --- DocumentType viewer mapping tests ---
 
     @Test
-    fun `PDF maps to pdf_viewer.html`() {
+    fun `PDF maps to pdf-viewer-html`() {
         assertEquals("pdf_viewer.html", DocumentType.PDF.viewerHtml)
     }
 
     @Test
-    fun `DOCX maps to docx_viewer.html`() {
+    fun `DOCX maps to docx-viewer-html`() {
         assertEquals("docx_viewer.html", DocumentType.DOCX.viewerHtml)
     }
 
     @Test
-    fun `XLSX maps to xlsx_viewer.html`() {
+    fun `XLSX maps to xlsx-viewer-html`() {
         assertEquals("xlsx_viewer.html", DocumentType.XLSX.viewerHtml)
     }
 
     @Test
-    fun `CSV maps to xlsx_viewer.html`() {
+    fun `CSV maps to xlsx-viewer-html`() {
         assertEquals("xlsx_viewer.html", DocumentType.CSV.viewerHtml)
     }
 
