@@ -32,6 +32,7 @@ data class SyncQueueEntity(
 
         const val TYPE_DOCUMENT = "DOCUMENT"
         const val TYPE_CLIENT = "CLIENT"
+        const val TYPE_TRANSACTION = "TRANSACTION"
 
         fun pending(userId: String?, entityType: String, entityId: String, operation: String, now: Long): SyncQueueEntity =
             SyncQueueEntity(

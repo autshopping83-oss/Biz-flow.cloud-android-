@@ -137,4 +137,27 @@
     <string name="delete">Eliminar</string>
     <string name="clients_delete_confirm">¿Está seguro de que desea eliminar el cliente %1$s?</string>
     <string name="edit">Editar</string>
+    <string name="finance_balance">Saldo</string>
+    <string name="finance_income">Ingresos</string>
+    <string name="finance_expense">Gastos</string>
+    <string name="finance_income_expense_format">%1$s ingresos • %2$s gastos</string>
+    <string name="finance_received_from_documents">Recibido de documentos: %1$s</string>
+    <string name="finance_movements">Movimientos</string>
+    <string name="finance_add_movement">Agregar movimiento</string>
+    <string name="finance_amount">Monto</string>
+    <string name="finance_description">Descripción</string>
+    <string name="finance_category">Categoría</string>
+    <string name="finance_date">Fecha</string>
+    <string name="finance_save_movement">Guardar movimiento</string>
+    <string name="finance_delete_confirm">¿Eliminar movimiento "%1$s"?</string>
+    <string name="finance_filter_all">Todos</string>
+    <string name="finance_filter_all_categories">Todas</string>
+    <string name="finance_income_vs_expense">Ingresos vs Gastos</string>
+    <string name="finance_expenses_by_category">Gastos por categoría</string>
+    <string name="finance_evolution">Evolución</string>
+    <string name="finance_empty_title">Sin movimientos</string>
+    <string name="finance_empty_body">Agregue un movimiento financiero o cree documentos pagados para comenzar.</string>
+    <string name="finance_document">Documento</string>
+    <string name="loading">Cargando…</string>
+    <string name="ok">OK</string>
 </resources>

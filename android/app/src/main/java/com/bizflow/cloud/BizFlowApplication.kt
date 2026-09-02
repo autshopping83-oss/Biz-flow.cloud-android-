@@ -9,6 +9,7 @@ import com.bizflow.cloud.data.local.AppDatabase
 import com.bizflow.cloud.data.remote.RemoteSync
 import com.bizflow.cloud.data.remote.SupabaseClientProvider
 import com.bizflow.cloud.data.repository.ClientRepository
+import com.bizflow.cloud.data.repository.TransactionRepository
 import com.bizflow.cloud.data.repository.CompanySettingsRepository
 import com.bizflow.cloud.data.repository.DocumentRepository
 import com.bizflow.cloud.data.repository.PdfGeneratorRepositoryImpl
@@ -32,6 +33,7 @@ class BizFlowApplication : Application() {
             .addMigrations(AppDatabase.MIGRATION_3_4)
             .addMigrations(AppDatabase.MIGRATION_4_5)
             .addMigrations(AppDatabase.MIGRATION_5_6)
+            .addMigrations(AppDatabase.MIGRATION_6_7)
             .build()
     }
 
@@ -47,6 +49,14 @@ class BizFlowApplication : Application() {
     val clientRepository: ClientRepository by lazy {
         ClientRepository(
             clientDao = database.clientDao(),
+            syncQueueDao = database.syncQueueDao(),
+            userIdProvider = { authManager.currentUserId() },
+        )
+    }
+
+    val transactionRepository: TransactionRepository by lazy {
+        TransactionRepository(
+            transactionDao = database.transactionDao(),
             syncQueueDao = database.syncQueueDao(),
             userIdProvider = { authManager.currentUserId() },
         )

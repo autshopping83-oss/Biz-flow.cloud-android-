@@ -137,4 +137,27 @@
     <string name="delete">Delete</string>
     <string name="clients_delete_confirm">您确定要删除客户 %1$s 吗？</string>
     <string name="edit">编辑</string>
+    <string name="finance_balance">余额</string>
+    <string name="finance_income">收入</string>
+    <string name="finance_expense">支出</string>
+    <string name="finance_income_expense_format">%1$s 收入 • %2$s 支出</string>
+    <string name="finance_received_from_documents">来自文档的收入: %1$s</string>
+    <string name="finance_movements">交易记录</string>
+    <string name="finance_add_movement">添加交易</string>
+    <string name="finance_amount">金额</string>
+    <string name="finance_description">描述</string>
+    <string name="finance_category">分类</string>
+    <string name="finance_date">日期</string>
+    <string name="finance_save_movement">保存交易</string>
+    <string name="finance_delete_confirm">删除交易 "%1$s"？</string>
+    <string name="finance_filter_all">全部</string>
+    <string name="finance_filter_all_categories">全部</string>
+    <string name="finance_income_vs_expense">收入 vs 支出</string>
+    <string name="finance_expenses_by_category">按分类支出</string>
+    <string name="finance_evolution">趋势</string>
+    <string name="finance_empty_title">暂无交易</string>
+    <string name="finance_empty_body">添加财务交易或创建已付款文档以开始使用。</string>
+    <string name="finance_document">文档</string>
+    <string name="loading">加载中…</string>
+    <string name="ok">确定</string>
 </resources>

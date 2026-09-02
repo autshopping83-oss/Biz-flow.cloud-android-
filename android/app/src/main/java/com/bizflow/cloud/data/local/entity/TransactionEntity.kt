@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "transactions",
-    indices = [Index("receiptId")],
+    indices = [Index("receiptId"), Index("documentId")],
 )
 data class TransactionEntity(
     @PrimaryKey val id: String,
@@ -18,6 +18,8 @@ data class TransactionEntity(
     val date: String,
     val timestamp: Long,
     val receiptId: String?,
+    val documentId: String?,
+    val currency: String,
     val synced: Boolean,
     val updatedAt: Long,
     val deletedAt: Long?,

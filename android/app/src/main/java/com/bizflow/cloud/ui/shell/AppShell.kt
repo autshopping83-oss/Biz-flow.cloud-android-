@@ -94,7 +94,7 @@ fun AppShell() {
                 ClientsScreen(onBack = { navController.popBackStack() })
             }
             composable(BottomDestination.FINANCE.route) {
-                PlaceholderScreen(titleRes = BottomDestination.FINANCE.labelRes)
+                FinanceScreen()
             }
             composable(BottomDestination.MORE.route) {
                 MoreScreen(

@@ -15,11 +15,13 @@ import com.bizflow.cloud.data.local.entity.ClientEntity
 import com.bizflow.cloud.data.local.entity.CompanySettingsEntity
 import com.bizflow.cloud.data.local.entity.DocumentEntity
 import com.bizflow.cloud.data.local.entity.LineItemEntity
+import com.bizflow.cloud.data.local.entity.TransactionEntity
 import com.bizflow.cloud.data.model.DocumentStatus
 import com.bizflow.cloud.data.model.DocumentType
 import com.bizflow.cloud.data.repository.ClientRepository
 import com.bizflow.cloud.data.repository.CompanySettingsRepository
 import com.bizflow.cloud.data.repository.DocumentRepository
+import com.bizflow.cloud.data.repository.TransactionRepository
 import com.bizflow.cloud.data.repository.PdfGeneratorRepositoryImpl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,6 +58,7 @@ class CreateDocumentViewModel(
     private val clientRepository: ClientRepository,
     private val pdfGenerator: PdfGeneratorRepositoryImpl,
     private val companySettingsRepository: CompanySettingsRepository,
+    private val transactionRepository: TransactionRepository,
     private val appContext: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -157,8 +160,37 @@ class CreateDocumentViewModel(
             val number = documentRepository.nextNumber(state.type)
             val document = buildDocument(state, items, number)
             documentRepository.save(document, items)
+            if (document.status == DocumentStatus.PAGO) {
+                createFinanceFromDocument(document)
+            }
             onSaved()
         }
+    }
+
+    private suspend fun createFinanceFromDocument(document: DocumentEntity) {
+        val existing = transactionRepository.getByDocumentId(document.id)
+        if (existing != null) return
+        val timestamp = try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(document.date)?.time
+        } catch (_: Exception) { System.currentTimeMillis() }
+        transactionRepository.save(
+            TransactionEntity(
+                id = UUID.randomUUID().toString(),
+                userId = null,
+                type = FinanceViewModel.TYPE_INCOME,
+                amount = document.total,
+                description = "Documento ${document.number} — ${document.clientName.ifBlank { "Sem cliente" }}",
+                category = FinanceViewModel.CATEGORY_DOCUMENT,
+                date = document.date,
+                timestamp = timestamp ?: System.currentTimeMillis(),
+                receiptId = null,
+                documentId = document.id,
+                currency = document.currency,
+                synced = false,
+                updatedAt = System.currentTimeMillis(),
+                deletedAt = null,
+            ),
+        )
     }
 
     fun requestPreview() {
@@ -260,6 +292,7 @@ class CreateDocumentViewModel(
                     clientRepository = app.clientRepository,
                     pdfGenerator = app.pdfGeneratorRepository,
                     companySettingsRepository = app.companySettingsRepository,
+                    transactionRepository = app.transactionRepository,
                     appContext = app.applicationContext,
                     savedStateHandle = createSavedStateHandle(),
                 )

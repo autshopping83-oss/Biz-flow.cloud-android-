@@ -31,7 +31,7 @@ import java.util.UUID
         CompanySettingsEntity::class,
         SyncQueueEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -114,6 +114,14 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE documents ADD COLUMN userId TEXT")
                 db.execSQL("ALTER TABLE sync_queue ADD COLUMN user_id TEXT")
+            }
+        }
+
+        val MIGRATION_6_7: Migration = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE transactions ADD COLUMN documentId TEXT")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN currency TEXT NOT NULL DEFAULT 'MZN'")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_transactions_documentId ON transactions(documentId)")
             }
         }
     }
