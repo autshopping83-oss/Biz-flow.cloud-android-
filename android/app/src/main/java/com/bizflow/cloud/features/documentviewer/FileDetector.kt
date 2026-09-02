@@ -78,7 +78,7 @@ object FileDetector {
                 val bytesRead = stream.read(header)
                 if (bytesRead >= 4) {
                     for ((type, magic) in MAGIC_BYTES) {
-                        if (header.startsWith(magic)) return type
+                        if (magic.indices.all { header[it] == magic[it] }) return type
                     }
                 }
             }
