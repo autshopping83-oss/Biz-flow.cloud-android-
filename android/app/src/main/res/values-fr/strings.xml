@@ -160,4 +160,13 @@
     <string name="finance_document">Document</string>
     <string name="loading">Chargement…</string>
     <string name="ok">OK</string>
+    <string name="products_title">Produits/Services</string>
+    <string name="products_add">Ajouter un produit</string>
+    <string name="products_edit">Modifier le produit</string>
+    <string name="products_save">Enregistrer</string>
+    <string name="products_name">Nom</string>
+    <string name="products_price">Prix</string>
+    <string name="products_category">Catégorie</string>
+    <string name="products_empty">Aucun produit enregistré</string>
+    <string name="products_delete_confirm">Supprimer le produit « %1$s » ?</string>
 </resources>

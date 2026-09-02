@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -59,6 +60,7 @@ private fun nativeName(tag: String): String {
 fun MoreScreen(
     modifier: Modifier = Modifier,
     onOpenCompanySettings: () -> Unit = {},
+    onOpenProducts: () -> Unit = {},
     onOpenAccount: () -> Unit = {},
     onSignOut: suspend () -> Unit = {},
 ) {
@@ -92,6 +94,14 @@ fun MoreScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onOpenCompanySettings() },
+            )
+            ListItem(
+                headlineContent = { Text(text = stringResource(R.string.products_title)) },
+                leadingContent = { Icon(Icons.Filled.Inventory, contentDescription = null) },
+                trailingContent = { Icon(Icons.Filled.ChevronRight, contentDescription = null) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenProducts() },
             )
             ListItem(
                 headlineContent = { Text(text = stringResource(R.string.more_settings)) },

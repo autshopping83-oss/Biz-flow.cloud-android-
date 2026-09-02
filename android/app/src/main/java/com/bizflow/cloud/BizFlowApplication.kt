@@ -9,6 +9,7 @@ import com.bizflow.cloud.data.local.AppDatabase
 import com.bizflow.cloud.data.remote.RemoteSync
 import com.bizflow.cloud.data.remote.SupabaseClientProvider
 import com.bizflow.cloud.data.repository.ClientRepository
+import com.bizflow.cloud.data.repository.ProductRepository
 import com.bizflow.cloud.data.repository.TransactionRepository
 import com.bizflow.cloud.data.repository.CompanySettingsRepository
 import com.bizflow.cloud.data.repository.DocumentRepository
@@ -57,6 +58,14 @@ class BizFlowApplication : Application() {
     val transactionRepository: TransactionRepository by lazy {
         TransactionRepository(
             transactionDao = database.transactionDao(),
+            syncQueueDao = database.syncQueueDao(),
+            userIdProvider = { authManager.currentUserId() },
+        )
+    }
+
+    val productRepository: ProductRepository by lazy {
+        ProductRepository(
+            productDao = database.productDao(),
             syncQueueDao = database.syncQueueDao(),
             userIdProvider = { authManager.currentUserId() },
         )

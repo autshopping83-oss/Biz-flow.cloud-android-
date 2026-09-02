@@ -160,4 +160,13 @@
     <string name="finance_document">文档</string>
     <string name="loading">加载中…</string>
     <string name="ok">确定</string>
+    <string name="products_title">产品/服务</string>
+    <string name="products_add">添加产品</string>
+    <string name="products_edit">编辑产品</string>
+    <string name="products_save">保存</string>
+    <string name="products_name">名称</string>
+    <string name="products_price">价格</string>
+    <string name="products_category">分类</string>
+    <string name="products_empty">暂无产品</string>
+    <string name="products_delete_confirm">删除产品 "%1$s"？</string>
 </resources>

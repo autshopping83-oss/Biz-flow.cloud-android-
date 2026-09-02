@@ -34,6 +34,7 @@ import com.bizflow.cloud.ui.screens.HomeScreen
 import com.bizflow.cloud.ui.screens.MoreScreen
 import com.bizflow.cloud.ui.screens.ClientsScreen
 import com.bizflow.cloud.ui.screens.FinanceScreen
+import com.bizflow.cloud.ui.screens.ProductsScreen
 import com.bizflow.cloud.ui.screens.PlaceholderScreen
 import io.github.jan.supabase.gotrue.SessionStatus
 import kotlinx.coroutines.flow.collectLatest
@@ -102,9 +103,15 @@ fun AppShell() {
                     onOpenCompanySettings = {
                         navController.navigate(EditorRoute.COMPANY_SETTINGS)
                     },
+                    onOpenProducts = {
+                        navController.navigate(EditorRoute.PRODUCTS)
+                    },
                     onOpenAccount = { navController.navigate(AccountRoute.ACCOUNT) },
                     onSignOut = { app.authManager.signOut() },
                 )
+            }
+            composable(EditorRoute.PRODUCTS) {
+                ProductsScreen(onBack = { navController.popBackStack() })
             }
             composable(EditorRoute.COMPANY_SETTINGS) {
                 CompanySettingsScreen(onClose = { navController.popBackStack() })
@@ -146,6 +153,7 @@ fun AppShell() {
 private object EditorRoute {
     const val EDITOR = "documentEditor"
     const val COMPANY_SETTINGS = "companySettings"
+    const val PRODUCTS = "products"
     val AUTH_ROUTES = listOf(AccountRoute.ACCOUNT, AccountRoute.LOGIN, AccountRoute.SIGNUP, AccountRoute.RECOVER)
 }
 
