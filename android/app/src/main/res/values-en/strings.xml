@@ -173,4 +173,20 @@
     <string name="editor_select_product_hint">Choose an existing product or add a new one</string>
     <string name="editor_add_new_product">+ New product</string>
     <string name="editor_no_products">No products registered</string>
+    <string name="category_document">Document</string>
+    <string name="category_services">Services</string>
+    <string name="category_products">Products</string>
+    <string name="category_operational">Operational</string>
+    <string name="category_salaries">Salaries</string>
+    <string name="category_rent">Rent</string>
+    <string name="category_utilities">Utilities</string>
+    <string name="category_taxes">Taxes</string>
+    <string name="category_marketing">Marketing</string>
+    <string name="category_other">Other</string>
+    <string name="category_consulting">Consulting</string>
+    <string name="category_maintenance">Maintenance</string>
+    <string name="category_rental">Rental</string>
+    <string name="category_subscription">Subscription</string>
+    <string name="finance_category_placeholder">E.g. Services, Consulting...</string>
+    <string name="products_category_placeholder">E.g. Services, Products...</string>
 </resources>

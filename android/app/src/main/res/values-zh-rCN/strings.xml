@@ -173,4 +173,20 @@
     <string name="editor_select_product_hint">选择现有产品或添加新产品</string>
     <string name="editor_add_new_product">+ 新产品</string>
     <string name="editor_no_products">暂无产品</string>
+    <string name="category_document">文档</string>
+    <string name="category_services">服务</string>
+    <string name="category_products">产品</string>
+    <string name="category_operational">运营</string>
+    <string name="category_salaries">工资</string>
+    <string name="category_rent">租金</string>
+    <string name="category_utilities">公用事业</string>
+    <string name="category_taxes">税费</string>
+    <string name="category_marketing">营销</string>
+    <string name="category_other">其他</string>
+    <string name="category_consulting">咨询</string>
+    <string name="category_maintenance">维护</string>
+    <string name="category_rental">租赁</string>
+    <string name="category_subscription">订阅</string>
+    <string name="finance_category_placeholder">例如: 服务, 咨询...</string>
+    <string name="products_category_placeholder">例如: 服务, 产品...</string>
 </resources>

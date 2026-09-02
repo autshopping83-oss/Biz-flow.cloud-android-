@@ -424,40 +424,43 @@ private fun FinanceFilters(
     onFilterTypeChange: (FinanceViewModel.FilterType) -> Unit,
     onFilterCategoryChange: (String?) -> Unit,
 ) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+        androidx.compose.foundation.layout.FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
             FilterChip(
                 selected = filterType == FinanceViewModel.FilterType.ALL,
                 onClick = { onFilterTypeChange(FinanceViewModel.FilterType.ALL) },
-                label = { Text(stringResource(R.string.finance_filter_all)) },
+                label = { Text(stringResource(R.string.finance_filter_all), fontSize = 12.sp) },
             )
             FilterChip(
                 selected = filterType == FinanceViewModel.FilterType.INCOME,
                 onClick = { onFilterTypeChange(FinanceViewModel.FilterType.INCOME) },
-                label = { Text(stringResource(R.string.finance_income)) },
+                label = { Text(stringResource(R.string.finance_income), fontSize = 12.sp) },
             )
             FilterChip(
                 selected = filterType == FinanceViewModel.FilterType.EXPENSE,
                 onClick = { onFilterTypeChange(FinanceViewModel.FilterType.EXPENSE) },
-                label = { Text(stringResource(R.string.finance_expense)) },
+                label = { Text(stringResource(R.string.finance_expense), fontSize = 12.sp) },
             )
         }
         if (categories.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth(),
+            Spacer(modifier = Modifier.height(4.dp))
+            androidx.compose.foundation.layout.FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 FilterChip(
                     selected = filterCategory == null,
                     onClick = { onFilterCategoryChange(null) },
-                    label = { Text(stringResource(R.string.finance_filter_all_categories)) },
+                    label = { Text(stringResource(R.string.finance_filter_all_categories), fontSize = 11.sp) },
                 )
-                categories.take(3).forEach { cat ->
+                categories.take(6).forEach { cat ->
                     FilterChip(
                         selected = filterCategory == cat,
                         onClick = { onFilterCategoryChange(if (filterCategory == cat) null else cat) },
-                        label = { Text(cat, maxLines = 1) },
+                        label = { Text(cat, maxLines = 1, fontSize = 11.sp) },
                     )
                 }
             }
@@ -902,18 +905,13 @@ private fun CreateTransactionSheet(
                 style = MaterialTheme.typography.labelMedium,
             )
             Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            OutlinedTextField(
+                value = category,
+                onValueChange = { category = it },
+                placeholder = { Text(stringResource(R.string.finance_category_placeholder)) },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-            ) {
-                FinanceViewModel.FINANCE_CATEGORIES.take(5).forEach { cat ->
-                    FilterChip(
-                        selected = category == cat,
-                        onClick = { category = cat },
-                        label = { Text(cat, fontSize = 11.sp) },
-                    )
-                }
-            }
+            )
             Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(

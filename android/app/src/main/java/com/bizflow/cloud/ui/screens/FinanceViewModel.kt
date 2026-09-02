@@ -303,18 +303,7 @@ class FinanceViewModel(
             return FinancePeriod(start, end, label)
         }
 
-        val FINANCE_CATEGORIES = listOf(
-            CATEGORY_DOCUMENT,
-            "SERVICES",
-            "PRODUCTS",
-            "OPERATIONAL",
-            "SALARIES",
-            "RENT",
-            "UTILITIES",
-            "TAXES",
-            "MARKETING",
-            "OTHER",
-        )
+        val FINANCE_CATEGORIES = emptyList<String>()
 
         val Factory: Factory = viewModelFactory {
             initializer {

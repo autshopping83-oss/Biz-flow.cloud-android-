@@ -89,15 +89,7 @@ class ProductsViewModel(
     }
 
     companion object {
-        val PRODUCT_CATEGORIES = listOf(
-            "SERVICES",
-            "PRODUCTS",
-            "CONSULTING",
-            "MAINTENANCE",
-            "RENTAL",
-            "SUBSCRIPTION",
-            "OTHER",
-        )
+        val PRODUCT_CATEGORIES = emptyList<String>()
 
         val Factory: Factory = viewModelFactory {
             initializer {

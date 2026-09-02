@@ -317,18 +317,13 @@ private fun ProductFormSheet(
                 style = MaterialTheme.typography.labelMedium,
             )
             Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            OutlinedTextField(
+                value = category,
+                onValueChange = { category = it },
+                placeholder = { Text(stringResource(R.string.products_category_placeholder)) },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-            ) {
-                ProductsViewModel.PRODUCT_CATEGORIES.take(4).forEach { cat ->
-                    FilterChip(
-                        selected = category == cat,
-                        onClick = { category = if (category == cat) "" else cat },
-                        label = { Text(cat, fontSize = 11.sp) },
-                    )
-                }
-            }
+            )
             Spacer(modifier = Modifier.height(20.dp))
 
             val price = priceText.toDoubleOrNull()
