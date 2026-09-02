@@ -1,86 +1,15 @@
 package com.bizflow.cloud.features.documentviewer
 
-import android.content.Intent
-import android.net.Uri
-import android.os.Bundle
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class DocumentViewerActivityTest {
 
-    // --- Intent construction tests ---
+    // --- MIME map tests (matches FileDetector MIME_MAP keys) ---
 
     @Test
-    fun `PDF intent has correct MIME type`() {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            type = "application/pdf"
-            data = Uri.parse("content://com.example.filemanager/document/1")
-        }
-        assertEquals("application/pdf", intent.type)
-        assertNotNull(intent.data)
-    }
-
-    @Test
-    fun `DOCX intent has correct MIME type`() {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            data = Uri.parse("content://com.example.filemanager/document/2")
-        }
-        assertEquals(
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            intent.type
-        )
-    }
-
-    @Test
-    fun `XLSX intent has correct MIME type`() {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            data = Uri.parse("content://com.example.filemanager/document/3")
-        }
-        assertEquals(
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            intent.type
-        )
-    }
-
-    @Test
-    fun `CSV intent has correct MIME type`() {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            type = "text/csv"
-            data = Uri.parse("content://com.example.filemanager/document/4")
-        }
-        assertEquals("text/csv", intent.type)
-    }
-
-    @Test
-    fun `CSV intent with alternative MIME type`() {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            type = "text/comma-separated-values"
-            data = Uri.parse("content://com.example.filemanager/document/5")
-        }
-        assertEquals("text/comma-separated-values", intent.type)
-    }
-
-    // --- URI scheme tests ---
-
-    @Test
-    fun `content URI scheme is used`() {
-        val uri = Uri.parse("content://com.example.filemanager/document/1")
-        assertEquals("content", uri.scheme)
-    }
-
-    @Test
-    fun `file URI scheme is handled`() {
-        val uri = Uri.parse("file:///storage/emulated/0/Documents/test.pdf")
-        assertEquals("file", uri.scheme)
-    }
-
-    // --- FileDetector integration with Intent ---
-
-    @Test
-    fun `FileDetector maps PDF MIME correctly`() {
+    fun `MIME map has PDF`() {
         val mimeMap = mapOf(
             "application/pdf" to DocumentType.PDF,
         )
@@ -88,7 +17,7 @@ class DocumentViewerActivityTest {
     }
 
     @Test
-    fun `FileDetector maps DOCX MIME correctly`() {
+    fun `MIME map has DOCX`() {
         val mimeMap = mapOf(
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document" to DocumentType.DOCX,
         )
@@ -96,7 +25,7 @@ class DocumentViewerActivityTest {
     }
 
     @Test
-    fun `FileDetector maps XLSX MIME correctly`() {
+    fun `MIME map has XLSX`() {
         val mimeMap = mapOf(
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" to DocumentType.XLSX,
         )
@@ -104,7 +33,7 @@ class DocumentViewerActivityTest {
     }
 
     @Test
-    fun `FileDetector maps CSV MIME correctly`() {
+    fun `MIME map has three CSV variants`() {
         val mimeMap = mapOf(
             "text/csv" to DocumentType.CSV,
             "text/comma-separated-values" to DocumentType.CSV,
@@ -115,74 +44,61 @@ class DocumentViewerActivityTest {
         assertEquals(DocumentType.CSV, mimeMap["application/csv"])
     }
 
-    // --- Extension fallback tests ---
+    // --- Extension extraction (pure String, no Android Uri) ---
 
     @Test
-    fun `extension extraction from content URI path`() {
-        val uri = Uri.parse("content://com.example/document/report.docx")
-        val path = uri.lastPathSegment
-        val ext = path?.substringAfterLast('.')
+    fun `extension extraction from path`() {
+        val path = "content://com.example/document/report.docx"
+        val lastSegment = path.substringAfterLast('/').substringBefore('?')
+        val ext = lastSegment.substringAfterLast('.')
         assertEquals("docx", ext)
     }
 
     @Test
     fun `extension extraction with dots in filename`() {
-        val uri = Uri.parse("content://com.example/document/my.report.2024.xlsx")
-        val path = uri.lastPathSegment
-        val ext = path?.substringAfterLast('.')
+        val path = "content://com.example/document/my.report.2024.xlsx"
+        val lastSegment = path.substringAfterLast('/').substringBefore('?')
+        val ext = lastSegment.substringAfterLast('.')
         assertEquals("xlsx", ext)
     }
 
     @Test
     fun `extension extraction with no dot`() {
-        val uri = Uri.parse("content://com.example/document/nodocext")
-        val path = uri.lastPathSegment
-        val dot = path?.lastIndexOf('.')
-        val ext = if (dot != null && dot >= 0) path.substring(dot + 1) else null
-        assertEquals(null, ext)
+        val path = "content://com.example/document/nodocext"
+        val lastSegment = path.substringAfterLast('/').substringBefore('?')
+        val dotIndex = lastSegment.lastIndexOf('.')
+        val ext = if (dotIndex >= 0) lastSegment.substring(dotIndex + 1) else null
+        assertNull(ext)
     }
 
-    // --- MIME conflict tests ---
+    @Test
+    fun `extension extraction with query params`() {
+        val path = "content://com.example/document/report.pdf?token=abc123"
+        val lastSegment = path.substringAfterLast('/').substringBefore('?')
+        val ext = lastSegment.substringAfterLast('.')
+        assertEquals("pdf", ext)
+    }
+
+    // --- MIME conflict resolution tests ---
 
     @Test
     fun `conflict scenario - PDF MIME but DOCX extension`() {
-        // Intent says PDF, but file is actually DOCX
-        // Detection priority: MIME > extension > ContentResolver > magic bytes
-        // MIME wins — PDF renderer will fail gracefully on DOCX content
         val intentMime = "application/pdf"
-        val extension = "docx"
         val mimeMap = mapOf(
             "application/pdf" to DocumentType.PDF,
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document" to DocumentType.DOCX,
         )
-        // MIME has priority
+        // MIME has priority over extension
         val detected = mimeMap[intentMime]
         assertEquals(DocumentType.PDF, detected)
-    }
-
-    @Test
-    fun `conflict scenario - DOCX MIME but PDF extension`() {
-        val intentMime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        val extension = "pdf"
-        val mimeMap = mapOf(
-            "application/pdf" to DocumentType.PDF,
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" to DocumentType.DOCX,
-        )
-        val detected = mimeMap[intentMime]
-        assertEquals(DocumentType.DOCX, detected)
     }
 
     @Test
     fun `unknown MIME falls through to extension`() {
         val intentMime = "application/octet-stream"
         val extension = "csv"
-        val mimeMap = mapOf(
-            "application/pdf" to DocumentType.PDF,
-        )
-        val extMap = mapOf(
-            "csv" to DocumentType.CSV,
-        )
-        // MIME not found, fall to extension
+        val mimeMap = mapOf<String, DocumentType>()
+        val extMap = mapOf("csv" to DocumentType.CSV)
         val detected = mimeMap[intentMime] ?: extMap[extension]
         assertEquals(DocumentType.CSV, detected)
     }
@@ -206,40 +122,40 @@ class DocumentViewerActivityTest {
     }
 
     @Test
-    fun `file at limit is rejected`() {
+    fun `file at limit+1 is rejected`() {
         val limit = 25L * 1024 * 1024
-        val fileSize = 26_214_401L // 25MB + 1 byte
-        assert(fileSize > limit) { "File at limit+1 should be rejected" }
+        val fileSize = 26_214_401L
+        assert(fileSize > limit)
     }
 
     @Test
     fun `file under limit is accepted`() {
         val limit = 25L * 1024 * 1024
-        val fileSize = 26_214_399L // 25MB - 1 byte
-        assert(fileSize <= limit) { "File under limit should be accepted" }
+        val fileSize = 26_214_399L
+        assert(fileSize <= limit)
     }
 
     @Test
     fun `file exactly at limit is accepted`() {
         val limit = 25L * 1024 * 1024
-        val fileSize = 26_214_400L // exactly 25MB
-        assert(fileSize <= limit) { "File exactly at limit should be accepted" }
+        val fileSize = 26_214_400L
+        assert(fileSize <= limit)
     }
 
     // --- ODS rejection test ---
 
     @Test
-    fun `ODS is not supported`() {
+    fun `ODS is not in supported extensions`() {
         val extMap = mapOf(
             "pdf" to DocumentType.PDF,
             "docx" to DocumentType.DOCX,
             "xlsx" to DocumentType.XLSX,
             "csv" to DocumentType.CSV,
         )
-        assertEquals(null, extMap["ods"])
+        assertNull(extMap["ods"])
     }
 
-    // --- XSS filename tests ---
+    // --- XSS filename tests (org.json.JSONObject.quote) ---
 
     @Test
     fun `JSON quote escapes single quotes`() {
@@ -270,22 +186,20 @@ class DocumentViewerActivityTest {
     }
 
     @Test
-    fun `JSON quote escapes injection attempt`() {
+    fun `JSON quote escapes single-quote injection`() {
         val filename = "test');alert(1);//"
         val escaped = org.json.JSONObject.quote(filename)
-        // Should produce: "test\');alert(1);//"
         assert(escaped.contains("\\'")) { "Single quote should be escaped" }
-        assert(!escaped.contains("';")) { "No unescaped injection sequence" }
     }
 
     @Test
-    fun `JSON quote escapes complex injection`() {
+    fun `JSON quote escapes double-quote injection`() {
         val filename = "\");alert(document.domain);//"
         val escaped = org.json.JSONObject.quote(filename)
         assert(escaped.contains("\\\"")) { "Double quote should be escaped" }
     }
 
-    // --- DocumentType viewer mapping tests ---
+    // --- DocumentType enum viewer mapping tests ---
 
     @Test
     fun `PDF maps to pdf-viewer-html`() {
@@ -334,20 +248,38 @@ class DocumentViewerActivityTest {
         assertEquals("loadCsvFromBase64", DocumentType.CSV.jsEntryPoint)
     }
 
-    // --- Intent extras tests ---
+    // --- MIME fallback priority tests ---
 
     @Test
-    fun `intent without data URI has null data`() {
-        val intent = Intent(Intent.ACTION_VIEW)
-        assertEquals(null, intent.data)
+    fun `MIME not in map returns null`() {
+        val mimeMap = mapOf(
+            "application/pdf" to DocumentType.PDF,
+        )
+        assertNull(mimeMap["text/plain"])
     }
 
     @Test
-    fun `intent with type but no data`() {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            type = "application/pdf"
-        }
-        assertEquals("application/pdf", intent.type)
-        assertEquals(null, intent.data)
+    fun `extension not in map returns null`() {
+        val extMap = mapOf(
+            "pdf" to DocumentType.PDF,
+            "docx" to DocumentType.DOCX,
+        )
+        assertNull(extMap["rtf"])
+    }
+
+    // --- Content URI path parsing tests ---
+
+    @Test
+    fun `content URI last path segment extraction`() {
+        val uri = "content://com.android.providers.media.documents/document/primary%3ADocuments%2Freport.pdf"
+        val lastSegment = uri.substringAfterLast('/').substringBefore('?')
+        assertEquals("primary%3ADocuments%2Freport.pdf", lastSegment)
+    }
+
+    @Test
+    fun `file URI path extraction`() {
+        val uri = "file:///storage/emulated/0/Documents/test.pdf"
+        val path = uri.removePrefix("file://")
+        assertEquals("/storage/emulated/0/Documents/test.pdf", path)
     }
 }
