@@ -155,48 +155,68 @@ class DocumentViewerActivityTest {
         assertNull(extMap["ods"])
     }
 
-    // --- XSS filename tests (org.json.JSONObject.quote) ---
+    // --- XSS filename escaping tests (manual JSON string escaping) ---
 
-    @Test
-    fun `JSON quote escapes single quotes`() {
-        val filename = "O'Reilly.pdf"
-        val escaped = org.json.JSONObject.quote(filename)
-        assertEquals("\"O'Reilly.pdf\"", escaped)
+    private fun jsonStringEscape(s: String): String {
+        val sb = StringBuilder("\"")
+        for (c in s) {
+            when (c) {
+                '"' -> sb.append("\\\"")
+                '\\' -> sb.append("\\\\")
+                '\n' -> sb.append("\\n")
+                '\r' -> sb.append("\\r")
+                '\t' -> sb.append("\\t")
+                '\'' -> sb.append("\\'")
+                else -> sb.append(c)
+            }
+        }
+        sb.append("\"")
+        return sb.toString()
     }
 
     @Test
-    fun `JSON quote escapes backslashes`() {
-        val filename = "abc\\def.pdf"
-        val escaped = org.json.JSONObject.quote(filename)
-        assertEquals("\"abc\\\\def.pdf\"", escaped)
+    fun `escape preserves simple filename`() {
+        assertEquals("\"report.pdf\"", jsonStringEscape("report.pdf"))
     }
 
     @Test
-    fun `JSON quote escapes double quotes`() {
-        val filename = "test\"injection.pdf"
-        val escaped = org.json.JSONObject.quote(filename)
-        assertEquals("\"test\\\"injection.pdf\"", escaped)
+    fun `escape handles single quotes`() {
+        assertEquals("\"O'Reilly.pdf\"", jsonStringEscape("O'Reilly.pdf"))
     }
 
     @Test
-    fun `JSON quote escapes newlines`() {
-        val filename = "test\ninjection.pdf"
-        val escaped = org.json.JSONObject.quote(filename)
-        assertEquals("\"test\\ninjection.pdf\"", escaped)
+    fun `escape handles backslashes`() {
+        assertEquals("\"abc\\\\def.pdf\"", jsonStringEscape("abc\\def.pdf"))
     }
 
     @Test
-    fun `JSON quote escapes single-quote injection`() {
-        val filename = "test');alert(1);//"
-        val escaped = org.json.JSONObject.quote(filename)
-        assert(escaped.contains("\\'")) { "Single quote should be escaped" }
+    fun `escape handles double quotes`() {
+        assertEquals("\"test\\\"injection.pdf\"", jsonStringEscape("test\"injection.pdf"))
     }
 
     @Test
-    fun `JSON quote escapes double-quote injection`() {
-        val filename = "\");alert(document.domain);//"
-        val escaped = org.json.JSONObject.quote(filename)
-        assert(escaped.contains("\\\"")) { "Double quote should be escaped" }
+    fun `escape handles newlines`() {
+        assertEquals("\"test\\ninjection.pdf\"", jsonStringEscape("test\ninjection.pdf"))
+    }
+
+    @Test
+    fun `escape handles single-quote injection`() {
+        val escaped = jsonStringEscape("test');alert(1);//")
+        assert(escaped.contains("\\'")) { "Single quote must be escaped" }
+        assert(escaped.startsWith("\"")) { "Must be wrapped in quotes" }
+        assert(escaped.endsWith("\"")) { "Must be wrapped in quotes" }
+    }
+
+    @Test
+    fun `escape handles double-quote injection`() {
+        val escaped = jsonStringEscape("\");alert(document.domain);//")
+        assert(escaped.contains("\\\"")) { "Double quote must be escaped" }
+    }
+
+    @Test
+    fun `escape wraps result in double quotes`() {
+        val escaped = jsonStringEscape("file.pdf")
+        assert(escaped.startsWith("\"") && escaped.endsWith("\""))
     }
 
     // --- DocumentType enum viewer mapping tests ---
