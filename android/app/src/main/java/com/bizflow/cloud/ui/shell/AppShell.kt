@@ -80,6 +80,13 @@ fun AppShell() {
                             restoreState = true
                         }
                     },
+                    onNewExpense = {
+                        navController.navigate(BottomDestination.FINANCE.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                 )
             }
             composable(BottomDestination.DOCUMENTS.route) {

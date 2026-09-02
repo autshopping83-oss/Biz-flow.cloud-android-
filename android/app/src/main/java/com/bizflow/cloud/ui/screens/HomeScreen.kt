@@ -49,10 +49,12 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     onCreateDocument: (DocumentType) -> Unit = {},
     onViewHistory: () -> Unit = {},
+    onNewExpense: () -> Unit = {},
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
 ) {
     val recentDocuments by viewModel.recentDocuments.collectAsStateWithLifecycle()
     val currency by viewModel.currency.collectAsStateWithLifecycle()
+    val monthlyRevenue by viewModel.monthlyRevenue.collectAsStateWithLifecycle()
     val displayCurrency = currency.ifBlank { CurrencyCatalog.DEFAULT_CODE }
 
     Scaffold(
@@ -77,7 +79,7 @@ fun HomeScreen(
                 actions = {
                     RevenueBadge(
                         label = stringResource(R.string.monthly_revenue),
-                        value = formatMoney(0.0, displayCurrency),
+                        value = formatMoney(monthlyRevenue, displayCurrency),
                         modifier = Modifier.padding(end = 12.dp),
                     )
                 },
@@ -99,7 +101,7 @@ fun HomeScreen(
                 QuickActionsSection(onCreateDocument = onCreateDocument)
             }
             item {
-                QuickAccessSection()
+                QuickAccessSection(onNewExpense = onNewExpense)
             }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -187,12 +189,12 @@ private fun QuickActionsSection(onCreateDocument: (DocumentType) -> Unit) {
 }
 
 @Composable
-private fun QuickAccessSection() {
+private fun QuickAccessSection(onNewExpense: () -> Unit = {}) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         QuickAccessChip(
             label = stringResource(R.string.home_quick_expense),
             icon = Icons.Filled.AccountBalanceWallet,
-            onClick = { /* Fase 6: nova despesa */ },
+            onClick = onNewExpense,
             modifier = Modifier.weight(1f),
         )
         QuickAccessChip(
