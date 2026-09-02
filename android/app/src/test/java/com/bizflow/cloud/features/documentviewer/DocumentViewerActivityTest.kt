@@ -166,7 +166,6 @@ class DocumentViewerActivityTest {
                 '\n' -> sb.append("\\n")
                 '\r' -> sb.append("\\r")
                 '\t' -> sb.append("\\t")
-                '\'' -> sb.append("\\'")
                 else -> sb.append(c)
             }
         }
@@ -202,7 +201,7 @@ class DocumentViewerActivityTest {
     @Test
     fun `escape handles single-quote injection`() {
         val escaped = jsonStringEscape("test');alert(1);//")
-        assert(escaped.contains("\\'")) { "Single quote must be escaped" }
+        assert(escaped.contains("');")) { "Single quotes are NOT escaped in JSON (safe in JSON context)" }
         assert(escaped.startsWith("\"")) { "Must be wrapped in quotes" }
         assert(escaped.endsWith("\"")) { "Must be wrapped in quotes" }
     }
