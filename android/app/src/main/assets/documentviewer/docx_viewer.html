@@ -13,11 +13,18 @@ body { overflow: hidden; }
 #content { position: fixed; top: 48px; bottom: 0; left: 0; right: 0; overflow: auto; padding: 16px; background: white; -webkit-overflow-scrolling: touch; }
 #loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #333; font-size: 16px; z-index: 200; }
 #error { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #ff6b6b; font-size: 14px; text-align: center; display: none; z-index: 200; }
-.docx-wrapper { width: 100%; max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; }
-.docx-wrapper table { border-collapse: collapse; width: 100%; max-width: 100%; table-layout: auto; }
-.docx-wrapper td, .docx-wrapper th { border: 1px solid #ccc; padding: 4px 8px; max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; }
-.docx-wrapper img { max-width: 100%; height: auto; display: block; }
-.docx-wrapper p, .docx-wrapper div { max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; }
+
+.docx { width: 100% !important; max-width: 100% !important; overflow: visible !important; }
+.docx > section { width: 100% !important; max-width: 100% !important; min-width: 0 !important; overflow: visible !important; page-break-inside: avoid; }
+.docx section { width: 100% !important; max-width: 100% !important; min-width: 0 !important; }
+.docx section > div { width: 100% !important; max-width: 100% !important; min-width: 0 !important; overflow: visible !important; }
+.docx p, .docx h1, .docx h2, .docx h3, .docx h4, .docx h5, .docx h6,
+.docx li, .docx ul, .docx ol, .docx blockquote { max-width: 100% !important; overflow-wrap: break-word !important; word-wrap: break-word !important; }
+.docx table { max-width: 100% !important; width: auto !important; table-layout: auto !important; }
+.docx td, .docx th { max-width: none !important; overflow-wrap: break-word !important; word-wrap: break-word !important; white-space: normal !important; }
+.docx img { max-width: 100% !important; height: auto !important; }
+.docx [style*="width"] { max-width: 100% !important; }
+.docx [style*="min-width"] { min-width: 0 !important; }
 </style>
 </head>
 <body>
@@ -27,7 +34,7 @@ body { overflow: hidden; }
 <div id="loading">Loading DOCX...</div>
 <div id="error"></div>
 <div id="content">
-  <div id="docx-container" class="docx-wrapper"></div>
+  <div id="docx-container"></div>
 </div>
 <script src="docx/jszip.min.js"></script>
 <script src="docx/docx-preview.min.js"></script>
@@ -53,7 +60,17 @@ body { overflow: hidden; }
         array[i] = raw.charCodeAt(i);
       }
       var blob = new Blob([array], {type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
-      docx.renderAsync(blob, container).then(function() {
+      docx.renderAsync(blob, container, null, {
+        className: 'docx',
+        breakPages: true,
+        ignoreLastRenderedPageBreak: true,
+        experimental: false,
+        trimXmlDeclaration: true,
+        renderHeaders: true,
+        renderFooters: true,
+        renderFootnotes: false,
+        renderEndnotes: false
+      }).then(function() {
         loading.style.display = 'none';
       }).catch(function(err) {
         showError('DOCX render error: ' + err.message);
