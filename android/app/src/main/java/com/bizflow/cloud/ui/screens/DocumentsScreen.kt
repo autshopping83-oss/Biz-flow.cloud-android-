@@ -51,7 +51,7 @@ import com.bizflow.cloud.data.model.DocumentType
 fun DocumentsScreen(
     modifier: Modifier = Modifier,
     onAddDocument: () -> Unit = {},
-    onEditDocument: (DocumentType) -> Unit = {},
+    onEditDocument: (DocumentType, String) -> Unit = { _, _ -> },
     viewModel: DocumentsViewModel = viewModel(factory = DocumentsViewModel.Factory),
 ) {
     val documents by viewModel.documents.collectAsStateWithLifecycle()
@@ -184,7 +184,7 @@ private fun DocumentsEmptyState(modifier: Modifier = Modifier) {
 @Composable
 private fun DocumentList(
     documents: List<DocumentWithItems>,
-    onEditDocument: (DocumentType) -> Unit = {},
+    onEditDocument: (DocumentType, String) -> Unit = { _, _ -> },
     onDeleteDocument: (DocumentWithItems) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -196,7 +196,7 @@ private fun DocumentList(
         items(documents, key = { it.document.id }) { item ->
             DocumentCard(
                 document = item.document,
-                onEdit = { onEditDocument(item.document.documentType) },
+                onEdit = { onEditDocument(item.document.documentType, item.document.id) },
                 onDelete = { onDeleteDocument(item) },
             )
         }

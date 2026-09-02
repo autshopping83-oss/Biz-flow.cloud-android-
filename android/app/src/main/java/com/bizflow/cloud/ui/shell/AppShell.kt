@@ -87,8 +87,8 @@ fun AppShell() {
                     onAddDocument = {
                         navController.navigate("${EditorRoute.EDITOR}/${DocumentType.FATURA.code}")
                     },
-                    onEditDocument = { type ->
-                        navController.navigate("${EditorRoute.EDITOR}/${type.code}")
+                    onEditDocument = { type, docId ->
+                        navController.navigate("${EditorRoute.EDITOR}/${type.code}?documentId=$docId")
                     },
                 )
             }
@@ -139,9 +139,14 @@ fun AppShell() {
                 RecoverScreen(onBack = { navController.popBackStack() })
             }
             composable(
-                route = "${EditorRoute.EDITOR}/{documentType}",
+                route = "${EditorRoute.EDITOR}/{documentType}?documentId={documentId}",
                 arguments = listOf(
                     navArgument("documentType") { type = NavType.StringType },
+                    navArgument("documentId") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
                 ),
             ) {
                 CreateDocumentScreen(onClose = { navController.popBackStack() })

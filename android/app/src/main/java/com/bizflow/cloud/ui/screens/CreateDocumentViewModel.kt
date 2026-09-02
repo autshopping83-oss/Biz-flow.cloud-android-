@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -66,6 +67,7 @@ class CreateDocumentViewModel(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val initialType: DocumentType = DocumentType.fromCode(savedStateHandle.get<String>("documentType"))
+    private val existingDocumentId: String? = savedStateHandle.get<String>("documentId")
     private val _uiState = MutableStateFlow(CreateDocumentUiState(type = initialType, date = todayIso()))
     val uiState: StateFlow<CreateDocumentUiState> = _uiState.asStateFlow()
     val clients: StateFlow<List<ClientEntity>> = clientRepository
@@ -85,11 +87,45 @@ class CreateDocumentViewModel(
                 _uiState.value = _uiState.value.copy(taxRate = settings.defaultTaxRate)
             }
             companySnapshot = settings
+            if (existingDocumentId != null) {
+                loadExistingDocument(existingDocumentId)
+            }
         }
     }
 
+    private suspend fun loadExistingDocument(docId: String) {
+        val docWithItems = documentRepository.observeById(docId)
+            .firstOrNull()
+        if (docWithItems == null) return
+        val doc = docWithItems.document
+        existingDocumentNumber = doc.number
+        val items = docWithItems.items.map { line ->
+            EditorItemUi(
+                id = line.id,
+                description = line.description,
+                quantity = if (line.quantity == line.quantity.toLong().toDouble()) line.quantity.toLong().toString() else line.quantity.toString(),
+                unitPrice = if (line.unitPrice == line.unitPrice.toLong().toDouble()) line.unitPrice.toLong().toString() else line.unitPrice.toString(),
+            )
+        }
+        _uiState.value = _uiState.value.copy(
+            type = doc.documentType,
+            clientName = doc.clientName,
+            clientContact = doc.clientContact,
+            clientLocation = doc.clientLocation,
+            clientNuit = doc.clientNuit,
+            date = doc.date,
+            discount = if (doc.discount == 0.0) "" else doc.discount.toString(),
+            status = doc.status,
+            paymentMethod = doc.paymentMethod,
+            currency = doc.currency,
+            items = items,
+            signaturePath = doc.signaturePath,
+        )
+    }
+
     private var companySnapshot: CompanySettingsEntity? = null
-    private val documentId = UUID.randomUUID().toString()
+    private val documentId = existingDocumentId ?: UUID.randomUUID().toString()
+    private var existingDocumentNumber: String? = null
     private var previewNumber: String = ""
 
     fun updateType(type: DocumentType) { _uiState.value = _uiState.value.copy(type = type) }
@@ -163,7 +199,7 @@ class CreateDocumentViewModel(
         _uiState.value = state.copy(isSaving = true)
         viewModelScope.launch {
             val items = buildItems(state)
-            val number = documentRepository.nextNumber(state.type)
+            val number = existingDocumentNumber ?: documentRepository.nextNumber(state.type)
             val document = buildDocument(state, items, number)
             documentRepository.save(document, items)
             if (document.status == DocumentStatus.PAGO) {
