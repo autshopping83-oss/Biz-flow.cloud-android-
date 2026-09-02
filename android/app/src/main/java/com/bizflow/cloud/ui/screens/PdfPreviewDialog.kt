@@ -1,6 +1,7 @@
 package com.bizflow.cloud.ui.screens
 
 import android.webkit.WebView
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.SaveAlt
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +37,8 @@ fun PdfPreviewDialog(
     html: String,
     jobName: String,
     onPrint: () -> Unit,
+    onSave: () -> Unit,
+    onShare: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -44,7 +49,7 @@ fun PdfPreviewDialog(
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
             Column {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -54,6 +59,14 @@ fun PdfPreviewDialog(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f),
                     )
+                    TextButton(onClick = onSave) {
+                        Icon(Icons.Filled.SaveAlt, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(text = stringResource(R.string.editor_save_pdf))
+                    }
+                    TextButton(onClick = onShare) {
+                        Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(text = stringResource(R.string.editor_share))
+                    }
                     TextButton(onClick = onPrint) {
                         Icon(Icons.Filled.Print, contentDescription = null, modifier = Modifier.size(18.dp))
                         Text(text = stringResource(R.string.editor_print))

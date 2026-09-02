@@ -1,16 +1,24 @@
 package com.bizflow.cloud.data.repository
 
+import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.CancellationSignal
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
+import android.os.ParcelFileDescriptor.MODE_CREATE
+import android.os.ParcelFileDescriptor.MODE_WRITE_ONLY
 import android.print.PageRange
 import android.print.PrintAttributes
 import android.print.PrintDocumentAdapter
 import android.print.PrintManager
+import android.provider.MediaStore
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.bizflow.cloud.core.util.ImageFiles
@@ -24,12 +32,15 @@ import com.bizflow.cloud.data.model.DocumentType
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
 
 class PdfGeneratorRepositoryImpl(
     private val applicationContext: Context,
     private val companySettingsRepository: CompanySettingsRepository,
 ) {
+    private val appContext get() = applicationContext
     private val mainHandler = Handler(Looper.getMainLooper())
     private val printing = AtomicBoolean(false)
     private var activeWebView: WebView? = null
@@ -53,6 +64,115 @@ class PdfGeneratorRepositoryImpl(
             if (printing.compareAndSet(false, true)) {
                 startPrint(context.applicationContext, html, jobName)
             }
+        }
+    }
+
+    suspend fun savePdfToFile(context: Context, html: String, fileName: String): Uri? {
+        return withContext(Dispatchers.IO) {
+            val pdfBytes = renderHtmlToPdf(html) ?: return@withContext null
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                saveViaMediaStore(context, pdfBytes, fileName)
+            } else {
+                saveViaFile(context, pdfBytes, fileName)
+            }
+        }
+    }
+
+    suspend fun sharePdf(context: Context, html: String, fileName: String): Uri? {
+        return withContext(Dispatchers.IO) {
+            val pdfBytes = renderHtmlToPdf(html) ?: return@withContext null
+            val cacheDir = File(context.cacheDir, "shared_pdfs")
+            cacheDir.mkdirs()
+            val file = File(cacheDir, "$fileName.pdf")
+            file.writeBytes(pdfBytes)
+            val authority = "${context.packageName}.fileprovider"
+            androidx.core.content.FileProvider.getUriForFile(context, authority, file)
+        }
+    }
+
+    private suspend fun renderHtmlToPdf(html: String): ByteArray? = suspendCancellableCoroutine { cont ->
+        mainHandler.post {
+            val webView = WebView(appContext)
+            webView.setBackgroundColor(Color.TRANSPARENT)
+            webView.settings.javaScriptEnabled = false
+            webView.settings.allowFileAccess = false
+            webView.settings.defaultTextEncodingName = "UTF-8"
+            val attrs = PrintAttributes.Builder()
+                .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                .build()
+            val dpi = attrs.resolution?.horizontalDpi?.toFloat() ?: 96f
+            val w = attrs.mediaSize?.widthMils?.div(1000f) ?: 8.27f
+            webView.layout(0, 0, (w * dpi).toInt(), (w * dpi * 1.4f).toInt())
+            webView.webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    val adapter = webView.createPrintDocumentAdapter("pdf_render")
+                    adapter.onLayout(attrs, attrs, null, object : PrintDocumentAdapter.LayoutResultCallback() {
+                        override fun onLayoutFinished(info: android.print.PrintDocumentInfo?, changed: Boolean) {
+                            val buf = java.io.ByteArrayOutputStream()
+                            val pfd = ParcelFileDescriptor.createPipe()
+                            val readSide = ParcelFileDescriptor.AutoCloseInputStream(pfd)
+                            adapter.onWrite(
+                                arrayOf(PageRange.ALL_PAGES),
+                                pfd,
+                                CancellationSignal(),
+                                object : PrintDocumentAdapter.WriteResultCallback() {
+                                    override fun onWriteFinished(pages: Array<out PageRange>?) {
+                                        val bytes = readSide.readBytes()
+                                        readSide.close()
+                                        webView.destroy()
+                                        if (cont.isActive) cont.resume(bytes)
+                                    }
+                                    override fun onWriteFailed(error: CharSequence?) {
+                                        webView.destroy()
+                                        if (cont.isActive) cont.resume(null)
+                                    }
+                                },
+                            )
+                        }
+                        override fun onLayoutFailed(error: CharSequence?) {
+                            webView.destroy()
+                            if (cont.isActive) cont.resume(null)
+                        }
+                    }, null)
+                }
+            }
+            webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
+            cont.invokeOnCancellation { webView.destroy() }
+        }
+    }
+
+    private fun saveViaMediaStore(context: Context, bytes: ByteArray, fileName: String): Uri? {
+        val resolver = context.contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.Downloads.DISPLAY_NAME, "$fileName.pdf")
+            put(MediaStore.Downloads.MIME_TYPE, "application/pdf")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/Biz-flow")
+                put(MediaStore.Downloads.IS_PENDING, 1)
+            }
+        }
+        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val uri = resolver.insert(collection, values) ?: return null
+        resolver.openOutputStream(uri)?.use { it.write(bytes) }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            values.clear()
+            values.put(MediaStore.Downloads.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+        }
+        return uri
+    }
+
+    private fun saveViaFile(context: Context, bytes: ByteArray, fileName: String): Uri? {
+        val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "Biz-flow")
+        dir.mkdirs()
+        val file = File(dir, "$fileName.pdf")
+        file.writeBytes(bytes)
+        val authority = "${context.packageName}.fileprovider"
+        return try {
+            androidx.core.content.FileProvider.getUriForFile(context, authority, file)
+        } catch (_: Exception) {
+            Uri.fromFile(file)
         }
     }
 

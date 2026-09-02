@@ -1,6 +1,7 @@
 package com.bizflow.cloud.ui.screens
 
 import android.content.Context
+import android.content.Intent
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -251,6 +252,50 @@ class CreateDocumentViewModel(
     fun printPreview() {
         val html = _uiState.value.previewHtml ?: return
         pdfGenerator.printHtml(appContext, html, "Documento_$previewNumber")
+    }
+
+    fun savePdfToDisk(onResult: (Boolean, String) -> Unit) {
+        val state = _uiState.value
+        val html = state.previewHtml ?: return
+        viewModelScope.launch {
+            val number = previewNumber.ifBlank {
+                documentRepository.nextNumber(state.type)
+            }
+            val fileName = "Documento_${number}"
+            val uri = pdfGenerator.savePdfToFile(appContext, html, fileName)
+            withContext(Dispatchers.Main) {
+                if (uri != null) {
+                    onResult(true, "PDF guardado em Documentos/Biz-flow/$fileName.pdf")
+                } else {
+                    onResult(false, "Erro ao guardar PDF")
+                }
+            }
+        }
+    }
+
+    fun sharePdf(onResult: (Boolean) -> Unit) {
+        val state = _uiState.value
+        val html = state.previewHtml ?: return
+        viewModelScope.launch {
+            val number = previewNumber.ifBlank {
+                documentRepository.nextNumber(state.type)
+            }
+            val fileName = "Documento_${number}"
+            val uri = pdfGenerator.sharePdf(appContext, html, fileName)
+            withContext(Dispatchers.Main) {
+                if (uri != null) {
+                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/pdf"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    appContext.startActivity(Intent.createChooser(sendIntent, fileName))
+                    onResult(true)
+                } else {
+                    onResult(false)
+                }
+            }
+        }
     }
 
     fun resetPreview() { _uiState.value = _uiState.value.copy(previewHtml = null) }

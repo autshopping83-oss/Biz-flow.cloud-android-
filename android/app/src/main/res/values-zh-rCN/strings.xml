@@ -2,6 +2,8 @@
 <resources>
     <string name="editor_total">总计</string>
     <string name="editor_save">保存</string>
+    <string name="editor_save_pdf">保存PDF</string>
+    <string name="editor_share">分享</string>
     <string name="editor_cancel">取消</string>
     <string name="nav_back">返回</string>
     <string name="more_company_settings">公司设置</string>

@@ -2,6 +2,8 @@
 <resources>
     <string name="editor_total">Total</string>
     <string name="editor_save">Guardar</string>
+    <string name="editor_save_pdf">Guardar PDF</string>
+    <string name="editor_share">Compartir</string>
     <string name="editor_cancel">Cancelar</string>
     <string name="nav_back">Volver</string>
     <string name="more_company_settings">Configuración de la Empresa</string>

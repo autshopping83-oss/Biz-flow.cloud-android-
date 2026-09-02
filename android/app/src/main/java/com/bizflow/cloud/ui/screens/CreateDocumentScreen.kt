@@ -1,4 +1,5 @@
 package com.bizflow.cloud.ui.screens
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -33,6 +34,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -49,6 +51,7 @@ fun CreateDocumentScreen(
     val ui by viewModel.uiState.collectAsStateWithLifecycle()
     val clients by viewModel.clients.collectAsStateWithLifecycle()
     val products by viewModel.products.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var editingItem by rememberSaveable { mutableStateOf<EditorItemUi?>(null) }
     var showProductPicker by rememberSaveable { mutableStateOf(false) }
@@ -276,6 +279,12 @@ fun CreateDocumentScreen(
             html = html,
             jobName = stringResource(documentTypeLabelRes(ui.type)),
             onPrint = viewModel::printPreview,
+            onSave = {
+                viewModel.savePdfToDisk { success, message ->
+                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                }
+            },
+            onShare = { viewModel.sharePdf {} },
             onDismiss = { viewModel.resetPreview() },
         )
     }
