@@ -30,6 +30,7 @@ class DocumentViewerActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var progressBar: ProgressBar
     private val networkRequests = mutableListOf<String>()
+    private var pendingJs: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,6 +76,16 @@ class DocumentViewerActivity : AppCompatActivity() {
         }
 
         webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView, url: String) {
+                super.onPageFinished(view, url)
+                val js = pendingJs ?: return
+                pendingJs = null
+                Log.i(TAG, "Page finished, executing JS")
+                webView.evaluateJavascript(js, null)
+                webView.visibility = View.VISIBLE
+                progressBar.visibility = View.GONE
+            }
+
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val url = request.url.toString()
                 if (url.startsWith(VIEWER_BASE) || url.startsWith("file:///android_asset/")) {
@@ -146,12 +157,7 @@ class DocumentViewerActivity : AppCompatActivity() {
 
         val viewerUrl = VIEWER_BASE + fileType.viewerHtml
         webView.loadUrl(viewerUrl)
-        webView.postDelayed({
-            val js = "javascript:${fileType.jsEntryPoint}('$base64', $escapedFileName)"
-            webView.evaluateJavascript(js, null)
-            webView.visibility = View.VISIBLE
-            progressBar.visibility = View.GONE
-        }, 300)
+        pendingJs = "javascript:${fileType.jsEntryPoint}('$base64', $escapedFileName)"
     }
 
     private fun showTooLargeError() {

@@ -26,7 +26,7 @@ canvas { display: block; }
 <div id="viewerContainer">
   <div id="viewer"></div>
 </div>
-<script src="pdf.min.js"></script>
+<script src="pdfjs/pdf.min.js"></script>
 <script>
 (function() {
   var viewerContainer = document.getElementById('viewerContainer');
@@ -57,7 +57,7 @@ canvas { display: block; }
   };
 
   function renderPdf(data) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.min.js';
     var loadingTask = pdfjsLib.getDocument({data: data});
     loadingTask.promise.then(function(pdf) {
       loading.style.display = 'none';
