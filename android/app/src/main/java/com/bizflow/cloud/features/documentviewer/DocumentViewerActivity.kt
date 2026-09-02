@@ -1,21 +1,23 @@
 package com.bizflow.cloud.features.documentviewer
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
+import android.view.Gravity
 import android.view.View
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
-import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 
 class DocumentViewerActivity : AppCompatActivity() {
@@ -23,26 +25,19 @@ class DocumentViewerActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "DocViewer"
         private const val VIEWER_BASE = "file:///android_asset/documentviewer/"
-        private const val MAX_FILE_SIZE = 25L * 1024 * 1024 // 25MB — ~90MB RAM pico
+        private const val MAX_FILE_SIZE = 25L * 1024 * 1024 // 25MB
     }
 
     private lateinit var webView: WebView
     private lateinit var progressBar: ProgressBar
-
-    // Network request tracking
     private val networkRequests = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Build UI programmatically (no layout XML needed for POC)
         val root = FrameLayout(this)
-        progressBar = ProgressBar(this).apply {
-            visibility = View.VISIBLE
-        }
-        webView = WebView(this).apply {
-            visibility = View.INVISIBLE
-        }
+        progressBar = ProgressBar(this).apply { visibility = View.VISIBLE }
+        webView = WebView(this).apply { visibility = View.INVISIBLE }
         root.addView(webView, FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT
@@ -50,9 +45,7 @@ class DocumentViewerActivity : AppCompatActivity() {
         root.addView(progressBar, FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.WRAP_CONTENT,
             FrameLayout.LayoutParams.WRAP_CONTENT
-        ).apply {
-            gravity = android.view.Gravity.CENTER
-        })
+        ).apply { gravity = Gravity.CENTER })
         setContentView(root)
 
         setupWebView()
@@ -85,31 +78,23 @@ class DocumentViewerActivity : AppCompatActivity() {
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val url = request.url.toString()
-                // Allow local assets only
                 if (url.startsWith(VIEWER_BASE) || url.startsWith("file:///android_asset/")) {
                     return false
                 }
-                // Block blob: from navigation (but allow for pdf.js worker)
                 if (url.startsWith("blob:") && request.isForMainFrame) {
-                    Log.w(TAG, "BLOCKED blob: navigation: $url")
-                    networkRequests.add("BLOCKED blob:nav $url")
+                    networkRequests.add("BLOCKED blob:nav")
                     return true
                 }
-                // Block everything else
-                Log.w(TAG, "BLOCKED external URL: $url")
                 networkRequests.add("BLOCKED url $url")
                 return true
             }
 
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
                 val url = request.url.toString()
-                // Allow local assets
                 if (url.startsWith("file:///android_asset/") || url.startsWith("blob:")) {
                     return super.shouldInterceptRequest(view, request)
                 }
-                // Block external requests
                 if (!url.startsWith("data:")) {
-                    Log.w(TAG, "BLOCKED network request: ${request.method} $url")
                     networkRequests.add("BLOCKED net ${request.method} $url")
                     return WebResourceResponse("text/plain", "utf-8", "".byteInputStream())
                 }
@@ -127,43 +112,69 @@ class DocumentViewerActivity : AppCompatActivity() {
 
         val mimeType = intent.type
         val fileType = FileDetector.detect(this, uri, mimeType)
-        Log.i(TAG, "Detected file type: ${fileType.label} (MIME: $mimeType)")
+        Log.i(TAG, "Detected type: ${fileType.label}")
 
         if (fileType == DocumentType.UNKNOWN) {
-            Log.e(TAG, "Unsupported file type")
+            Toast.makeText(this, "Formato de arquivo não suportado", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
 
-        // Copy file to memory (for POC - production should use streaming)
+        // Check known size before reading when available
+        val knownSize = getFileSize(uri)
+        if (knownSize != null && knownSize > MAX_FILE_SIZE) {
+            showTooLargeError()
+            return
+        }
+
         val fileData = readFileToBytes(uri)
         if (fileData == null) {
-            Log.e(TAG, "Failed to read file")
+            Toast.makeText(this, "Erro ao ler arquivo", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
 
         if (fileData.size > MAX_FILE_SIZE) {
-            Log.e(TAG, "File too large: ${fileData.size} bytes")
-            finish()
+            showTooLargeError()
             return
         }
 
         val base64 = Base64.encodeToString(fileData, Base64.NO_WRAP)
         val fileName = getFileName(uri) ?: "document"
 
-        Log.i(TAG, "File: $fileName, Size: ${fileData.size} bytes, Type: ${fileType.label}")
+        // Pass filename via JSON encoding (prevents JS injection)
+        val jsonFileName = JSONObject().put("name", fileName).toString()
+        // jsonFileName is {"name":"..."} — we extract just the string value
+        val escapedFileName = JSONObject.quote(fileName)
 
-        // Load viewer HTML and pass data
         val viewerUrl = VIEWER_BASE + fileType.viewerHtml
         webView.loadUrl(viewerUrl)
         webView.postDelayed({
-            val escapedFileName = fileName.replace("\\", "\\\\").replace("'", "\\'")
-            val js = "javascript:${fileType.jsEntryPoint}('$base64', '$escapedFileName')"
+            val js = "javascript:${fileType.jsEntryPoint}('$base64', $escapedFileName)"
             webView.evaluateJavascript(js, null)
             webView.visibility = View.VISIBLE
             progressBar.visibility = View.GONE
-        }, 300) // Small delay to ensure page is loaded
+        }, 300)
+    }
+
+    private fun showTooLargeError() {
+        Toast.makeText(
+            this,
+            "Este arquivo é muito grande para ser visualizado neste dispositivo. O limite é 25 MB.",
+            Toast.LENGTH_LONG
+        ).show()
+        finish()
+    }
+
+    private fun getFileSize(uri: Uri): Long? {
+        return try {
+            contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val idx = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                    if (idx >= 0) cursor.getLong(idx) else null
+                } else null
+            }
+        } catch (_: Exception) { null }
     }
 
     private fun readFileToBytes(uri: Uri): ByteArray? {
