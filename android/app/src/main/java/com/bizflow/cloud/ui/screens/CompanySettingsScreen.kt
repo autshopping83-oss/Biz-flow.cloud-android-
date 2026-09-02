@@ -51,8 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bizflow.cloud.R
-import com.bizflow.cloud.ui.more.components.DocumentTemplateSelectorBottomSheet
-import com.bizflow.cloud.ui.more.components.pdfTemplateOptions
+import com.bizflow.cloud.ui.more.components.TemplateCarousel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,7 +61,6 @@ fun CompanySettingsScreen(
     viewModel: CompanySettingsViewModel = viewModel(factory = CompanySettingsViewModel.Factory),
 ) {
     val ui by viewModel.uiState.collectAsStateWithLifecycle()
-    var showTemplates by remember { mutableStateOf(false) }
     val logoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let(viewModel::saveLogoImage)
     }
@@ -101,17 +99,6 @@ fun CompanySettingsScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState()),
         ) {
-            ListItem(
-                headlineContent = { Text(text = stringResource(R.string.more_pdf_template)) },
-                supportingContent = {
-                    Text(text = stringResource(currentTemplateName(ui.templateId)))
-                },
-                leadingContent = { Icon(Icons.Filled.Description, contentDescription = null) },
-                trailingContent = { Icon(Icons.Filled.ChevronRight, contentDescription = null) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showTemplates = true },
-            )
             IdentitySection(
                 logo = {
                     SettingsImageRow(
@@ -161,6 +148,11 @@ fun CompanySettingsScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             )
             ProfileSectionHeader(R.string.settings_section_documents)
+            TemplateCarousel(
+                selectedTemplateId = ui.templateId,
+                onTemplateSelected = viewModel::setDocumentTemplateId,
+                modifier = Modifier.padding(vertical = 8.dp),
+            )
             SettingsImageRow(
                 labelRes = R.string.settings_stamp,
                 hintRes = R.string.settings_stamp_hint,
@@ -177,23 +169,6 @@ fun CompanySettingsScreen(
             )
         }
     }
-
-    if (showTemplates) {
-        DocumentTemplateSelectorBottomSheet(
-            selectedTemplateId = ui.templateId,
-            onTemplateSelected = { templateId ->
-                viewModel.setDocumentTemplateId(templateId)
-                showTemplates = false
-            },
-            onDismiss = { showTemplates = false },
-        )
-    }
-}
-
-@Composable
-private fun currentTemplateName(templateId: String): Int {
-    return pdfTemplateOptions.firstOrNull { it.id == templateId }?.nameRes
-        ?: R.string.template_1_modern_name
 }
 
 @Composable
