@@ -33,7 +33,7 @@
 
         </activity>
 
-        <!-- POC: Document Viewer - receives documents from external apps -->
+        <!-- Local Document Viewer — receives documents from external apps (ACTION_VIEW) -->
         <activity
             android:name=".features.documentviewer.DocumentViewerActivity"
             android:label="@string/app_name"

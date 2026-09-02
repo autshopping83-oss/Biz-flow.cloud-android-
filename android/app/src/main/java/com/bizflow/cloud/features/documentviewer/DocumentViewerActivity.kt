@@ -14,7 +14,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONObject
@@ -143,8 +142,6 @@ class DocumentViewerActivity : AppCompatActivity() {
         val fileName = getFileName(uri) ?: "document"
 
         // Pass filename via JSON encoding (prevents JS injection)
-        val jsonFileName = JSONObject().put("name", fileName).toString()
-        // jsonFileName is {"name":"..."} — we extract just the string value
         val escapedFileName = JSONObject.quote(fileName)
 
         val viewerUrl = VIEWER_BASE + fileType.viewerHtml
