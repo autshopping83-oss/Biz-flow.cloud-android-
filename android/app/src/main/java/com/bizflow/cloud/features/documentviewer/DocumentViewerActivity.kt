@@ -207,6 +207,7 @@ class DocumentViewerActivity : AppCompatActivity() {
         return name
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         if (webView.canGoBack()) {
             webView.goBack()

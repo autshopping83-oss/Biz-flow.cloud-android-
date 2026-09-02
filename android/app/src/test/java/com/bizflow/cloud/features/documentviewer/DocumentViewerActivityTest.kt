@@ -275,7 +275,7 @@ class DocumentViewerActivityTest {
         val escaped = org.json.JSONObject.quote(filename)
         // Should produce: "test\');alert(1);//"
         assert(escaped.contains("\\'")) { "Single quote should be escaped" }
-        assert(!escaped.contains("'");"||escaped.contains("';") ) { "No unescaped injection" }
+        assert(!escaped.contains("';")) { "No unescaped injection sequence" }
     }
 
     @Test
