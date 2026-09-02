@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenuItem
@@ -26,7 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -44,6 +46,7 @@ fun CurrencySelector(
     var expanded by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     val searchFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
     val selected = remember(selectedCode) {
         CurrencyCatalog.byCode(selectedCode) ?: CurrencyCatalog.byCode(CurrencyCatalog.DEFAULT_CODE)!!
     }
@@ -53,7 +56,9 @@ fun CurrencySelector(
 
     LaunchedEffect(expanded) {
         if (expanded) {
+            kotlinx.coroutines.delay(200)
             searchFocusRequester.requestFocus()
+            keyboardController?.show()
         }
     }
 
