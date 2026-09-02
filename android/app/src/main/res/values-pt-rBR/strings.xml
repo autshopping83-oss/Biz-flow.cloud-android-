@@ -169,4 +169,8 @@
     <string name="products_category">Categoria</string>
     <string name="products_empty">Sem produtos cadastrados</string>
     <string name="products_delete_confirm">Excluir produto "%1$s"?</string>
+    <string name="editor_select_product">Selecionar produto</string>
+    <string name="editor_select_product_hint">Escolha um produto existente ou adicione um novo</string>
+    <string name="editor_add_new_product">+ Novo produto</string>
+    <string name="editor_no_products">Sem produtos cadastrados</string>
 </resources>

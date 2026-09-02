@@ -169,4 +169,8 @@
     <string name="products_category">Category</string>
     <string name="products_empty">No products registered</string>
     <string name="products_delete_confirm">Delete product "%1$s"?</string>
+    <string name="editor_select_product">Select product</string>
+    <string name="editor_select_product_hint">Choose an existing product or add a new one</string>
+    <string name="editor_add_new_product">+ New product</string>
+    <string name="editor_no_products">No products registered</string>
 </resources>

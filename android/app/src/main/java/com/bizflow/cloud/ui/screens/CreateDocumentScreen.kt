@@ -48,8 +48,10 @@ fun CreateDocumentScreen(
 ) {
     val ui by viewModel.uiState.collectAsStateWithLifecycle()
     val clients by viewModel.clients.collectAsStateWithLifecycle()
+    val products by viewModel.products.collectAsStateWithLifecycle()
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var editingItem by rememberSaveable { mutableStateOf<EditorItemUi?>(null) }
+    var showProductPicker by rememberSaveable { mutableStateOf(false) }
     var showSignaturePad by remember { mutableStateOf(false) }
     var showClientDialog by rememberSaveable { mutableStateOf(false) }
     val totals = computeTotals(ui.items, ui.discount, ui.taxRate)
@@ -134,9 +136,7 @@ fun CreateDocumentScreen(
                 ) {
                     SectionHeader(titleRes = R.string.editor_items, modifier = Modifier.weight(1f))
                     TextButton(
-                        onClick = {
-                            editingItem = EditorItemUi(id = "", description = "", quantity = "1", unitPrice = "")
-                        },
+                        onClick = { showProductPicker = true },
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = null)
                         Text(text = stringResource(R.string.editor_add_item))
@@ -242,6 +242,24 @@ fun CreateDocumentScreen(
                 showClientDialog = false
             },
             onDismiss = { showClientDialog = false },
+        )
+    }
+    if (showProductPicker) {
+        ProductPickerBottomSheet(
+            products = products,
+            currency = ui.currency,
+            onSelectProduct = { product ->
+                editingItem = EditorItemUi(
+                    id = "",
+                    description = product.name,
+                    quantity = "1",
+                    unitPrice = product.price.toString(),
+                )
+            },
+            onAddNew = {
+                editingItem = EditorItemUi(id = "", description = "", quantity = "1", unitPrice = "")
+            },
+            onDismiss = { showProductPicker = false },
         )
     }
     if (showSignaturePad) {

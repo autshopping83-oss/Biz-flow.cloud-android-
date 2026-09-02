@@ -169,4 +169,8 @@
     <string name="products_category">分类</string>
     <string name="products_empty">暂无产品</string>
     <string name="products_delete_confirm">删除产品 "%1$s"？</string>
+    <string name="editor_select_product">选择产品</string>
+    <string name="editor_select_product_hint">选择现有产品或添加新产品</string>
+    <string name="editor_add_new_product">+ 新产品</string>
+    <string name="editor_no_products">暂无产品</string>
 </resources>

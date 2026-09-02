@@ -15,12 +15,14 @@ import com.bizflow.cloud.data.local.entity.ClientEntity
 import com.bizflow.cloud.data.local.entity.CompanySettingsEntity
 import com.bizflow.cloud.data.local.entity.DocumentEntity
 import com.bizflow.cloud.data.local.entity.LineItemEntity
+import com.bizflow.cloud.data.local.entity.ProductEntity
 import com.bizflow.cloud.data.local.entity.TransactionEntity
 import com.bizflow.cloud.data.model.DocumentStatus
 import com.bizflow.cloud.data.model.DocumentType
 import com.bizflow.cloud.data.repository.ClientRepository
 import com.bizflow.cloud.data.repository.CompanySettingsRepository
 import com.bizflow.cloud.data.repository.DocumentRepository
+import com.bizflow.cloud.data.repository.ProductRepository
 import com.bizflow.cloud.data.repository.TransactionRepository
 import com.bizflow.cloud.data.repository.PdfGeneratorRepositoryImpl
 import kotlinx.coroutines.Dispatchers
@@ -56,6 +58,7 @@ data class CreateDocumentUiState(
 class CreateDocumentViewModel(
     private val documentRepository: DocumentRepository,
     private val clientRepository: ClientRepository,
+    private val productRepository: ProductRepository,
     private val pdfGenerator: PdfGeneratorRepositoryImpl,
     private val companySettingsRepository: CompanySettingsRepository,
     private val transactionRepository: TransactionRepository,
@@ -66,6 +69,9 @@ class CreateDocumentViewModel(
     private val _uiState = MutableStateFlow(CreateDocumentUiState(type = initialType, date = todayIso()))
     val uiState: StateFlow<CreateDocumentUiState> = _uiState.asStateFlow()
     val clients: StateFlow<List<ClientEntity>> = clientRepository
+        .observeAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val products: StateFlow<List<ProductEntity>> = productRepository
         .observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -290,6 +296,7 @@ class CreateDocumentViewModel(
                 CreateDocumentViewModel(
                     documentRepository = app.documentRepository,
                     clientRepository = app.clientRepository,
+                    productRepository = app.productRepository,
                     pdfGenerator = app.pdfGeneratorRepository,
                     companySettingsRepository = app.companySettingsRepository,
                     transactionRepository = app.transactionRepository,
