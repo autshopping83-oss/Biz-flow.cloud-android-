@@ -190,5 +190,5 @@
     <string name="finance_category_placeholder">Ex: Services, Conseil...</string>
     <string name="products_category_placeholder">Ex: Services, Produits...</string>
     <string name="finance_empty_period_title">Aucune donnée pour cette période</string>
-    <string name="finance_empty_period_body">Il n'y a aucun mouvement financier pour ce mois.</string>
+    <string name="finance_empty_period_body">Il n\'y a aucun mouvement financier pour ce mois.</string>
 </resources>
