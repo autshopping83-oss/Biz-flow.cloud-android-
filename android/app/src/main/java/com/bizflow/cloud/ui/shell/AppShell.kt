@@ -33,6 +33,7 @@ import com.bizflow.cloud.ui.screens.DocumentsScreen
 import com.bizflow.cloud.ui.screens.HomeScreen
 import com.bizflow.cloud.ui.screens.MoreScreen
 import com.bizflow.cloud.ui.screens.ClientsScreen
+import com.bizflow.cloud.ui.screens.FinanceScreen
 import com.bizflow.cloud.ui.screens.PlaceholderScreen
 import io.github.jan.supabase.gotrue.SessionStatus
 import kotlinx.coroutines.flow.collectLatest
