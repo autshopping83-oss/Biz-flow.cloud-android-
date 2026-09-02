@@ -189,4 +189,6 @@
     <string name="category_subscription">Suscripción</string>
     <string name="finance_category_placeholder">Ej: Servicios, Consultoría...</string>
     <string name="products_category_placeholder">Ej: Servicios, Productos...</string>
+    <string name="finance_empty_period_title">Sin datos en este período</string>
+    <string name="finance_empty_period_body">No hay movimientos financieros para este mes.</string>
 </resources>

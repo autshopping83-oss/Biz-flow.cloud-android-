@@ -189,4 +189,6 @@
     <string name="category_subscription">订阅</string>
     <string name="finance_category_placeholder">例如: 服务, 咨询...</string>
     <string name="products_category_placeholder">例如: 服务, 产品...</string>
+    <string name="finance_empty_period_title">此期间无数据</string>
+    <string name="finance_empty_period_body">此月份没有财务记录。</string>
 </resources>

@@ -149,6 +149,13 @@ class FinanceViewModel(
         _period.value = previousMonthPeriod()
     }
 
+    fun setNextMonth() {
+        val next = nextMonthPeriod()
+        if (next.startMs <= System.currentTimeMillis()) {
+            _period.value = next
+        }
+    }
+
     fun createTransaction(
         type: String,
         amount: Double,
@@ -287,6 +294,25 @@ class FinanceViewModel(
         fun previousMonthPeriod(): FinancePeriod {
             val cal = Calendar.getInstance()
             cal.add(Calendar.MONTH, -1)
+            cal.set(Calendar.DAY_OF_MONTH, 1)
+            cal.set(Calendar.HOUR_OF_DAY, 0)
+            cal.set(Calendar.MINUTE, 0)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+            val start = cal.timeInMillis
+            cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH))
+            cal.set(Calendar.HOUR_OF_DAY, 23)
+            cal.set(Calendar.MINUTE, 59)
+            cal.set(Calendar.SECOND, 59)
+            cal.set(Calendar.MILLISECOND, 999)
+            val end = cal.timeInMillis
+            val label = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
+            return FinancePeriod(start, end, label)
+        }
+
+        fun nextMonthPeriod(): FinancePeriod {
+            val cal = Calendar.getInstance()
+            cal.add(Calendar.MONTH, 1)
             cal.set(Calendar.DAY_OF_MONTH, 1)
             cal.set(Calendar.HOUR_OF_DAY, 0)
             cal.set(Calendar.MINUTE, 0)

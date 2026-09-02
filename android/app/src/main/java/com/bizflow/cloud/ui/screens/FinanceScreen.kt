@@ -122,11 +122,6 @@ fun FinanceScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-        } else if (state.transactions.isEmpty() && state.filterType == FinanceViewModel.FilterType.ALL && state.filterCategory == null) {
-            FinanceEmptyState(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-                onAddMovement = { showCreateSheet = true },
-            )
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
@@ -136,95 +131,86 @@ fun FinanceScreen(
                     PeriodSelector(
                         period = state.period,
                         onPrevious = { viewModel.setPreviousMonth() },
-                        onNext = {
-                            val cal = Calendar.getInstance().apply { timeInMillis = state.period.startMs }
-                            cal.add(Calendar.MONTH, 1)
-                            if (cal.timeInMillis <= System.currentTimeMillis()) {
-                                val newStart = Calendar.getInstance().apply {
-                                    timeInMillis = state.period.startMs
-                                    add(Calendar.MONTH, 1)
-                                }
-                                val newEnd = Calendar.getInstance().apply {
-                                    timeInMillis = state.period.endMs
-                                    add(Calendar.MONTH, 1)
-                                }
-                                viewModel.setPeriod(
-                                    FinanceViewModel.FinancePeriod(
-                                        newStart.timeInMillis,
-                                        newEnd.timeInMillis,
-                                        SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(newEnd.time),
-                                    ),
-                                )
-                            }
-                        },
+                        onNext = { viewModel.setNextMonth() },
                         onCurrent = { viewModel.setCurrentMonth() },
                     )
                 }
 
-                item {
-                    FinanceSummary(
-                        balance = state.balance,
-                        income = state.totalIncome,
-                        expense = state.totalExpense,
-                        documentIncome = state.documentIncome,
-                        currency = state.currency,
-                    )
-                }
-
-                item {
-                    FinanceFilters(
-                        filterType = state.filterType,
-                        filterCategory = state.filterCategory,
-                        categories = state.categoryExpenses.keys.toList(),
-                        onFilterTypeChange = { viewModel.setFilter(it) },
-                        onFilterCategoryChange = { viewModel.setFilterCategory(it) },
-                    )
-                }
-
-                if (state.monthlyData.isNotEmpty()) {
+                if (state.transactions.isEmpty() && state.filterType == FinanceViewModel.FilterType.ALL && state.filterCategory == null) {
                     item {
-                        BarChartSection(
-                            data = state.monthlyData,
-                            currency = state.currency,
+                        FinanceEmptyState(
+                            title = stringResource(R.string.finance_empty_period_title),
+                            body = stringResource(R.string.finance_empty_period_body),
+                            modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
+                            onAddMovement = { showCreateSheet = true },
                         )
                     }
-                }
-
-                if (state.totalIncome > 0 || state.totalExpense > 0) {
+                } else {
                     item {
-                        IncomeExpenseDonut(
+                        FinanceSummary(
+                            balance = state.balance,
                             income = state.totalIncome,
                             expense = state.totalExpense,
+                            documentIncome = state.documentIncome,
                             currency = state.currency,
                         )
                     }
-                }
 
-                if (state.categoryExpenses.isNotEmpty()) {
                     item {
-                        CategoryDonut(
-                            categoryExpenses = state.categoryExpenses,
-                            totalExpense = state.totalExpense,
-                            currency = state.currency,
+                        FinanceFilters(
+                            filterType = state.filterType,
+                            filterCategory = state.filterCategory,
+                            categories = state.categoryExpenses.keys.toList(),
+                            onFilterTypeChange = { viewModel.setFilter(it) },
+                            onFilterCategoryChange = { viewModel.setFilterCategory(it) },
                         )
                     }
-                }
 
-                if (state.transactions.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = stringResource(R.string.finance_movements),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        )
+                    if (state.monthlyData.isNotEmpty()) {
+                        item {
+                            BarChartSection(
+                                data = state.monthlyData,
+                                currency = state.currency,
+                            )
+                        }
                     }
-                    items(state.transactions, key = { it.id }) { transaction ->
-                        TransactionRow(
-                            transaction = transaction,
-                            currency = state.currency,
-                            onDelete = { deleteTarget = transaction },
-                        )
+
+                    if (state.totalIncome > 0 || state.totalExpense > 0) {
+                        item {
+                            IncomeExpenseDonut(
+                                income = state.totalIncome,
+                                expense = state.totalExpense,
+                                currency = state.currency,
+                            )
+                        }
+                    }
+
+                    if (state.categoryExpenses.isNotEmpty()) {
+                        item {
+                            CategoryDonut(
+                                categoryExpenses = state.categoryExpenses,
+                                totalExpense = state.totalExpense,
+                                currency = state.currency,
+                            )
+                        }
+                    }
+
+                    if (state.transactions.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.finance_movements),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            )
+                        }
+                        items(state.transactions, key = { it.id }) { transaction ->
+                            TransactionRow(
+                                transaction = transaction,
+                                currency = state.currency,
+                                onDelete = { deleteTarget = transaction },
+                            )
+                        }
                     }
                 }
             }
@@ -265,6 +251,8 @@ fun FinanceScreen(
 
 @Composable
 private fun FinanceEmptyState(
+    title: String = stringResource(R.string.finance_empty_title),
+    body: String = stringResource(R.string.finance_empty_body),
     modifier: Modifier = Modifier,
     onAddMovement: () -> Unit = {},
 ) {
@@ -274,13 +262,13 @@ private fun FinanceEmptyState(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = stringResource(R.string.finance_empty_title),
+            text = title,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = stringResource(R.string.finance_empty_body),
+            text = body,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
