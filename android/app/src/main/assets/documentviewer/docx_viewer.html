@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOCX Viewer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: sans-serif; background: #f5f5f5; }
+#toolbar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #2b5797; color: #fff; display: flex; align-items: center; padding: 0 12px; z-index: 100; }
+#toolbar span { flex: 1; text-align: center; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#content { position: fixed; top: 48px; bottom: 0; left: 0; right: 0; overflow: auto; padding: 16px; background: white; }
+#loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #333; font-size: 16px; z-index: 200; }
+#error { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #ff6b6b; font-size: 14px; text-align: center; display: none; z-index: 200; }
+.docx-wrapper { max-width: 800px; margin: 0 auto; }
+.docx-wrapper table { border-collapse: collapse; width: 100%; }
+.docx-wrapper td, .docx-wrapper th { border: 1px solid #ccc; padding: 4px 8px; }
+.docx-wrapper img { max-width: 100%; }
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <span id="title">DOCX Viewer</span>
+</div>
+<div id="loading">Loading DOCX...</div>
+<div id="error"></div>
+<div id="content">
+  <div id="docx-container" class="docx-wrapper"></div>
+</div>
+<script src="jszip.min.js"></script>
+<script src="docx-preview.min.js"></script>
+<script>
+(function() {
+  var loading = document.getElementById('loading');
+  var errorDiv = document.getElementById('error');
+  var titleEl = document.getElementById('title');
+  var container = document.getElementById('docx-container');
+
+  function showError(msg) {
+    loading.style.display = 'none';
+    errorDiv.textContent = msg;
+    errorDiv.style.display = 'block';
+  }
+
+  window.loadDocxFromBase64 = function(base64Data, fileName) {
+    titleEl.textContent = fileName || 'DOCX Viewer';
+    try {
+      var raw = atob(base64Data);
+      var array = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) {
+        array[i] = raw.charCodeAt(i);
+      }
+      var blob = new Blob([array], {type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+      docx.renderAsync(blob, container).then(function() {
+        loading.style.display = 'none';
+      }).catch(function(err) {
+        showError('DOCX render error: ' + err.message);
+      });
+    } catch(e) {
+      showError('Failed to decode DOCX: ' + e.message);
+    }
+  };
+})();
+</script>
+</body>
+</html>

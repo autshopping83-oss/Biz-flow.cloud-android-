@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>PDF Viewer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #525659; font-family: sans-serif; overflow: hidden; }
+#toolbar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #323639; color: #fff; display: flex; align-items: center; padding: 0 12px; z-index: 100; }
+#toolbar span { flex: 1; text-align: center; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#viewerContainer { position: fixed; top: 48px; bottom: 0; left: 0; right: 0; overflow: auto; }
+#viewer { margin: 0 auto; }
+.page { margin: 8px auto; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+canvas { display: block; }
+#loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #fff; font-size: 16px; z-index: 200; }
+#error { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #ff6b6b; font-size: 14px; text-align: center; display: none; z-index: 200; }
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <span id="title">PDF Viewer</span>
+</div>
+<div id="loading">Loading PDF...</div>
+<div id="error"></div>
+<div id="viewerContainer">
+  <div id="viewer"></div>
+</div>
+<script src="pdf.min.js"></script>
+<script>
+(function() {
+  var viewerContainer = document.getElementById('viewerContainer');
+  var viewer = document.getElementById('viewer');
+  var loading = document.getElementById('loading');
+  var errorDiv = document.getElementById('error');
+  var titleEl = document.getElementById('title');
+
+  function showError(msg) {
+    loading.style.display = 'none';
+    errorDiv.textContent = msg;
+    errorDiv.style.display = 'block';
+  }
+
+  // Receive file data from Android
+  window.loadPdfFromBase64 = function(base64Data, fileName) {
+    titleEl.textContent = fileName || 'PDF Viewer';
+    try {
+      var raw = atob(base64Data);
+      var array = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) {
+        array[i] = raw.charCodeAt(i);
+      }
+      renderPdf(array);
+    } catch(e) {
+      showError('Failed to decode PDF: ' + e.message);
+    }
+  };
+
+  function renderPdf(data) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js';
+    var loadingTask = pdfjsLib.getDocument({data: data});
+    loadingTask.promise.then(function(pdf) {
+      loading.style.display = 'none';
+      titleEl.textContent = (titleEl.textContent || 'PDF') + ' (' + pdf.numPages + ' pages)';
+      var scale = 1.5;
+      for (var i = 1; i <= pdf.numPages; i++) {
+        (function(pageNum) {
+          pdf.getPage(pageNum).then(function(page) {
+            var viewport = page.getViewport({scale: scale});
+            var div = document.createElement('div');
+            div.className = 'page';
+            div.id = 'page-' + pageNum;
+            div.style.width = viewport.width + 'px';
+            div.style.height = viewport.height + 'px';
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            div.appendChild(canvas);
+            viewer.appendChild(div);
+            page.render({canvasContext: ctx, viewport: viewport});
+          });
+        })(i);
+      }
+    }, function(err) {
+      showError('PDF error: ' + err.message);
+    });
+  }
+})();
+</script>
+</body>
+</html>

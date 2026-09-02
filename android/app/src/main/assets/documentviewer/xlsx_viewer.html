@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spreadsheet Viewer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: sans-serif; background: #f5f5f5; }
+#toolbar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #217346; color: #fff; display: flex; align-items: center; padding: 0 12px; z-index: 100; }
+#toolbar span { flex: 1; text-align: center; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#content { position: fixed; top: 48px; bottom: 0; left: 0; right: 0; overflow: auto; padding: 8px; background: white; }
+#loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #333; font-size: 16px; z-index: 200; }
+#error { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #ff6b6b; font-size: 14px; text-align: center; display: none; z-index: 200; }
+.sheet-tabs { position: fixed; bottom: 0; left: 0; right: 0; height: 36px; background: #e8e8e8; display: flex; align-items: center; padding: 0 8px; gap: 4px; overflow-x: auto; z-index: 100; }
+.sheet-tab { padding: 4px 12px; background: white; border: 1px solid #ccc; border-radius: 4px 4px 0 0; cursor: pointer; font-size: 12px; white-space: nowrap; }
+.sheet-tab.active { background: #217346; color: white; border-color: #217346; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { background: #f0f0f0; font-weight: bold; position: sticky; top: 0; z-index: 1; }
+td, th { border: 1px solid #d0d0d0; padding: 4px 8px; text-align: left; white-space: nowrap; }
+tr:nth-child(even) { background: #fafafa; }
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <span id="title">Spreadsheet Viewer</span>
+</div>
+<div id="loading">Loading spreadsheet...</div>
+<div id="error"></div>
+<div id="content"></div>
+<div id="sheet-tabs" class="sheet-tabs" style="display:none;"></div>
+<script src="xlsx.full.min.js"></script>
+<script>
+(function() {
+  var loading = document.getElementById('loading');
+  var errorDiv = document.getElementById('error');
+  var titleEl = document.getElementById('title');
+  var content = document.getElementById('content');
+  var tabsDiv = document.getElementById('sheet-tabs');
+
+  function showError(msg) {
+    loading.style.display = 'none';
+    errorDiv.textContent = msg;
+    errorDiv.style.display = 'block';
+  }
+
+  function renderSheet(sheet, name) {
+    var html = '<table>';
+    var range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+    // Header row
+    html += '<tr><th></th>';
+    for (var c = range.s.c; c <= range.e.c; c++) {
+      html += '<th>' + XLSX.utils.encode_col(c) + '</th>';
+    }
+    html += '</tr>';
+    // Data rows
+    for (var r = range.s.r; r <= range.e.r; r++) {
+      html += '<tr><td style="background:#f0f0f0;font-weight:bold;">' + (r + 1) + '</td>';
+      for (var c = range.s.c; c <= range.e.c; c++) {
+        var addr = XLSX.utils.encode_cell({r: r, c: c});
+        var cell = sheet[addr];
+        var val = cell ? (cell.v !== undefined ? cell.v : '') : '';
+        html += '<td>' + escapeHtml(String(val)) + '</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</table>';
+    return html;
+  }
+
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  window.loadXlsxFromBase64 = function(base64Data, fileName) {
+    titleEl.textContent = fileName || 'Spreadsheet Viewer';
+    try {
+      var raw = atob(base64Data);
+      var array = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) {
+        array[i] = raw.charCodeAt(i);
+      }
+      var workbook = XLSX.read(array, {type: 'array'});
+      loading.style.display = 'none';
+      var sheetNames = workbook.SheetNames;
+      if (sheetNames.length > 1) {
+        tabsDiv.style.display = 'flex';
+        tabsDiv.innerHTML = '';
+      }
+      function showSheet(idx) {
+        content.innerHTML = renderSheet(workbook.Sheets[sheetNames[idx]], sheetNames[idx]);
+        // Update tabs
+        var tabs = tabsDiv.querySelectorAll('.sheet-tab');
+        for (var i = 0; i < tabs.length; i++) {
+          tabs[i].className = 'sheet-tab' + (i === idx ? ' active' : '');
+        }
+      }
+      sheetNames.forEach(function(name, idx) {
+        if (sheetNames.length > 1) {
+          var tab = document.createElement('div');
+          tab.className = 'sheet-tab' + (idx === 0 ? ' active' : '');
+          tab.textContent = name;
+          tab.onclick = function() { showSheet(idx); };
+          tabsDiv.appendChild(tab);
+        }
+      });
+      showSheet(0);
+    } catch(e) {
+      showError('Spreadsheet error: ' + e.message);
+    }
+  };
+
+  window.loadCsvFromBase64 = function(base64Data, fileName) {
+    titleEl.textContent = fileName || 'CSV Viewer';
+    try {
+      var raw = atob(base64Data);
+      var workbook = XLSX.read(raw, {type: 'string'});
+      loading.style.display = 'none';
+      content.innerHTML = renderSheet(workbook.Sheets[workbook.SheetNames[0]], 'CSV');
+    } catch(e) {
+      showError('CSV error: ' + e.message);
+    }
+  };
+})();
+</script>
+</body>
+</html>

@@ -30,3 +30,11 @@
 
 # --- slf4j (referencia opcional do OkHttp) ---
 -dontwarn org.slf4j.impl.StaticLoggerBinder
+
+# --- Document Viewer POC ---
+# Keep DocumentViewerActivity (accessed via Intent from AndroidManifest)
+-keep class com.bizflow.cloud.features.documentviewer.DocumentViewerActivity { *; }
+# Keep FileDetector (used by DocumentViewerActivity)
+-keep class com.bizflow.cloud.features.documentviewer.FileDetector { *; }
+# Keep DocumentType enum
+-keep class com.bizflow.cloud.features.documentviewer.DocumentType { *; }
