@@ -81,7 +81,7 @@ fun AppShell() {
                         }
                     },
                     onNewExpense = {
-                        navController.navigate(BottomDestination.FINANCE.route) {
+                        navController.navigate("${BottomDestination.FINANCE.route}?openCreate=true") {
                             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
@@ -104,6 +104,17 @@ fun AppShell() {
             }
             composable(BottomDestination.FINANCE.route) {
                 FinanceScreen()
+            }
+            composable(
+                route = "${BottomDestination.FINANCE.route}?openCreate={openCreate}",
+                arguments = listOf(
+                    navArgument("openCreate") {
+                        type = NavType.BoolType
+                        defaultValue = false
+                    },
+                ),
+            ) {
+                FinanceScreen(autoOpenCreate = true)
             }
             composable(BottomDestination.MORE.route) {
                 MoreScreen(

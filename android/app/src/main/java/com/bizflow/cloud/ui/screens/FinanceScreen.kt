@@ -87,10 +87,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun FinanceScreen(
     modifier: Modifier = Modifier,
+    autoOpenCreate: Boolean = false,
     viewModel: FinanceViewModel = viewModel(factory = FinanceViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var showCreateSheet by rememberSaveable { mutableStateOf(false) }
+    var showCreateSheet by rememberSaveable { mutableStateOf(autoOpenCreate) }
     var deleteTarget by remember { mutableStateOf<TransactionEntity?>(null) }
 
     Scaffold(
