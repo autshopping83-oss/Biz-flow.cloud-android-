@@ -1,120 +1,81 @@
 package com.bizflow.cloud.data.repository;
 
+import android.content.ContentValues;
 import android.content.Context;
-import android.graphics.Color;
-import android.os.CancellationSignal;
-import android.os.Handler;
-import android.os.Looper;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.os.ParcelFileDescriptor;
-import android.print.PageRange;
-import android.print.PrintAttributes;
-import android.print.PrintDocumentAdapter;
-import android.print.PrintDocumentInfo;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.provider.MediaStore;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 
 public class PdfRenderHelper {
 
-    public static byte[] renderHtmlToPdfSync(Context context, String html) {
-        final byte[][] result = new byte[1][1];
-        final CountDownLatch latch = new CountDownLatch(1);
+    /**
+     * Save HTML content to Downloads/Biz-flow/ as an .html file.
+     * Returns the content:// Uri on Q+ or file:// Uri on older devices.
+     */
+    public static Uri saveHtmlToDownloads(Context context, String html, String fileName) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return saveViaMediaStore(context, html, fileName);
+        } else {
+            return saveViaFile(context, html, fileName);
+        }
+    }
 
-        new Handler(Looper.getMainLooper()).post(() -> {
-            try {
-                WebView webView = new WebView(context);
-                webView.setBackgroundColor(Color.TRANSPARENT);
-                webView.getSettings().setJavaScriptEnabled(false);
-                webView.getSettings().setAllowFileAccess(false);
-                webView.getSettings().setDefaultTextEncodingName("UTF-8");
+    private static Uri saveViaMediaStore(Context context, String html, String fileName) {
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Downloads.DISPLAY_NAME, fileName + ".html");
+        values.put(MediaStore.Downloads.MIME_TYPE, "text/html");
+        values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/Biz-flow");
+        values.put(MediaStore.Downloads.IS_PENDING, 1);
 
-                PrintAttributes attrs = new PrintAttributes.Builder()
-                        .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
-                        .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
-                        .build();
+        android.content.ContentResolver resolver = context.getContentResolver();
+        Uri collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+        Uri uri = resolver.insert(collection, values);
+        if (uri == null) return null;
 
-                float dpi = attrs.getResolution() != null ? attrs.getResolution().getHorizontalDpi() : 96f;
-                float wInches = attrs.getMediaSize() != null ? attrs.getMediaSize().getWidthMils() / 1000f : 8.27f;
-                webView.layout(0, 0, (int) (wInches * dpi), (int) (wInches * dpi * 1.4f));
-
-                webView.setWebViewClient(new WebViewClient() {
-                    @Override
-                    public void onPageFinished(WebView view, String url) {
-                        PrintDocumentAdapter adapter = webView.createPrintDocumentAdapter("pdf_render");
-
-                        adapter.onLayout(attrs, attrs, null, new PrintDocumentAdapter.LayoutResultCallback() {
-                            @Override
-                            public void onLayoutFinished(PrintDocumentInfo info, boolean changed) {
-                                try {
-                                    ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
-                                    ParcelFileDescriptor readSide = pipe[0];
-                                    ParcelFileDescriptor writeSide = pipe[1];
-
-                                    adapter.onWrite(
-                                            new PageRange[]{PageRange.ALL_PAGES},
-                                            writeSide,
-                                            new CancellationSignal(),
-                                            new PrintDocumentAdapter.WriteResultCallback() {
-                                                @Override
-                                                public void onWriteFinished(PageRange[] pages) {
-                                                    try {
-                                                        InputStream is = new ParcelFileDescriptor.AutoCloseInputStream(readSide);
-                                                        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-                                                        byte[] tmp = new byte[4096];
-                                                        int len;
-                                                        while ((len = is.read(tmp)) != -1) {
-                                                            buf.write(tmp, 0, len);
-                                                        }
-                                                        is.close();
-                                                        result[0] = buf.toByteArray();
-                                                    } catch (Exception e) {
-                                                        result[0] = null;
-                                                    }
-                                                    latch.countDown();
-                                                    webView.destroy();
-                                                }
-
-                                                @Override
-                                                public void onWriteFailed(CharSequence error) {
-                                                    result[0] = null;
-                                                    latch.countDown();
-                                                    webView.destroy();
-                                                }
-                                            }
-                                    );
-                                } catch (Exception e) {
-                                    result[0] = null;
-                                    latch.countDown();
-                                    webView.destroy();
-                                }
-                            }
-
-                            @Override
-                            public void onLayoutFailed(CharSequence error) {
-                                result[0] = null;
-                                latch.countDown();
-                                webView.destroy();
-                            }
-                        }, null);
-                    }
-                });
-
-                webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
-            } catch (Exception e) {
-                result[0] = null;
-                latch.countDown();
-            }
-        });
-
-        try {
-            latch.await(60, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
+        try (OutputStream os = resolver.openOutputStream(uri)) {
+            if (os == null) return null;
+            os.write(html.getBytes("UTF-8"));
+        } catch (Exception e) {
             return null;
         }
-        return result[0];
+
+        values.clear();
+        values.put(MediaStore.Downloads.IS_PENDING, 0);
+        resolver.update(uri, values, null, null);
+        return uri;
+    }
+
+    private static Uri saveViaFile(Context context, String html, String fileName) {
+        File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "Biz-flow");
+        if (!dir.exists()) dir.mkdirs();
+        File file = new File(dir, fileName + ".html");
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(html.getBytes("UTF-8"));
+        } catch (Exception e) {
+            return null;
+        }
+        return Uri.fromFile(file);
+    }
+
+    /**
+     * Save HTML to cache for sharing via FileProvider.
+     */
+    public static Uri saveHtmlToCache(Context context, String html, String fileName) {
+        File cacheDir = new File(context.getCacheDir(), "shared_html");
+        cacheDir.mkdirs();
+        File file = new File(cacheDir, fileName + ".html");
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(html.getBytes("UTF-8"));
+        } catch (Exception e) {
+            return null;
+        }
+        return androidx.core.content.FileProvider.getUriForFile(
+                context, context.getPackageName() + ".fileprovider", file);
     }
 }

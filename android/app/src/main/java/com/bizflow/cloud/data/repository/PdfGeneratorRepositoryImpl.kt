@@ -1,24 +1,17 @@
 package com.bizflow.cloud.data.repository
 
-import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.CancellationSignal
-import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
-import android.os.ParcelFileDescriptor.MODE_CREATE
-import android.os.ParcelFileDescriptor.MODE_WRITE_ONLY
 import android.print.PageRange
 import android.print.PrintAttributes
 import android.print.PrintDocumentAdapter
 import android.print.PrintManager
-import android.provider.MediaStore
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.bizflow.cloud.core.util.ImageFiles
@@ -66,63 +59,14 @@ class PdfGeneratorRepositoryImpl(
     }
 
     suspend fun savePdfToFile(context: Context, html: String, fileName: String): Uri? {
-        val pdfBytes = withContext(Dispatchers.IO) {
-            PdfRenderHelper.renderHtmlToPdfSync(context.applicationContext, html)
-        } ?: return null
         return withContext(Dispatchers.IO) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                saveViaMediaStore(context, pdfBytes, fileName)
-            } else {
-                saveViaFile(context, pdfBytes, fileName)
-            }
+            PdfRenderHelper.saveHtmlToDownloads(context.applicationContext, html, fileName)
         }
     }
 
     suspend fun sharePdf(context: Context, html: String, fileName: String): Uri? {
-        val pdfBytes = withContext(Dispatchers.IO) {
-            PdfRenderHelper.renderHtmlToPdfSync(context.applicationContext, html)
-        } ?: return null
         return withContext(Dispatchers.IO) {
-            val cacheDir = File(context.cacheDir, "shared_pdfs")
-            cacheDir.mkdirs()
-            val file = File(cacheDir, "$fileName.pdf")
-            file.writeBytes(pdfBytes)
-            val authority = "${context.packageName}.fileprovider"
-            androidx.core.content.FileProvider.getUriForFile(context, authority, file)
-        }
-    }
-
-    private fun saveViaMediaStore(context: Context, bytes: ByteArray, fileName: String): Uri? {
-        val resolver = context.contentResolver
-        val values = ContentValues().apply {
-            put(MediaStore.Downloads.DISPLAY_NAME, "$fileName.pdf")
-            put(MediaStore.Downloads.MIME_TYPE, "application/pdf")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/Biz-flow")
-                put(MediaStore.Downloads.IS_PENDING, 1)
-            }
-        }
-        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        val uri = resolver.insert(collection, values) ?: return null
-        resolver.openOutputStream(uri)?.use { it.write(bytes) }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            values.clear()
-            values.put(MediaStore.Downloads.IS_PENDING, 0)
-            resolver.update(uri, values, null, null)
-        }
-        return uri
-    }
-
-    private fun saveViaFile(context: Context, bytes: ByteArray, fileName: String): Uri? {
-        val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "Biz-flow")
-        dir.mkdirs()
-        val file = File(dir, "$fileName.pdf")
-        file.writeBytes(bytes)
-        val authority = "${context.packageName}.fileprovider"
-        return try {
-            androidx.core.content.FileProvider.getUriForFile(context, authority, file)
-        } catch (_: Exception) {
-            Uri.fromFile(file)
+            PdfRenderHelper.saveHtmlToCache(context.applicationContext, html, fileName)
         }
     }
 
