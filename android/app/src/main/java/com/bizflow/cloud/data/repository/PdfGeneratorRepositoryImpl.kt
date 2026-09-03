@@ -32,9 +32,7 @@ import com.bizflow.cloud.data.model.DocumentType
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
 
 class PdfGeneratorRepositoryImpl(
     private val applicationContext: Context,
@@ -68,8 +66,10 @@ class PdfGeneratorRepositoryImpl(
     }
 
     suspend fun savePdfToFile(context: Context, html: String, fileName: String): Uri? {
+        val pdfBytes = withContext(Dispatchers.IO) {
+            PdfRenderHelper.renderHtmlToPdf(context.applicationContext, html)
+        } ?: return null
         return withContext(Dispatchers.IO) {
-            val pdfBytes = renderHtmlToPdf(html) ?: return@withContext null
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 saveViaMediaStore(context, pdfBytes, fileName)
             } else {
@@ -79,66 +79,16 @@ class PdfGeneratorRepositoryImpl(
     }
 
     suspend fun sharePdf(context: Context, html: String, fileName: String): Uri? {
+        val pdfBytes = withContext(Dispatchers.IO) {
+            PdfRenderHelper.renderHtmlToPdf(context.applicationContext, html)
+        } ?: return null
         return withContext(Dispatchers.IO) {
-            val pdfBytes = renderHtmlToPdf(html) ?: return@withContext null
             val cacheDir = File(context.cacheDir, "shared_pdfs")
             cacheDir.mkdirs()
             val file = File(cacheDir, "$fileName.pdf")
             file.writeBytes(pdfBytes)
             val authority = "${context.packageName}.fileprovider"
             androidx.core.content.FileProvider.getUriForFile(context, authority, file)
-        }
-    }
-
-    private suspend fun renderHtmlToPdf(html: String): ByteArray? = suspendCancellableCoroutine { cont ->
-        mainHandler.post {
-            val webView = WebView(appContext)
-            webView.setBackgroundColor(Color.TRANSPARENT)
-            webView.settings.javaScriptEnabled = false
-            webView.settings.allowFileAccess = false
-            webView.settings.defaultTextEncodingName = "UTF-8"
-            val attrs = PrintAttributes.Builder()
-                .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
-                .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
-                .build()
-            val dpi = attrs.resolution?.horizontalDpi?.toFloat() ?: 96f
-            val w = attrs.mediaSize?.widthMils?.div(1000f) ?: 8.27f
-            webView.layout(0, 0, (w * dpi).toInt(), (w * dpi * 1.4f).toInt())
-            webView.webViewClient = object : WebViewClient() {
-                override fun onPageFinished(view: WebView?, url: String?) {
-                    val adapter = webView.createPrintDocumentAdapter("pdf_render")
-                    adapter.onLayout(attrs, attrs, null, object : PrintDocumentAdapter.LayoutResultCallback() {
-                        override fun onLayoutFinished(info: android.print.PrintDocumentInfo?, changed: Boolean) {
-                            val buf = java.io.ByteArrayOutputStream()
-                            val pfd = ParcelFileDescriptor.createPipe()
-                            val readSide = ParcelFileDescriptor.AutoCloseInputStream(pfd)
-                            adapter.onWrite(
-                                arrayOf(PageRange.ALL_PAGES),
-                                pfd,
-                                CancellationSignal(),
-                                object : PrintDocumentAdapter.WriteResultCallback() {
-                                    override fun onWriteFinished(pages: Array<out PageRange>?) {
-                                        val bytes = readSide.readBytes()
-                                        readSide.close()
-                                        webView.destroy()
-                                        if (cont.isActive) cont.resume(bytes)
-                                    }
-                                    override fun onWriteFailed(error: CharSequence?) {
-                                        webView.destroy()
-                                        if (cont.isActive) cont.resume(null)
-                                    }
-                                },
-                            )
-                        }
-                        override fun onLayoutFailed(error: CharSequence?) {
-                            webView.destroy()
-                            if (cont.isActive) cont.resume(null)
-                        }
-                    }, null)
-                }
-            }
-            webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
-            cont.invokeOnCancellation { webView.destroy() }
         }
     }
 
