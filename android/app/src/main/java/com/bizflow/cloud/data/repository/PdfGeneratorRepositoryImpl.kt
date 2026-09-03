@@ -67,7 +67,7 @@ class PdfGeneratorRepositoryImpl(
 
     suspend fun savePdfToFile(context: Context, html: String, fileName: String): Uri? {
         val pdfBytes = withContext(Dispatchers.IO) {
-            PdfRenderHelper.renderHtmlToPdf(context.applicationContext, html)
+            PdfRenderHelper.renderHtmlToPdfSync(context.applicationContext, html)
         } ?: return null
         return withContext(Dispatchers.IO) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -80,7 +80,7 @@ class PdfGeneratorRepositoryImpl(
 
     suspend fun sharePdf(context: Context, html: String, fileName: String): Uri? {
         val pdfBytes = withContext(Dispatchers.IO) {
-            PdfRenderHelper.renderHtmlToPdf(context.applicationContext, html)
+            PdfRenderHelper.renderHtmlToPdfSync(context.applicationContext, html)
         } ?: return null
         return withContext(Dispatchers.IO) {
             val cacheDir = File(context.cacheDir, "shared_pdfs")

@@ -20,11 +20,10 @@ import java.util.concurrent.TimeUnit;
 
 public class PdfRenderHelper {
 
-    public interface Callback {
-        void onResult(byte[] pdfBytes);
-    }
+    public static byte[] renderHtmlToPdfSync(Context context, String html) {
+        final byte[][] result = new byte[1][1];
+        final CountDownLatch latch = new CountDownLatch(1);
 
-    public static void renderHtmlToPdf(Context context, String html, Callback callback) {
         new Handler(Looper.getMainLooper()).post(() -> {
             try {
                 WebView webView = new WebView(context);
@@ -46,8 +45,6 @@ public class PdfRenderHelper {
                     @Override
                     public void onPageFinished(WebView view, String url) {
                         PrintDocumentAdapter adapter = webView.createPrintDocumentAdapter("pdf_render");
-                        CountDownLatch latch = new CountDownLatch(1);
-                        final byte[][] result = new byte[1][1];
 
                         adapter.onLayout(attrs, attrs, null, new PrintDocumentAdapter.LayoutResultCallback() {
                             @Override
@@ -103,19 +100,21 @@ public class PdfRenderHelper {
                                 webView.destroy();
                             }
                         }, null);
-
-                        boolean completed = latch.await(30, TimeUnit.SECONDS);
-                        if (!completed) {
-                            webView.destroy();
-                        }
-                        callback.onResult(completed ? result[0] : null);
                     }
                 });
 
                 webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
             } catch (Exception e) {
-                callback.onResult(null);
+                result[0] = null;
+                latch.countDown();
             }
         });
+
+        try {
+            latch.await(60, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            return null;
+        }
+        return result[0];
     }
 }
