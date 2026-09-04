@@ -2,6 +2,7 @@ package com.bizflow.cloud.data.repository
 
 import android.content.ContentValues
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -23,6 +24,7 @@ import android.print.PrintManager
 import android.provider.MediaStore
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.bizflow.cloud.R
 import com.bizflow.cloud.core.util.ImageFiles
 import com.bizflow.cloud.core.util.formatDate
 import com.bizflow.cloud.core.util.formatMoney
@@ -33,6 +35,7 @@ import com.bizflow.cloud.data.model.DocumentStatus
 import com.bizflow.cloud.data.model.DocumentType
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -58,13 +61,24 @@ class PdfGeneratorRepositoryImpl(
         private val A4_HEIGHT_PX = (A4_HEIGHT_PT.toFloat() * TARGET_DPI / 72).toInt()
     }
 
-    suspend fun buildHtml(document: DocumentEntity, items: List<LineItemEntity>): String =
-        withContext(Dispatchers.IO) {
-            val settings = companySettingsRepository.getSettings()
-            val templateId = settings?.documentTemplateId ?: CompanySettingsEntity.DEFAULT_TEMPLATE_ID
-            val template = readTemplate(templateId)
-            buildFromTemplate(template, settings, document, items)
-        }
+    private fun localizedContext(localeTag: String): Context {
+        val locale = Locale.forLanguageTag(localeTag)
+        val config = Configuration(applicationContext.resources.configuration)
+        config.setLocale(locale)
+        return applicationContext.createConfigurationContext(config)
+    }
+
+    suspend fun buildHtml(
+        document: DocumentEntity,
+        items: List<LineItemEntity>,
+        localeTag: String = "pt",
+    ): String = withContext(Dispatchers.IO) {
+        val settings = companySettingsRepository.getSettings()
+        val templateId = settings?.documentTemplateId ?: CompanySettingsEntity.DEFAULT_TEMPLATE_ID
+        val template = readTemplate(templateId)
+        val ctx = localizedContext(localeTag)
+        buildFromTemplate(template, settings, document, items, ctx, localeTag)
+    }
 
     suspend fun generatePdf(context: Context, document: DocumentEntity, items: List<LineItemEntity>) {
         val html = buildHtml(document, items)
@@ -371,7 +385,7 @@ class PdfGeneratorRepositoryImpl(
         }
     }
 
-    // ── Template building (unchanged) ──────────────────────────────────
+    // ── Template building ───────────────────────────────────────────────
 
     private fun readTemplate(templateId: String): String {
         return applicationContext.assets.open("templates/$templateId.html")
@@ -384,27 +398,55 @@ class PdfGeneratorRepositoryImpl(
         settings: CompanySettingsEntity?,
         document: DocumentEntity,
         items: List<LineItemEntity>,
+        ctx: Context,
+        localeTag: String,
     ): String {
+        val locale = Locale.forLanguageTag(localeTag)
         return template
+            .replace("{{LANG}}", langAttr(localeTag))
             .replace("{{COMPANY_LOGO_HTML}}", logoHtml(settings?.logoPath?.takeIf { contentExists(it) }
                 ?: document.companyLogo))
             .replace("{{COMPANY_NAME}}", html(document.companyName ?: ""))
             .replace("{{COMPANY_DETAILS}}", html(companyDetails(document)))
-            .replace("{{DOC_TITLE}}", documentTitle(document.documentType))
+            .replace("{{DOC_TITLE}}", documentTitle(document.documentType, ctx))
             .replace("{{DOC_NUMBER}}", html(document.number))
-            .replace("{{DOC_DATE}}", formatDate(document.date))
+            .replace("{{DOC_DATE}}", formatDate(document.date, locale))
             .replace("{{CLIENT_NAME}}", html(document.clientName))
-            .replace("{{CLIENT_DETAILS}}", html(clientDetails(document)))
+            .replace("{{CLIENT_DETAILS}}", html(clientDetails(document, ctx)))
             .replace("{{PAYMENT_METHOD_INFO}}", html(document.paymentMethod ?: "\u2014"))
-            .replace("{{ITEMS_TABLE_ROWS}}", itemsTableRows(items, document.currency))
-            .replace("{{SUBTOTAL}}", formatMoney(document.subtotal, document.currency))
-            .replace("{{TAX_LABEL}}", "VAT (${(document.taxRate * 100).toInt()}%)")
-            .replace("{{TAX_AMOUNT}}", formatMoney(document.taxAmount, document.currency))
-            .replace("{{TOTAL_AMOUNT}}", formatMoney(document.total, document.currency))
-            .replace("{{STATUS_SEAL_HTML}}", statusSealHtml(document.status))
+            .replace("{{ITEMS_TABLE_ROWS}}", itemsTableRows(items, document.currency, locale))
+            .replace("{{LABEL_NUMBER}}", ctx.getString(R.string.pdf_label_number))
+            .replace("{{LABEL_DATE}}", ctx.getString(R.string.pdf_label_date))
+            .replace("{{LABEL_CLIENT}}", ctx.getString(R.string.pdf_label_client))
+            .replace("{{LABEL_CLIENT_ALT}}", ctx.getString(R.string.pdf_label_client_alt))
+            .replace("{{LABEL_PAYMENT}}", ctx.getString(R.string.pdf_label_payment))
+            .replace("{{LABEL_NOTES}}", ctx.getString(R.string.pdf_label_notes))
+            .replace("{{LABEL_SUBTOTAL}}", ctx.getString(R.string.pdf_label_subtotal))
+            .replace("{{LABEL_TOTAL}}", ctx.getString(R.string.pdf_label_total))
+            .replace("{{HEADER_DESCRIPTION}}", ctx.getString(R.string.pdf_header_description))
+            .replace("{{HEADER_UNIT_PRICE}}", ctx.getString(R.string.pdf_header_unit_price))
+            .replace("{{HEADER_PRICE}}", ctx.getString(R.string.pdf_header_price))
+            .replace("{{HEADER_QUANTITY}}", ctx.getString(R.string.pdf_header_quantity))
+            .replace("{{HEADER_TOTAL}}", ctx.getString(R.string.pdf_label_total))
+            .replace("{{TAX_LABEL}}", ctx.getString(R.string.pdf_label_tax).trimEnd(':') +
+                " (${(document.taxRate * 100).toInt()}%)")
+            .replace("{{SUBTOTAL}}", formatMoney(document.subtotal, document.currency, locale))
+            .replace("{{TAX_AMOUNT}}", formatMoney(document.taxAmount, document.currency, locale))
+            .replace("{{TOTAL_AMOUNT}}", formatMoney(document.total, document.currency, locale))
+            .replace("{{STATUS_SEAL_HTML}}", statusSealHtml(document.status, ctx))
             .replace("{{COMPANY_STAMP_HTML}}", companyStampHtml(settings?.stampPath, document.stampText))
             .replace("{{TERMS_AND_CONDITIONS}}", html(document.stampText ?: ""))
             .replace("{{SIGNATURE_HTML}}", signatureHtml(resolveSignature(document, settings)))
+            .replace("{{FOOTER_SIGNATURE}}", ctx.getString(R.string.pdf_footer_signature))
+            .replace("{{FOOTER_PROCESSED}}", ctx.getString(R.string.pdf_footer_processed))
+            .replace("{{FOOTER_THANKS}}", ctx.getString(R.string.pdf_footer_thanks))
+    }
+
+    private fun langAttr(localeTag: String): String {
+        return when (localeTag) {
+            "zh-CN" -> "zh-Hans"
+            else -> localeTag
+        }
     }
 
     private fun contentExists(path: String?): Boolean =
@@ -428,11 +470,17 @@ class PdfGeneratorRepositoryImpl(
         }
     }
 
-    private fun statusSealHtml(status: DocumentStatus): String {
+    private fun statusSealHtml(status: DocumentStatus, ctx: Context): String {
         if (status == DocumentStatus.EMITIDO) return ""
+        val label = when (status) {
+            DocumentStatus.PAGO -> ctx.getString(R.string.status_paid)
+            DocumentStatus.PENDENTE -> ctx.getString(R.string.status_pending)
+            DocumentStatus.ANULADO -> ctx.getString(R.string.status_cancelled)
+            DocumentStatus.EMITIDO -> ""
+        }
         return "<div style=\"position:absolute; top:44%; left:50%; transform:translate(-50%,-50%) rotate(-20deg); " +
             "border:6px solid #C62828; color:#C62828; border-radius:14px; padding:10px 30px; " +
-            "font-size:44px; font-weight:900; letter-spacing:8px; opacity:0.16;\">${status.name}</div>"
+            "font-size:44px; font-weight:900; letter-spacing:8px; opacity:0.16;\">${html(label.uppercase())}</div>"
     }
 
     private fun companyDetails(document: DocumentEntity): String {
@@ -457,30 +505,32 @@ class PdfGeneratorRepositoryImpl(
         }.joinToString(" \u2022 ")
     }
 
-    private fun clientDetails(document: DocumentEntity): String {
+    private fun clientDetails(document: DocumentEntity, ctx: Context): String {
         return buildList {
             document.clientLocation.takeIf { it.isNotBlank() }?.let { add(it) }
-            document.clientNuit.takeIf { it.isNotBlank() }?.let { add("NUIT: $it") }
+            document.clientNuit.takeIf { it.isNotBlank() }?.let {
+                add("${ctx.getString(R.string.pdf_label_nuit)} $it")
+            }
             document.clientContact.takeIf { it.isNotBlank() }?.let { add(it) }
             document.clientWhatsApp?.takeIf { it.isNotBlank() }?.let { add(it) }
         }.joinToString(" \u2022 ")
     }
 
-    private fun itemsTableRows(items: List<LineItemEntity>, currency: String): String {
+    private fun itemsTableRows(items: List<LineItemEntity>, currency: String, locale: Locale): String {
         return items.joinToString(separator = "\n      ") { item ->
             "<tr><td>${html(item.description)}</td>" +
-                "<td style=\"text-align:right\">${formatMoney(item.unitPrice, currency)}</td>" +
+                "<td style=\"text-align:right\">${formatMoney(item.unitPrice, currency, locale)}</td>" +
                 "<td style=\"text-align:right\">${formatQuantity(item.quantity)}</td>" +
-                "<td style=\"text-align:right\">${formatMoney(item.total, currency)}</td></tr>"
+                "<td style=\"text-align:right\">${formatMoney(item.total, currency, locale)}</td></tr>"
         }
     }
 
-    private fun documentTitle(type: DocumentType): String {
+    private fun documentTitle(type: DocumentType, ctx: Context): String {
         return when (type) {
-            DocumentType.FATURA -> "Factura"
-            DocumentType.FATURA_RECIBO -> "Fatura Recibo"
-            DocumentType.RECIBO -> "Recibo"
-            DocumentType.ORCAMENTO -> "Cotação"
+            DocumentType.FATURA -> ctx.getString(R.string.document_type_invoice)
+            DocumentType.FATURA_RECIBO -> ctx.getString(R.string.document_type_invoice_receipt)
+            DocumentType.RECIBO -> ctx.getString(R.string.document_type_receipt)
+            DocumentType.ORCAMENTO -> ctx.getString(R.string.document_type_quote)
         }
     }
 

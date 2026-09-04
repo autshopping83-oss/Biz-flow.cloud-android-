@@ -14,6 +14,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.bizflow.cloud.BizFlowApplication
 import com.bizflow.cloud.R
 import com.bizflow.cloud.core.util.ImageFiles
+import com.bizflow.cloud.core.util.LocaleHelper
 import com.bizflow.cloud.data.local.entity.ClientEntity
 import com.bizflow.cloud.data.local.entity.CompanySettingsEntity
 import com.bizflow.cloud.data.local.entity.DocumentEntity
@@ -246,7 +247,8 @@ class CreateDocumentViewModel(
             val items = buildItems(state)
             previewNumber = documentRepository.nextNumber(state.type)
             val document = buildDocument(state, items, previewNumber)
-            val html = pdfGenerator.buildHtml(document, items)
+            val localeTag = LocaleHelper.getCurrentLanguageTag(appContext)
+            val html = pdfGenerator.buildHtml(document, items, localeTag)
             _uiState.value = state.copy(previewHtml = html, isGeneratingPreview = false)
         }
     }

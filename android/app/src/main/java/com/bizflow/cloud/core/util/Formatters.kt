@@ -4,12 +4,13 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-fun formatMoney(amount: Double, currency: String): String {
-    val formatted = String.format(Locale.US, "%,.2f", amount).replace(',', ' ')
+fun formatMoney(amount: Double, currency: String, locale: Locale = Locale.US): String {
+    val formatted = String.format(locale, "%,.2f", amount)
+        .replace(",", " ")
     return "$formatted $currency"
 }
 
-fun formatDate(date: String): String {
+fun formatDate(date: String, locale: Locale = Locale.US): String {
     return try {
         val parsed = SimpleDateFormat("yyyy-MM-dd", Locale.US)
             .apply { timeZone = TimeZone.getTimeZone("UTC") }
@@ -17,7 +18,12 @@ fun formatDate(date: String): String {
         if (parsed == null) {
             date
         } else {
-            SimpleDateFormat("dd/MM/yyyy", Locale.US)
+            val fmt = when (locale.language) {
+                "zh" -> "yyyy-MM-dd"
+                "en" -> "MM/dd/yyyy"
+                else -> "dd/MM/yyyy"
+            }
+            SimpleDateFormat(fmt, locale)
                 .apply { timeZone = TimeZone.getTimeZone("UTC") }
                 .format(parsed)
         }

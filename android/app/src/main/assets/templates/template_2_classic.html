@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="{{LANG}}">
 <head>
   <meta charset="UTF-8">
   <style>
@@ -26,29 +26,29 @@
       <div>{{COMPANY_LOGO_HTML}}<strong>{{COMPANY_NAME}}</strong><div>{{COMPANY_DETAILS}}</div></div>
       <div class="doc-title-block" style="text-align: right;">
         <h1>{{DOC_TITLE}}</h1>
-        <div>Nº: <strong>{{DOC_NUMBER}}</strong></div>
-        <div>Data: <strong>{{DOC_DATE}}</strong></div>
+        <div>{{LABEL_NUMBER}} <strong>{{DOC_NUMBER}}</strong></div>
+        <div>{{LABEL_DATE}} <strong>{{DOC_DATE}}</strong></div>
       </div>
     </div>
     <div class="addresses">
-      <div class="address-col"><h3>Cliente:</h3><strong>{{CLIENT_NAME}}</strong><div>{{CLIENT_DETAILS}}</div></div>
-      <div class="address-col"><h3>Pagamento:</h3><div>{{PAYMENT_METHOD_INFO}}</div></div>
+      <div class="address-col"><h3>{{LABEL_CLIENT}}</h3><strong>{{CLIENT_NAME}}</strong><div>{{CLIENT_DETAILS}}</div></div>
+      <div class="address-col"><h3>{{LABEL_PAYMENT}}</h3><div>{{PAYMENT_METHOD_INFO}}</div></div>
     </div>
     <table class="data-table">
-      <thead><tr><th>Descrição</th><th style="text-align: right;">Preço</th><th style="text-align: right;">Qtd</th><th style="text-align: right;">Total</th></tr></thead>
+      <thead><tr><th>{{HEADER_DESCRIPTION}}</th><th style="text-align: right;">{{HEADER_PRICE}}</th><th style="text-align: right;">{{HEADER_QUANTITY}}</th><th style="text-align: right;">{{HEADER_TOTAL}}</th></tr></thead>
       <tbody>{{ITEMS_TABLE_ROWS}}</tbody>
     </table>
     <div class="totals-container">
       <div style="width:250px;">
-        <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>{{SUBTOTAL}}</span></div>
-        <div style="display:flex; justify-content:space-between;"><span>{{TAX_LABEL}}:</span><span>{{TAX_AMOUNT}}</span></div>
-        <div class="grand-total" style="display:flex; justify-content:space-between;"><span>Total:</span><span>{{TOTAL_AMOUNT}}</span></div>
+        <div style="display:flex; justify-content:space-between;"><span>{{LABEL_SUBTOTAL}}</span><span>{{SUBTOTAL}}</span></div>
+        <div style="display:flex; justify-content:space-between;"><span>{{TAX_LABEL}}</span><span>{{TAX_AMOUNT}}</span></div>
+        <div class="grand-total" style="display:flex; justify-content:space-between;"><span>{{LABEL_TOTAL}}</span><span>{{TOTAL_AMOUNT}}</span></div>
       </div>
     </div>
     <div class="signature-row" style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:22px;">
-      <div>{{COMPANY_STAMP_HTML}}{{SIGNATURE_HTML}}<div style="border-top:1px solid #2B3A4A; width:200px; margin-top:34px; padding-top:4px; font-size:9px; color:#555;">Assinatura Autorizada</div></div>
+      <div>{{COMPANY_STAMP_HTML}}{{SIGNATURE_HTML}}<div style="border-top:1px solid #2B3A4A; width:200px; margin-top:34px; padding-top:4px; font-size:9px; color:#555;">{{FOOTER_SIGNATURE}}</div></div>
     </div>
-    <div class="footer-bar"><div>{{COMPANY_NAME}} • biz-flow.cloud</div><div>Obrigado pela preferência!</div></div>
+    <div class="footer-bar"><div>{{COMPANY_NAME}} \u2022 biz-flow.cloud</div><div>{{FOOTER_THANKS}}</div></div>
   </div>
 </body>
 </html>

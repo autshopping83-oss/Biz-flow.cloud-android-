@@ -196,4 +196,22 @@
     <string name="products_category_placeholder">Ex: Services, Produits...</string>
     <string name="finance_empty_period_title">Aucune donnée pour cette période</string>
     <string name="finance_empty_period_body">Il n\'y a aucun mouvement financier pour ce mois.</string>
+    <!-- PDF document labels -->
+    <string name="pdf_label_number">N\u00b0 :</string>
+    <string name="pdf_label_date">Date :</string>
+    <string name="pdf_label_client">Client :</string>
+    <string name="pdf_label_client_alt">Pour :</string>
+    <string name="pdf_label_payment">Paiement :</string>
+    <string name="pdf_label_notes">Notes :</string>
+    <string name="pdf_header_description">Description</string>
+    <string name="pdf_header_unit_price">Prix Un.</string>
+    <string name="pdf_header_price">Prix</string>
+    <string name="pdf_header_quantity">Qte</string>
+    <string name="pdf_label_subtotal">Sous-total :</string>
+    <string name="pdf_label_total">Total :</string>
+    <string name="pdf_footer_signature">Signature Autoris\u00e9e</string>
+    <string name="pdf_footer_processed">Trait\u00e9 par biz-flow.cloud</string>
+    <string name="pdf_footer_thanks">Merci pour votre confiance !</string>
+    <string name="pdf_label_tax">TVA :</string>
+    <string name="pdf_label_nuit">N\u00b0 fiscal :</string>
 </resources>
