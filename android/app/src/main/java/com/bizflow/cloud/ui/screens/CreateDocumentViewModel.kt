@@ -15,7 +15,6 @@ import com.bizflow.cloud.BizFlowApplication
 import com.bizflow.cloud.R
 import com.bizflow.cloud.core.util.ImageFiles
 import com.bizflow.cloud.core.util.LocaleHelper
-import com.bizflow.cloud.core.util.PrintDiagnostic
 import com.bizflow.cloud.data.local.entity.ClientEntity
 import com.bizflow.cloud.data.local.entity.CompanySettingsEntity
 import com.bizflow.cloud.data.local.entity.DocumentEntity
@@ -307,33 +306,22 @@ class CreateDocumentViewModel(
     // ── 3. Save + Print: PDF → Documents + PrintManager ────────────────
 
     fun saveAndPrintPdf(activityContext: Context, onResult: (Boolean, String) -> Unit) {
-        PrintDiagnostic.clear()
-        PrintDiagnostic.record("VM_STEP_1_SAVE_AND_PRINT_CLICKED")
         val state = _uiState.value
-        val html = state.previewHtml ?: run {
-            PrintDiagnostic.recordError("VM_STEP_1_FAILED_NO_PREVIEW_HTML", RuntimeException("previewHtml null"))
-            return
-        }
+        val html = state.previewHtml ?: return
         viewModelScope.launch {
-            PrintDiagnostic.record("VM_STEP_2_COROUTINE_STARTED")
             val number = previewNumber.ifBlank {
                 documentRepository.nextNumber(state.type)
             }
             val fileName = "Fatura-BF-$number"
             val jobName = "Documento_$number"
-            PrintDiagnostic.record("VM_STEP_3_CALLING_PDF_GENERATOR")
             val uri = pdfGenerator.saveAndPrintPdf(appContext, activityContext, html, fileName, jobName)
-            PrintDiagnostic.record("VM_STEP_4_PDF_GENERATOR_RETURNED uri=$uri")
             withContext(Dispatchers.Main) {
                 if (uri != null) {
-                    PrintDiagnostic.record("VM_STEP_5_SHOWING_SUCCESS_TOAST")
                     onResult(true, appContext.getString(R.string.pdf_saved_ok, "Documents/$FOLDER_NAME/$fileName.pdf"))
                 } else {
-                    PrintDiagnostic.record("VM_STEP_5_SHOWING_ERROR_TOAST")
                     onResult(false, appContext.getString(R.string.pdf_save_error))
                 }
             }
-            PrintDiagnostic.record("VM_STEP_6_COROUTINE_FINISHING")
         }
     }
 

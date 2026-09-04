@@ -1,21 +1,26 @@
 package com.bizflow.cloud.core.util
 
 import java.text.DecimalFormat
-import java.text.NumberFormat
+import java.text.DecimalFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-fun formatMoney(amount: Double, currency: String, locale: Locale = Locale.US): String {
-    val nf = NumberFormat.getNumberInstance(locale)
+fun formatMoney(amount: Double, currency: String, locale: Locale = Locale("pt")): String {
+    val nf = java.text.NumberFormat.getNumberInstance(locale)
     nf.minimumFractionDigits = 2
     nf.maximumFractionDigits = 2
-    val absAmount = kotlin.math.abs(amount)
-    val integer = nf.format(kotlin.math.floor(absAmount).toLong())
-    val frac = String.format(locale, "%.2f", absAmount % 1).substring(1)
+    val formatted = nf.format(kotlin.math.abs(amount))
+    val integerPart = formatted.substringBeforeLast(",.")
+    val fractionalPart = formatted.substringAfterLast(",.")
+    val decimalSep = ','
+    val groupingSep = ' '
+    val normalizedInteger = integerPart.replace(
+        DecimalFormatSymbols(locale).groupingSeparator,
+        groupingSep
+    )
     val sign = if (amount < 0) "-" else ""
-    val decimalSep = (nf as? DecimalFormat)?.decimalFormatSymbols?.decimalSeparator ?: '.'
-    return "$sign$integer$decimalSep$frac $currency"
+    return "$sign$normalizedInteger$decimalSep$fractionalPart $currency"
 }
 
 fun formatDate(date: String, locale: Locale = Locale.US): String {
