@@ -95,45 +95,48 @@ class PdfGeneratorRepositoryImpl(
                 webView.settings.javaScriptEnabled = false
                 webView.settings.allowFileAccess = false
                 webView.settings.defaultTextEncodingName = "UTF-8"
-                webView.settings.setUseWideViewPort(true)
-                webView.settings.loadWithOverviewMode = true
-
-                try {
-                    val density = TARGET_DPI / 160f
-                    val field = WebView::class.java.getDeclaredField("mProvider")
-                    field.isAccessible = true
-                    val provider = field.get(webView)
-                    val dmField = provider.javaClass.getDeclaredField("mDisplayMetrics")
-                    dmField.isAccessible = true
-                    @Suppress("UNCHECKED_CAST")
-                    val dm = dmField.get(provider) as android.util.DisplayMetrics
-                    dm.density = density
-                    dm.scaledDensity = density
-                } catch (_: Exception) { }
 
                 webView.layout(0, 0, A4_WIDTH_PX, A4_HEIGHT_PX)
 
                 webView.webViewClient = object : WebViewClient() {
                     override fun onPageFinished(view: WebView?, url: String?) {
                         try {
+                            val deviceWidth = webView.width
+                            val deviceHeight = webView.height
+
                             val bitmap = Bitmap.createBitmap(
-                                A4_WIDTH_PX, A4_HEIGHT_PX, Bitmap.Config.ARGB_8888
+                                deviceWidth, deviceHeight, Bitmap.Config.ARGB_8888
                             )
                             val canvas = Canvas(bitmap)
                             webView.draw(canvas)
+
+                            val scaleX = A4_WIDTH_PX.toFloat() / deviceWidth
+                            val scaleY = A4_HEIGHT_PX.toFloat() / deviceHeight
+                            val scale = minOf(scaleX, scaleY)
+
+                            val scaledWidth = (deviceWidth * scale).toInt()
+                            val scaledHeight = (deviceHeight * scale).toInt()
+
+                            val scaledBitmap = Bitmap.createBitmap(
+                                scaledWidth, scaledHeight, Bitmap.Config.ARGB_8888
+                            )
+                            val scaledCanvas = Canvas(scaledBitmap)
+                            scaledCanvas.scale(scale, scale)
+                            scaledCanvas.drawBitmap(bitmap, 0f, 0f, null)
 
                             val pdfDocument = PdfDocument()
                             val pageInfo = PdfDocument.PageInfo.Builder(
                                 A4_WIDTH_PX, A4_HEIGHT_PX, 1
                             ).create()
                             val page = pdfDocument.startPage(pageInfo)
-                            page.canvas.drawBitmap(bitmap, 0f, 0f, null)
+                            page.canvas.drawBitmap(scaledBitmap, 0f, 0f, null)
                             pdfDocument.finishPage(page)
 
                             val output = ByteArrayOutputStream()
                             pdfDocument.writeTo(output)
 
                             bitmap.recycle()
+                            scaledBitmap.recycle()
                             pdfDocument.close()
                             webView.destroy()
 
