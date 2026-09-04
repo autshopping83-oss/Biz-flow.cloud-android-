@@ -202,6 +202,7 @@ class PdfGeneratorRepositoryImpl(
 
     suspend fun saveAndPrintPdf(
         context: Context,
+        activityContext: Context,
         html: String,
         fileName: String,
         jobName: String,
@@ -221,7 +222,7 @@ class PdfGeneratorRepositoryImpl(
             }
         }
         PrintDiagnostic.record("STEP_3_PDF_SAVED uri=$uri")
-        printPdfFromBytes(context, bytes, jobName)
+        printPdfFromBytes(activityContext, bytes, jobName)
         PrintDiagnostic.record("STEP_4_PRINT_PDF_FROM_BYTES_RETURNED")
         return uri
     }

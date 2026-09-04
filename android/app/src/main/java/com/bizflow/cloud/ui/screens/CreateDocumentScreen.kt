@@ -285,7 +285,7 @@ fun CreateDocumentScreen(
             },
             onShare = { viewModel.sharePdf {} },
             onSaveAndPrint = {
-                viewModel.saveAndPrintPdf { success, message ->
+                viewModel.saveAndPrintPdf(context) { success, message ->
                     Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                 }
             },

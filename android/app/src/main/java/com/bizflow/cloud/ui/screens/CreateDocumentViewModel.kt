@@ -306,7 +306,7 @@ class CreateDocumentViewModel(
 
     // ── 3. Save + Print: PDF → Documents + PrintManager ────────────────
 
-    fun saveAndPrintPdf(onResult: (Boolean, String) -> Unit) {
+    fun saveAndPrintPdf(activityContext: Context, onResult: (Boolean, String) -> Unit) {
         PrintDiagnostic.clear()
         PrintDiagnostic.record("VM_STEP_1_SAVE_AND_PRINT_CLICKED")
         val state = _uiState.value
@@ -322,7 +322,7 @@ class CreateDocumentViewModel(
             val fileName = "Fatura-BF-$number"
             val jobName = "Documento_$number"
             PrintDiagnostic.record("VM_STEP_3_CALLING_PDF_GENERATOR")
-            val uri = pdfGenerator.saveAndPrintPdf(appContext, html, fileName, jobName)
+            val uri = pdfGenerator.saveAndPrintPdf(appContext, activityContext, html, fileName, jobName)
             PrintDiagnostic.record("VM_STEP_4_PDF_GENERATOR_RETURNED uri=$uri")
             withContext(Dispatchers.Main) {
                 if (uri != null) {
