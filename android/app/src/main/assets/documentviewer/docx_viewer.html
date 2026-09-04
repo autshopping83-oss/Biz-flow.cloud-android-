@@ -11,6 +11,7 @@ body { overflow: hidden; }
 #toolbar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #2b5797; color: #fff; display: flex; align-items: center; padding: 0 12px; z-index: 100; }
 #toolbar span { flex: 1; text-align: center; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #content { position: fixed; top: 48px; bottom: 0; left: 0; right: 0; overflow: auto; padding: 16px; background: white; -webkit-overflow-scrolling: touch; }
+#docx-container { transform-origin: top left; width: 100%; }
 #loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #333; font-size: 16px; z-index: 200; }
 #error { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #ff6b6b; font-size: 14px; text-align: center; display: none; z-index: 200; }
 
@@ -72,6 +73,7 @@ body { overflow: hidden; }
         renderEndnotes: false
       }).then(function() {
         loading.style.display = 'none';
+        fitToWidth();
       }).catch(function(err) {
         showError('DOCX render error: ' + err.message);
       });
@@ -79,6 +81,34 @@ body { overflow: hidden; }
       showError('Failed to decode DOCX: ' + e.message);
     }
   };
+  function fitToWidth() {
+    var content = document.getElementById('content');
+    var sections = container.querySelectorAll('section');
+    if (!sections.length) return;
+    var contentWidth = content.clientWidth - 32;
+    var maxSectionWidth = 0;
+    sections.forEach(function(s) {
+      var w = s.scrollWidth || s.offsetWidth;
+      if (w > maxSectionWidth) maxSectionWidth = w;
+    });
+    if (maxSectionWidth <= 0) return;
+    if (maxSectionWidth <= contentWidth) {
+      container.style.transform = 'none';
+      container.style.width = '100%';
+      return;
+    }
+    var scale = contentWidth / maxSectionWidth;
+    container.style.transformOrigin = 'top left';
+    container.style.transform = 'scale(' + scale + ')';
+    container.style.width = maxSectionWidth + 'px';
+    content.scrollLeft = 0;
+  }
+
+  window.addEventListener('resize', function() {
+    container.style.transform = 'none';
+    container.style.width = '100%';
+    setTimeout(fitToWidth, 100);
+  });
 })();
 </script>
 </body>
