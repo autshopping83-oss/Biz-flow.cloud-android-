@@ -7,20 +7,16 @@ import java.util.Locale
 import java.util.TimeZone
 
 fun formatMoney(amount: Double, currency: String, locale: Locale = Locale("pt")): String {
-    val nf = java.text.NumberFormat.getNumberInstance(locale)
-    nf.minimumFractionDigits = 2
-    nf.maximumFractionDigits = 2
-    val formatted = nf.format(kotlin.math.abs(amount))
-    val integerPart = formatted.substringBeforeLast(",.")
-    val fractionalPart = formatted.substringAfterLast(",.")
-    val decimalSep = ','
-    val groupingSep = ' '
-    val normalizedInteger = integerPart.replace(
-        DecimalFormatSymbols(locale).groupingSeparator,
-        groupingSep
-    )
+    val symbols = DecimalFormatSymbols(locale)
+    val df = DecimalFormat("#,##0.00", symbols)
+    val formatted = df.format(kotlin.math.abs(amount))
+    val groupingSep = symbols.groupingSeparator
+    val decimalSep = symbols.decimalSeparator
+    val result = formatted
+        .replace(groupingSep, ' ')
+        .replace(decimalSep, ',')
     val sign = if (amount < 0) "-" else ""
-    return "$sign$normalizedInteger$decimalSep$fractionalPart $currency"
+    return "$sign$result $currency"
 }
 
 fun formatDate(date: String, locale: Locale = Locale.US): String {
