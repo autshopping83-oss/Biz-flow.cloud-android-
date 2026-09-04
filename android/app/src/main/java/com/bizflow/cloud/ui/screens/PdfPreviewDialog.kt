@@ -1,7 +1,6 @@
 package com.bizflow.cloud.ui.screens
 
 import android.webkit.WebView
-import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,9 +35,9 @@ import com.bizflow.cloud.R
 fun PdfPreviewDialog(
     html: String,
     jobName: String,
-    onPrint: () -> Unit,
     onSave: () -> Unit,
     onShare: () -> Unit,
+    onSaveAndPrint: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -67,9 +66,9 @@ fun PdfPreviewDialog(
                         Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(18.dp))
                         Text(text = stringResource(R.string.editor_share))
                     }
-                    TextButton(onClick = onPrint) {
+                    TextButton(onClick = onSaveAndPrint) {
                         Icon(Icons.Filled.Print, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(text = stringResource(R.string.editor_print))
+                        Text(text = stringResource(R.string.editor_save_and_print))
                     }
                     IconButton(onClick = onDismiss) {
                         Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.nav_back))

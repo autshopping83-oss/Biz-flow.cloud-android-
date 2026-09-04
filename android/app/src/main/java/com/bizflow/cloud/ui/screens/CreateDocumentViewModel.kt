@@ -2,6 +2,7 @@ package com.bizflow.cloud.ui.screens
 
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -11,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.bizflow.cloud.BizFlowApplication
+import com.bizflow.cloud.R
 import com.bizflow.cloud.core.util.ImageFiles
 import com.bizflow.cloud.data.local.entity.ClientEntity
 import com.bizflow.cloud.data.local.entity.CompanySettingsEntity
@@ -249,10 +251,7 @@ class CreateDocumentViewModel(
         }
     }
 
-    fun printPreview() {
-        val html = _uiState.value.previewHtml ?: return
-        pdfGenerator.printHtml(appContext, html, "Documento_$previewNumber")
-    }
+    // ── 1. Save: PDF → Documents/Biz-flow.cloud/ ───────────────────────
 
     fun savePdfToDisk(onResult: (Boolean, String) -> Unit) {
         val state = _uiState.value
@@ -261,17 +260,19 @@ class CreateDocumentViewModel(
             val number = previewNumber.ifBlank {
                 documentRepository.nextNumber(state.type)
             }
-            val fileName = "Documento_${number}"
-            val uri = pdfGenerator.savePdfToFile(appContext, html, fileName)
+            val fileName = "Fatura-BF-$number"
+            val uri = pdfGenerator.savePdfToDocuments(appContext, html, fileName)
             withContext(Dispatchers.Main) {
                 if (uri != null) {
-                    onResult(true, "PDF guardado em Documentos/Biz-flow/$fileName.pdf")
+                    onResult(true, appContext.getString(R.string.pdf_saved_ok, "Documents/$FOLDER_NAME/$fileName.pdf"))
                 } else {
-                    onResult(false, "Erro ao guardar PDF")
+                    onResult(false, appContext.getString(R.string.pdf_save_error))
                 }
             }
         }
     }
+
+    // ── 2. Share: PDF → Android Sharesheet ─────────────────────────────
 
     fun sharePdf(onResult: (Boolean) -> Unit) {
         val state = _uiState.value
@@ -280,19 +281,43 @@ class CreateDocumentViewModel(
             val number = previewNumber.ifBlank {
                 documentRepository.nextNumber(state.type)
             }
-            val fileName = "Documento_${number}"
-            val uri = pdfGenerator.sharePdf(appContext, html, fileName)
+            val fileName = "Fatura-BF-$number"
+            val uri = pdfGenerator.sharePdfViaFileProvider(appContext, html, fileName)
             withContext(Dispatchers.Main) {
                 if (uri != null) {
                     val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "application/pdf"
+                        type = PDF_MIME
                         putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    appContext.startActivity(Intent.createChooser(sendIntent, fileName))
+                    appContext.startActivity(
+                        Intent.createChooser(sendIntent, fileName)
+                    )
                     onResult(true)
                 } else {
                     onResult(false)
+                }
+            }
+        }
+    }
+
+    // ── 3. Save + Print: PDF → Documents + PrintManager ────────────────
+
+    fun saveAndPrintPdf(onResult: (Boolean, String) -> Unit) {
+        val state = _uiState.value
+        val html = state.previewHtml ?: return
+        viewModelScope.launch {
+            val number = previewNumber.ifBlank {
+                documentRepository.nextNumber(state.type)
+            }
+            val fileName = "Fatura-BF-$number"
+            val jobName = "Documento_$number"
+            val uri = pdfGenerator.saveAndPrintPdf(appContext, html, fileName, jobName)
+            withContext(Dispatchers.Main) {
+                if (uri != null) {
+                    onResult(true, appContext.getString(R.string.pdf_saved_ok, "Documents/$FOLDER_NAME/$fileName.pdf"))
+                } else {
+                    onResult(false, appContext.getString(R.string.pdf_save_error))
                 }
             }
         }
@@ -371,6 +396,9 @@ class CreateDocumentViewModel(
     }
 
     companion object {
+        private const val PDF_MIME = "application/pdf"
+        private const val FOLDER_NAME = "Biz-flow.cloud"
+
         val Factory: Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as BizFlowApplication

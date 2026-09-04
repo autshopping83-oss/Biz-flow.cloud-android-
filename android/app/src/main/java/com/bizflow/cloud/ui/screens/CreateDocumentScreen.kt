@@ -278,13 +278,17 @@ fun CreateDocumentScreen(
         PdfPreviewDialog(
             html = html,
             jobName = stringResource(documentTypeLabelRes(ui.type)),
-            onPrint = viewModel::printPreview,
             onSave = {
                 viewModel.savePdfToDisk { success, message ->
                     Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                 }
             },
             onShare = { viewModel.sharePdf {} },
+            onSaveAndPrint = {
+                viewModel.saveAndPrintPdf { success, message ->
+                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                }
+            },
             onDismiss = { viewModel.resetPreview() },
         )
     }

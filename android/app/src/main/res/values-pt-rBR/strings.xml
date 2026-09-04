@@ -2,8 +2,11 @@
 <resources>
     <string name="editor_total">Total</string>
     <string name="editor_save">Salvar</string>
-    <string name="editor_save_pdf">Salvar PDF</string>
+    <string name="editor_save_pdf">Salvar</string>
     <string name="editor_share">Compartilhar</string>
+    <string name="editor_save_and_print">Salvar e Imprimir</string>
+    <string name="pdf_saved_ok">PDF salvo em %1$s</string>
+    <string name="pdf_save_error">Erro ao salvar PDF</string>
     <string name="editor_cancel">Cancelar</string>
     <string name="nav_back">Voltar</string>
     <string name="more_company_settings">Configurações da Empresa</string>

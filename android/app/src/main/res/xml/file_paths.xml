@@ -2,6 +2,8 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Cache (internal) -->
     <cache-path name="cache" path="." />
+    <!-- Shared PDFs in cache for FileProvider sharing -->
+    <cache-path name="shared_pdfs" path="shared_pdfs/" />
     <!-- App-specific external files -->
     <external-files-path name="documents" path="Documents/" />
     <external-files-path name="downloads" path="Download/" />

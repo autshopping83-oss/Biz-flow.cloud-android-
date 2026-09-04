@@ -2,8 +2,11 @@
 <resources>
     <string name="editor_total">总计</string>
     <string name="editor_save">保存</string>
-    <string name="editor_save_pdf">保存PDF</string>
+    <string name="editor_save_pdf">保存</string>
     <string name="editor_share">分享</string>
+    <string name="editor_save_and_print">保存并打印</string>
+    <string name="pdf_saved_ok">PDF 已保存到 %1$s</string>
+    <string name="pdf_save_error">保存 PDF 时出错</string>
     <string name="editor_cancel">取消</string>
     <string name="nav_back">返回</string>
     <string name="more_company_settings">公司设置</string>
