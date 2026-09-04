@@ -30,7 +30,7 @@ public class PdfRenderHelper {
         ContentValues values = new ContentValues();
         values.put(MediaStore.Downloads.DISPLAY_NAME, fileName + ".html");
         values.put(MediaStore.Downloads.MIME_TYPE, "text/html");
-        values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/Biz-flow");
+        values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Biz-flow");
         values.put(MediaStore.Downloads.IS_PENDING, 1);
 
         android.content.ContentResolver resolver = context.getContentResolver();
@@ -52,7 +52,7 @@ public class PdfRenderHelper {
     }
 
     private static Uri saveViaFile(Context context, String html, String fileName) {
-        File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "Biz-flow");
+        File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Biz-flow");
         if (!dir.exists()) dir.mkdirs();
         File file = new File(dir, fileName + ".html");
         try (FileOutputStream fos = new FileOutputStream(file)) {
