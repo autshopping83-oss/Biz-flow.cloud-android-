@@ -96,7 +96,7 @@ class PdfGeneratorRepositoryImpl(
                 webView.settings.allowFileAccess = false
                 webView.settings.defaultTextEncodingName = "UTF-8"
                 webView.settings.setUseWideViewPort(true)
-                webView.settings.loadWithOverviewMode(true)
+                webView.settings.loadWithOverviewMode = true
 
                 try {
                     val density = TARGET_DPI / 160f
