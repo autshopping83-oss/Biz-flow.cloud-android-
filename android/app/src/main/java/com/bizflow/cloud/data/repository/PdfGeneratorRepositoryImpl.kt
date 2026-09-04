@@ -232,12 +232,13 @@ class PdfGeneratorRepositoryImpl(
         var name = baseName
         var suffix = 0
         val resolver = context.contentResolver
+        val relativePath = Environment.DIRECTORY_DOCUMENTS + "/" + FOLDER_NAME + "/"
         while (true) {
             val uri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
             val projection = arrayOf(MediaStore.MediaColumns._ID)
             val selection =
                 "${MediaStore.MediaColumns.RELATIVE_PATH}=? AND ${MediaStore.MediaColumns.DISPLAY_NAME}=?"
-            val selectionArgs = arrayOf("$FOLDER_NAME/", "$name.pdf")
+            val selectionArgs = arrayOf(relativePath, "$name.pdf")
             val exists = resolver.query(uri, projection, selection, selectionArgs, null)?.use {
                 it.moveToFirst()
             } ?: false
@@ -251,7 +252,7 @@ class PdfGeneratorRepositoryImpl(
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, "$fileName.pdf")
             put(MediaStore.MediaColumns.MIME_TYPE, PDF_MIME)
-            put(MediaStore.MediaColumns.RELATIVE_PATH, FOLDER_NAME)
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/" + FOLDER_NAME)
             put(MediaStore.MediaColumns.IS_PENDING, 1)
         }
         val collection = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
