@@ -199,7 +199,7 @@
     <!-- PDF document labels -->
     <string name="pdf_label_number">No:</string>
     <string name="pdf_label_date">Date:</string>
-    <string name="pdf_label_client">Customer:</string>
+    <string name="pdf_label_client">Client:</string>
     <string name="pdf_label_client_alt">To:</string>
     <string name="pdf_label_payment">Payment:</string>
     <string name="pdf_label_notes">Notes:</string>

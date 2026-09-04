@@ -428,7 +428,7 @@ class PdfGeneratorRepositoryImpl(
             .replace("{{HEADER_PRICE}}", ctx.getString(R.string.pdf_header_price))
             .replace("{{HEADER_QUANTITY}}", ctx.getString(R.string.pdf_header_quantity))
             .replace("{{HEADER_TOTAL}}", ctx.getString(R.string.pdf_label_total))
-            .replace("{{TAX_LABEL}}", ctx.getString(R.string.pdf_label_tax).trimEnd(':') +
+            .replace("{{TAX_LABEL}}", ctx.getString(R.string.pdf_label_tax).trimEnd(':', ' ') +
                 " (${(document.taxRate * 100).toInt()}%)")
             .replace("{{SUBTOTAL}}", formatMoney(document.subtotal, document.currency, locale))
             .replace("{{TAX_AMOUNT}}", formatMoney(document.taxAmount, document.currency, locale))

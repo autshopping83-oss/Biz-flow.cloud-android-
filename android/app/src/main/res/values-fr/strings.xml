@@ -212,6 +212,6 @@
     <string name="pdf_footer_signature">Signature Autoris\u00e9e</string>
     <string name="pdf_footer_processed">Trait\u00e9 par biz-flow.cloud</string>
     <string name="pdf_footer_thanks">Merci pour votre confiance !</string>
-    <string name="pdf_label_tax">TVA :</string>
+    <string name="pdf_label_tax">TVA:</string>
     <string name="pdf_label_nuit">N\u00b0 fiscal :</string>
 </resources>
