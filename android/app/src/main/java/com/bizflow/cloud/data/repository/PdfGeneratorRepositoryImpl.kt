@@ -95,6 +95,21 @@ class PdfGeneratorRepositoryImpl(
                 webView.settings.javaScriptEnabled = false
                 webView.settings.allowFileAccess = false
                 webView.settings.defaultTextEncodingName = "UTF-8"
+                webView.settings.setUseWideViewPort(true)
+                webView.settings.loadWithOverviewMode(true)
+
+                try {
+                    val density = TARGET_DPI / 160f
+                    val field = WebView::class.java.getDeclaredField("mProvider")
+                    field.isAccessible = true
+                    val provider = field.get(webView)
+                    val dmField = provider.javaClass.getDeclaredField("mDisplayMetrics")
+                    dmField.isAccessible = true
+                    @Suppress("UNCHECKED_CAST")
+                    val dm = dmField.get(provider) as android.util.DisplayMetrics
+                    dm.density = density
+                    dm.scaledDensity = density
+                } catch (_: Exception) { }
 
                 webView.layout(0, 0, A4_WIDTH_PX, A4_HEIGHT_PX)
 
@@ -204,7 +219,11 @@ class PdfGeneratorRepositoryImpl(
         if (printing.get()) return
         mainHandler.post {
             if (printing.compareAndSet(false, true)) {
-                val printManager = context.getSystemService(PrintManager::class.java)
+                val printManager = context.getSystemService(Context.PRINT_SERVICE) as? PrintManager
+                if (printManager == null) {
+                    printing.set(false)
+                    return@post
+                }
                 val attrs = PrintAttributes.Builder()
                     .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
                     .setColorMode(PrintAttributes.COLOR_MODE_COLOR)

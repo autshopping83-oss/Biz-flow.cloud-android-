@@ -293,7 +293,7 @@ class CreateDocumentViewModel(
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
                     appContext.startActivity(
-                        Intent.createChooser(sendIntent, fileName)
+                        Intent.createChooser(sendIntent, fileName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     )
                     onResult(true)
                 } else {
