@@ -1,18 +1,20 @@
 package com.bizflow.cloud.core.util
 
+import java.text.DecimalFormat
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
 fun formatMoney(amount: Double, currency: String, locale: Locale = Locale.US): String {
-    val nf = java.text.NumberFormat.getNumberInstance(locale)
+    val nf = NumberFormat.getNumberInstance(locale)
     nf.minimumFractionDigits = 2
     nf.maximumFractionDigits = 2
     val absAmount = kotlin.math.abs(amount)
     val integer = nf.format(kotlin.math.floor(absAmount).toLong())
     val frac = String.format(locale, "%.2f", absAmount % 1).substring(1)
     val sign = if (amount < 0) "-" else ""
-    val decimalSep = nf.decimalFormatSymbols.decimalSeparator
+    val decimalSep = (nf as? DecimalFormat)?.decimalFormatSymbols?.decimalSeparator ?: '.'
     return "$sign$integer$decimalSep$frac $currency"
 }
 
