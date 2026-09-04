@@ -306,22 +306,32 @@ class CreateDocumentViewModel(
     // ── 3. Save + Print: PDF → Documents + PrintManager ────────────────
 
     fun saveAndPrintPdf(onResult: (Boolean, String) -> Unit) {
+        android.util.Log.d("PDF_PRINT", "VM_STEP_1_SAVE_AND_PRINT_CLICKED")
         val state = _uiState.value
-        val html = state.previewHtml ?: return
+        val html = state.previewHtml ?: run {
+            android.util.Log.e("PDF_PRINT", "VM_STEP_1_FAILED_NO_PREVIEW_HTML")
+            return
+        }
         viewModelScope.launch {
+            android.util.Log.d("PDF_PRINT", "VM_STEP_2_COROUTINE_STARTED")
             val number = previewNumber.ifBlank {
                 documentRepository.nextNumber(state.type)
             }
             val fileName = "Fatura-BF-$number"
             val jobName = "Documento_$number"
+            android.util.Log.d("PDF_PRINT", "VM_STEP_3_CALLING_PDF_GENERATOR")
             val uri = pdfGenerator.saveAndPrintPdf(appContext, html, fileName, jobName)
+            android.util.Log.d("PDF_PRINT", "VM_STEP_4_PDF_GENERATOR_RETURNED uri=$uri")
             withContext(Dispatchers.Main) {
                 if (uri != null) {
+                    android.util.Log.d("PDF_PRINT", "VM_STEP_5_SHOWING_SUCCESS_TOAST")
                     onResult(true, appContext.getString(R.string.pdf_saved_ok, "Documents/$FOLDER_NAME/$fileName.pdf"))
                 } else {
+                    android.util.Log.e("PDF_PRINT", "VM_STEP_5_SHOWING_ERROR_TOAST")
                     onResult(false, appContext.getString(R.string.pdf_save_error))
                 }
             }
+            android.util.Log.d("PDF_PRINT", "VM_STEP_6_COROUTINE_FINISHING")
         }
     }
 
