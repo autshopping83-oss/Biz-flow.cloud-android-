@@ -322,9 +322,9 @@ class FinanceViewModelTest {
         val expense = 0.0
         val total = income + expense
 
-        val incomeRatio = if (total > 0) income / total else 0.5f
+        val incomeRatio: Double = if (total > 0) income / total else 0.5
 
-        assertEquals(0.5f, incomeRatio, 0.01f)
+        assertEquals(0.5, incomeRatio, 0.01)
     }
 
     // ── FilterType enum tests ──────────────────────────────────────────
