@@ -78,16 +78,23 @@ class FinanceViewModel(
         _filterCategory,
         _selectedCurrency,
         transactionRepository.observeAll(),
-        companySettingsRepository.observeCurrency(),
-    ) { args: Array<Any> ->
-        @Suppress("UNCHECKED_CAST")
-        val period = args[0] as FinancePeriod
-        val filterType = args[1] as FilterType
-        val filterCategory = args[2] as String?
-        val selectedCurrency = args[3] as String?
-        val allTransactions = args[4] as List<TransactionEntity>
-        val settingsCurrency = args[5] as String
+    ) { period, filterType, filterCategory, selectedCurrency, allTransactions ->
+        val settingsCurrency = companySettingsRepository.getCurrency()
+        buildUiState(period, filterType, filterCategory, selectedCurrency, allTransactions, settingsCurrency)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = FinanceUiState(),
+    )
 
+    private fun buildUiState(
+        period: FinancePeriod,
+        filterType: FilterType,
+        filterCategory: String?,
+        selectedCurrency: String?,
+        allTransactions: List<TransactionEntity>,
+        settingsCurrency: String,
+    ): FinanceUiState {
         val availableCurrencies = CurrencyCatalog.ALL.map { it.code }
 
         val activeCurrency = selectedCurrency ?: settingsCurrency
@@ -131,7 +138,7 @@ class FinanceViewModel(
 
         val monthlyData = computeMonthlyData(currencyFiltered, period)
 
-        FinanceUiState(
+        return FinanceUiState(
             period = period,
             totalIncome = income,
             totalExpense = expense,
@@ -151,11 +158,7 @@ class FinanceViewModel(
             availableCurrencies = availableCurrencies,
             isLoading = false,
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = FinanceUiState(),
-    )
+    }
 
     fun setPeriod(period: FinancePeriod) {
         _period.value = period
