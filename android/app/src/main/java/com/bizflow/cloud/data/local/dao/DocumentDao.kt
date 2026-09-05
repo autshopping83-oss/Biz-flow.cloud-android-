@@ -50,6 +50,9 @@ interface DocumentDao {
     @Query("SELECT COUNT(*) FROM documents WHERE deletedAt IS NULL AND createdAt BETWEEN :startMs AND :endMs")
     suspend fun countByPeriod(startMs: Long, endMs: Long): Int
 
+    @Query("SELECT COUNT(*) FROM documents WHERE deletedAt IS NULL AND currency = :currency AND createdAt BETWEEN :startMs AND :endMs")
+    suspend fun countByPeriodAndCurrency(currency: String, startMs: Long, endMs: Long): Int
+
     @Query("SELECT COUNT(*) FROM documents WHERE deletedAt IS NULL AND status = :status AND createdAt BETWEEN :startMs AND :endMs")
     suspend fun countByStatusAndPeriod(status: String, startMs: Long, endMs: Long): Int
 

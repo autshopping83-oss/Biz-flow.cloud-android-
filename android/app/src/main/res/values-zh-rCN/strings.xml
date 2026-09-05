@@ -237,9 +237,14 @@
     <string name="reports_top_products_quantity">热销产品 (数量)</string>
     <string name="reports_top_clients">大客户</string>
     <string name="reports_empty_sales">本期暂无销售记录。</string>
+    <string name="reports_empty_sales_filtered">本期暂无 %1$s 销售记录。</string>
     <string name="reports_empty_documents">本期暂无文档。</string>
+    <string name="reports_empty_documents_filtered">本期暂无 %1$s 文档。</string>
     <string name="reports_empty_products">本期暂无产品销售。</string>
+    <string name="reports_empty_products_filtered">本期暂无 %1$s 产品销售。</string>
     <string name="reports_empty_clients">本期暂无客户文档。</string>
+    <string name="reports_empty_clients_filtered">本期暂无 %1$s 客户文档。</string>
     <string name="reports_quantity_format">%1$d 件</string>
     <string name="reports_client_docs_format">%1$d 份文档</string>
+    <string name="reports_search_currency">搜索货币…</string>
 </resources>

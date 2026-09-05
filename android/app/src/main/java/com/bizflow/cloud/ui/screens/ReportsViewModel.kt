@@ -178,8 +178,14 @@ class ReportsViewModel(
             }
         }
 
+        val totalCount = if (isCurrencySelected) {
+            reportRepository.documentCountByPeriodAndCurrency(currency, period.startMs, period.endMs)
+        } else {
+            reportRepository.documentCountByPeriod(period.startMs, period.endMs)
+        }
+
         return DocumentMetrics(
-            totalCount = paid + issued + pending + cancelled,
+            totalCount = totalCount,
             paidCount = paid,
             issuedCount = issued,
             pendingCount = pending,

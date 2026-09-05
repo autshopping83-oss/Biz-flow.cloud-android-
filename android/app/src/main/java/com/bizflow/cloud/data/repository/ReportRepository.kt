@@ -15,6 +15,9 @@ class ReportRepository(
     suspend fun documentCountByPeriod(startMs: Long, endMs: Long): Int =
         documentDao.countByPeriod(startMs, endMs)
 
+    suspend fun documentCountByPeriodAndCurrency(currency: String, startMs: Long, endMs: Long): Int =
+        documentDao.countByPeriodAndCurrency(currency, startMs, endMs)
+
     suspend fun documentCountByStatusAndPeriod(status: String, startMs: Long, endMs: Long): Int =
         documentDao.countByStatusAndPeriod(status, startMs, endMs)
 

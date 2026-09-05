@@ -237,9 +237,14 @@
     <string name="reports_top_products_quantity">Top Products (Quantity)</string>
     <string name="reports_top_clients">Top Clients</string>
     <string name="reports_empty_sales">No sales recorded for this period.</string>
+    <string name="reports_empty_sales_filtered">No sales in %1$s for this period.</string>
     <string name="reports_empty_documents">No documents for this period.</string>
+    <string name="reports_empty_documents_filtered">No documents in %1$s for this period.</string>
     <string name="reports_empty_products">No products sold for this period.</string>
+    <string name="reports_empty_products_filtered">No products sold in %1$s for this period.</string>
     <string name="reports_empty_clients">No clients with documents for this period.</string>
+    <string name="reports_empty_clients_filtered">No clients with documents in %1$s for this period.</string>
     <string name="reports_quantity_format">%1$d units</string>
     <string name="reports_client_docs_format">%1$d documents</string>
+    <string name="reports_search_currency">Search currency…</string>
 </resources>

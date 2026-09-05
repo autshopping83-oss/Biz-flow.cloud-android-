@@ -36,6 +36,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
@@ -43,6 +44,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -135,17 +139,21 @@ fun ReportsScreen(
                     ReportsViewModel.ReportTab.SALES -> SalesReport(
                         sales = uiState.sales,
                         currency = displayCurrency,
+                        isFiltered = uiState.selectedCurrency != null,
                     )
                     ReportsViewModel.ReportTab.DOCUMENTS -> DocumentsReport(
                         documents = uiState.documents,
+                        isFiltered = uiState.selectedCurrency != null,
                     )
                     ReportsViewModel.ReportTab.PRODUCTS -> ProductsReport(
                         products = uiState.products,
                         currency = displayCurrency,
+                        isFiltered = uiState.selectedCurrency != null,
                     )
                     ReportsViewModel.ReportTab.CLIENTS -> ClientsReport(
                         clients = uiState.clients,
                         currency = displayCurrency,
+                        isFiltered = uiState.selectedCurrency != null,
                     )
                 }
             }
@@ -188,31 +196,50 @@ private fun ReportCurrencyFilter(
     settingsCurrency: String,
     onSelect: (String?) -> Unit,
 ) {
-    val availableCurrencies = CurrencyCatalog.ALL.map { it.code }
-    LazyRow(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        item {
-            FilterChip(
-                selected = selectedCurrency == null,
-                onClick = { onSelect(null) },
-                label = { Text(stringResource(R.string.finance_filter_all)) },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                ),
-            )
-        }
-        items(availableCurrencies) { code ->
-            FilterChip(
-                selected = selectedCurrency == code,
-                onClick = { onSelect(code) },
-                label = { Text(code) },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                ),
-            )
+    var searchQuery by remember { mutableStateOf("") }
+    val allCurrencies = CurrencyCatalog.ALL.map { it.code }
+    val filteredCurrencies = if (searchQuery.isBlank()) {
+        allCurrencies
+    } else {
+        allCurrencies.filter { it.contains(searchQuery.trim(), ignoreCase = true) }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            placeholder = { Text(stringResource(R.string.reports_search_currency)) },
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodySmall,
+        )
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            item {
+                FilterChip(
+                    selected = selectedCurrency == null,
+                    onClick = { onSelect(null) },
+                    label = { Text(stringResource(R.string.finance_filter_all)) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    ),
+                )
+            }
+            items(filteredCurrencies) { code ->
+                FilterChip(
+                    selected = selectedCurrency == code,
+                    onClick = { onSelect(code) },
+                    label = { Text(code) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    ),
+                )
+            }
         }
     }
 }
@@ -325,9 +352,15 @@ private fun ReportMetricRow(
 private fun SalesReport(
     sales: ReportsViewModel.SalesMetrics,
     currency: String,
+    isFiltered: Boolean,
 ) {
     if (sales.salesCount == 0 && sales.totalSales == 0.0) {
-        EmptyReportState(message = stringResource(R.string.reports_empty_sales))
+        val message = if (isFiltered) {
+            stringResource(R.string.reports_empty_sales_filtered, currency)
+        } else {
+            stringResource(R.string.reports_empty_sales)
+        }
+        EmptyReportState(message = message)
         return
     }
 
@@ -378,9 +411,15 @@ private fun SalesReport(
 @Composable
 private fun DocumentsReport(
     documents: ReportsViewModel.DocumentMetrics,
+    isFiltered: Boolean,
 ) {
     if (documents.totalCount == 0) {
-        EmptyReportState(message = stringResource(R.string.reports_empty_documents))
+        val message = if (isFiltered) {
+            stringResource(R.string.reports_empty_documents_filtered, "")
+        } else {
+            stringResource(R.string.reports_empty_documents)
+        }
+        EmptyReportState(message = message)
         return
     }
 
@@ -445,9 +484,15 @@ private fun DocumentsReport(
 private fun ProductsReport(
     products: ReportsViewModel.ProductMetrics,
     currency: String,
+    isFiltered: Boolean,
 ) {
     if (products.topByRevenue.isEmpty() && products.topByQuantity.isEmpty()) {
-        EmptyReportState(message = stringResource(R.string.reports_empty_products))
+        val message = if (isFiltered) {
+            stringResource(R.string.reports_empty_products_filtered, currency)
+        } else {
+            stringResource(R.string.reports_empty_products)
+        }
+        EmptyReportState(message = message)
         return
     }
 
@@ -511,6 +556,12 @@ private fun ProductRankingRow(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            } else {
+                Text(
+                    text = formatMoney(product.unitPrice, currency) + " / u",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
         Text(
@@ -529,9 +580,15 @@ private fun ProductRankingRow(
 private fun ClientsReport(
     clients: List<ReportsViewModel.ClientRanking>,
     currency: String,
+    isFiltered: Boolean,
 ) {
     if (clients.isEmpty()) {
-        EmptyReportState(message = stringResource(R.string.reports_empty_clients))
+        val message = if (isFiltered) {
+            stringResource(R.string.reports_empty_clients_filtered, currency)
+        } else {
+            stringResource(R.string.reports_empty_clients)
+        }
+        EmptyReportState(message = message)
         return
     }
 

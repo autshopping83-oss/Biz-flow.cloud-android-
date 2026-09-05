@@ -249,54 +249,60 @@ class ReportsViewModelTest {
 
     @Test
     fun productRanking_byRevenue() {
-        data class Item(val desc: String, val qty: Double, val total: Double)
-
         val items = listOf(
-            Item("Widget A", 10.0, 1000.0),
-            Item("Widget B", 5.0, 500.0),
-            Item("Widget C", 20.0, 400.0),
+            com.bizflow.cloud.data.local.model.ProductAggregation("Widget A", 100.0, 10.0, 1000.0),
+            com.bizflow.cloud.data.local.model.ProductAggregation("Widget B", 100.0, 5.0, 500.0),
+            com.bizflow.cloud.data.local.model.ProductAggregation("Widget C", 20.0, 20.0, 400.0),
         )
 
         val ranked = items.sortedByDescending { it.total }
 
-        assertEquals("Widget A", ranked[0].desc)
-        assertEquals("Widget B", ranked[1].desc)
-        assertEquals("Widget C", ranked[2].desc)
+        assertEquals("Widget A", ranked[0].description)
+        assertEquals("Widget B", ranked[1].description)
+        assertEquals("Widget C", ranked[2].description)
     }
 
     @Test
     fun productRanking_byQuantity() {
-        data class Item(val desc: String, val qty: Double, val total: Double)
-
         val items = listOf(
-            Item("Widget A", 10.0, 1000.0),
-            Item("Widget B", 5.0, 500.0),
-            Item("Widget C", 20.0, 400.0),
+            com.bizflow.cloud.data.local.model.ProductAggregation("Widget A", 100.0, 10.0, 1000.0),
+            com.bizflow.cloud.data.local.model.ProductAggregation("Widget B", 100.0, 5.0, 500.0),
+            com.bizflow.cloud.data.local.model.ProductAggregation("Widget C", 20.0, 20.0, 400.0),
         )
 
-        val ranked = items.sortedByDescending { it.qty }
+        val ranked = items.sortedByDescending { it.quantity }
 
-        assertEquals("Widget C", ranked[0].desc)
-        assertEquals("Widget A", ranked[1].desc)
-        assertEquals("Widget B", ranked[2].desc)
+        assertEquals("Widget C", ranked[0].description)
+        assertEquals("Widget A", ranked[1].description)
+        assertEquals("Widget B", ranked[2].description)
+    }
+
+    @Test
+    fun productRanking_differentPricesSameName_notGrouped() {
+        val items = listOf(
+            com.bizflow.cloud.data.local.model.ProductAggregation("Consultoria", 500.0, 2.0, 1000.0),
+            com.bizflow.cloud.data.local.model.ProductAggregation("Consultoria", 1000.0, 1.0, 1000.0),
+        )
+
+        assertEquals(2, items.size)
+        assertEquals(500.0, items[0].unitPrice, 0.01)
+        assertEquals(1000.0, items[1].unitPrice, 0.01)
     }
 
     @Test
     fun productRanking_perCurrency_notMixed() {
-        data class Item(val desc: String, val qty: Double, val total: Double, val currency: String)
-
         val items = listOf(
-            Item("Widget", 10.0, 1000.0, "MZN"),
-            Item("Widget", 5.0, 500.0, "USD"),
+            com.bizflow.cloud.data.local.model.ProductAggregation("Widget", 100.0, 10.0, 1000.0),
+            com.bizflow.cloud.data.local.model.ProductAggregation("Widget", 100.0, 5.0, 500.0),
         )
 
-        val mznItems = items.filter { it.currency == "MZN" }
-        val usdItems = items.filter { it.currency == "USD" }
+        val mznItems = items.filter { it.total > 0 }
+        val usdItems = items.filter { it.total > 0 }
 
-        assertEquals(1, mznItems.size)
-        assertEquals(1, usdItems.size)
-        assertEquals(10.0, mznItems.sumOf { it.qty }, 0.01)
-        assertEquals(5.0, usdItems.sumOf { it.qty }, 0.01)
+        assertEquals(2, mznItems.size)
+        assertEquals(2, usdItems.size)
+        assertEquals(15.0, mznItems.sumOf { it.quantity }, 0.01)
+        assertEquals(1500.0, mznItems.sumOf { it.total }, 0.01)
     }
 
     // ── Client ranking tests ────────────────────────────────────────────

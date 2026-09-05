@@ -237,9 +237,14 @@
     <string name="reports_top_products_quantity">Produtos Mais Vendidos (Quantidade)</string>
     <string name="reports_top_clients">Clientes com Maior Volume</string>
     <string name="reports_empty_sales">Nenhuma venda registrada neste período.</string>
+    <string name="reports_empty_sales_filtered">Nenhuma venda em %1$s neste período.</string>
     <string name="reports_empty_documents">Nenhum documento neste período.</string>
+    <string name="reports_empty_documents_filtered">Nenhum documento em %1$s neste período.</string>
     <string name="reports_empty_products">Nenhum produto vendido neste período.</string>
+    <string name="reports_empty_products_filtered">Nenhum produto vendido em %1$s neste período.</string>
     <string name="reports_empty_clients">Nenhum cliente com documentos neste período.</string>
+    <string name="reports_empty_clients_filtered">Nenhum cliente com documentos em %1$s neste período.</string>
     <string name="reports_quantity_format">%1$d unidades</string>
     <string name="reports_client_docs_format">%1$d documentos</string>
+    <string name="reports_search_currency">Pesquisar moeda…</string>
 </resources>

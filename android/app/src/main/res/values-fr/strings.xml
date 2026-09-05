@@ -237,9 +237,14 @@
     <string name="reports_top_products_quantity">Top Produits (Quantit\u00e9)</string>
     <string name="reports_top_clients">Clients les Plus Importants</string>
     <string name="reports_empty_sales">Aucune vente enregistr\u00e9e pour cette p\u00e9riode.</string>
+    <string name="reports_empty_sales_filtered">Aucune vente en %1$s pour cette p\u00e9riode.</string>
     <string name="reports_empty_documents">Aucun document pour cette p\u00e9riode.</string>
+    <string name="reports_empty_documents_filtered">Aucun document en %1$s pour cette p\u00e9riode.</string>
     <string name="reports_empty_products">Aucun produit vendu pour cette p\u00e9riode.</string>
+    <string name="reports_empty_products_filtered">Aucun produit vendu en %1$s pour cette p\u00e9riode.</string>
     <string name="reports_empty_clients">Aucun client avec documents pour cette p\u00e9riode.</string>
+    <string name="reports_empty_clients_filtered">Aucun client avec documents en %1$s pour cette p\u00e9riode.</string>
     <string name="reports_quantity_format">%1$d unit\u00e9s</string>
     <string name="reports_client_docs_format">%1$d documents</string>
+    <string name="reports_search_currency">Rechercher une devise…</string>
 </resources>
