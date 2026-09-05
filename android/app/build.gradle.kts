@@ -54,12 +54,6 @@ android {
         }
     }
 
-    bundle {
-        release {
-            debugSymbolLevel = com.android.build.api.dsl.DebugSymbolLevel.FULL
-        }
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
