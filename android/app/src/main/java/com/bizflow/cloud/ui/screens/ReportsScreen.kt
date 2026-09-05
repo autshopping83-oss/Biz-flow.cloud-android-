@@ -387,29 +387,29 @@ private fun DocumentsReport(
     ReportCard(title = stringResource(R.string.reports_documents_summary)) {
         ReportMetricRow(
             label = stringResource(R.string.reports_total_documents),
-            value = documents.totalCount,
+            value = documents.totalCount.toString(),
             icon = Icons.Filled.Description,
         )
         ReportMetricRow(
             label = stringResource(R.string.reports_documents_paid),
-            value = documents.paidCount,
+            value = documents.paidCount.toString(),
             icon = Icons.Filled.CheckCircle,
             valueColor = Color(0xFF4CAF50),
         )
         ReportMetricRow(
             label = stringResource(R.string.reports_documents_issued),
-            value = documents.issuedCount,
+            value = documents.issuedCount.toString(),
             icon = Icons.Filled.Send,
         )
         ReportMetricRow(
             label = stringResource(R.string.reports_documents_pending),
-            value = documents.pendingCount,
+            value = documents.pendingCount.toString(),
             icon = Icons.Filled.Pending,
             valueColor = Color(0xFFFF9800),
         )
         ReportMetricRow(
             label = stringResource(R.string.reports_documents_cancelled),
-            value = documents.cancelledCount,
+            value = documents.cancelledCount.toString(),
             icon = Icons.Filled.Close,
             valueColor = Color(0xFFF44336),
         )
