@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.automirrored.filled.Phone
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -177,7 +177,7 @@ fun AboutScreen(
 
             ListItem(
                 headlineContent = { Text(text = "+258840636794") },
-                leadingContent = { Icon(Icons.AutoMirrored.Filled.Phone, contentDescription = null) },
+                leadingContent = { Icon(Icons.Filled.Phone, contentDescription = null) },
                 trailingContent = { Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null) },
                 modifier = Modifier
                     .fillMaxWidth()
