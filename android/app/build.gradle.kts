@@ -27,8 +27,8 @@ android {
         applicationId = "com.bizflow.cloud"
         minSdk = 22
         targetSdk = 36
-        versionCode = 8
-        versionName = "1.4.4"
+        versionCode = 9
+        versionName = "1.4.5"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val supabaseUrl = resolveProperty("SUPABASE_URL")
