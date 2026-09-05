@@ -47,4 +47,16 @@ interface TransactionDao {
         AND timestamp BETWEEN :startMs AND :endMs
     """)
     fun sumByTypeAndPeriod(type: String, startMs: Long, endMs: Long): Flow<Double>
+
+    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM transactions WHERE deletedAt IS NULL AND type = :type AND currency = :currency AND timestamp BETWEEN :startMs AND :endMs")
+    suspend fun sumByTypePeriodAndCurrency(type: String, currency: String, startMs: Long, endMs: Long): Double
+
+    @Query("SELECT COUNT(*) FROM transactions WHERE deletedAt IS NULL AND type = :type AND timestamp BETWEEN :startMs AND :endMs")
+    suspend fun countByTypeAndPeriod(type: String, startMs: Long, endMs: Long): Int
+
+    @Query("SELECT category, SUM(amount) as amount FROM transactions WHERE deletedAt IS NULL AND type = :type AND timestamp BETWEEN :startMs AND :endMs GROUP BY category ORDER BY amount DESC")
+    suspend fun categorySummaryByTypeAndPeriod(type: String, startMs: Long, endMs: Long): List<CategorySummary>
+
+    @Query("SELECT category, SUM(amount) as amount FROM transactions WHERE deletedAt IS NULL AND type = :type AND currency = :currency AND timestamp BETWEEN :startMs AND :endMs GROUP BY category ORDER BY amount DESC")
+    suspend fun categorySummaryByTypePeriodAndCurrency(type: String, currency: String, startMs: Long, endMs: Long): List<CategorySummary>
 }

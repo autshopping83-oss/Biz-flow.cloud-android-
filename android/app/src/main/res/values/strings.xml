@@ -216,4 +216,31 @@
     <string name="pdf_footer_thanks">Obrigado pela preferência!</string>
     <string name="pdf_label_tax">IVA:</string>
     <string name="pdf_label_nuit">NUIT:</string>
+    <!-- Reports -->
+    <string name="reports_title">Relatórios</string>
+    <string name="reports_tab_sales">Vendas</string>
+    <string name="reports_tab_documents">Documentos</string>
+    <string name="reports_tab_products">Produtos</string>
+    <string name="reports_tab_clients">Clientes</string>
+    <string name="reports_sales_summary">Resumo de Vendas</string>
+    <string name="reports_total_sales">Total de Vendas</string>
+    <string name="reports_sales_count">Quantidade de Vendas</string>
+    <string name="reports_average_ticket">Ticket Médio</string>
+    <string name="reports_sales_by_type">Vendas por Tipo de Documento</string>
+    <string name="reports_documents_summary">Resumo de Documentos</string>
+    <string name="reports_total_documents">Total de Documentos</string>
+    <string name="reports_documents_paid">Pagos</string>
+    <string name="reports_documents_issued">Emitidos</string>
+    <string name="reports_documents_pending">Pendentes</string>
+    <string name="reports_documents_cancelled">Anulados</string>
+    <string name="reports_documents_by_type">Documentos por Tipo</string>
+    <string name="reports_top_products_revenue">Produtos Mais Vendidos (Receita)</string>
+    <string name="reports_top_products_quantity">Produtos Mais Vendidos (Quantidade)</string>
+    <string name="reports_top_clients">Clientes com Maior Volume</string>
+    <string name="reports_empty_sales">Ainda não existem vendas registadas neste período.</string>
+    <string name="reports_empty_documents">Ainda não existem documentos neste período.</string>
+    <string name="reports_empty_products">Ainda não existem produtos vendidos neste período.</string>
+    <string name="reports_empty_clients">Ainda não existem clientes com documentos neste período.</string>
+    <string name="reports_quantity_format">%1$d unidades</string>
+    <string name="reports_client_docs_format">%1$d documentos</string>
 </resources>

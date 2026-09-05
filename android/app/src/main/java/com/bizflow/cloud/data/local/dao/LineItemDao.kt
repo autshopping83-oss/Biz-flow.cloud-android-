@@ -22,4 +22,19 @@ interface LineItemDao {
 
     @Query("DELETE FROM line_items WHERE documentId IN (SELECT id FROM documents WHERE userId = :userId)")
     suspend fun clearForUser(userId: String)
+
+    @Query("SELECT description, SUM(quantity) as quantity, SUM(total) as total FROM line_items WHERE documentId IN (SELECT id FROM documents WHERE deletedAt IS NULL AND status IN ('PAGO') AND createdAt BETWEEN :startMs AND :endMs) GROUP BY description ORDER BY total DESC LIMIT :limit")
+    suspend fun topProductsByTotal(startMs: Long, endMs: Long, limit: Int): List<ProductAggregation>
+
+    @Query("SELECT description, SUM(quantity) as quantity, SUM(total) as total FROM line_items WHERE documentId IN (SELECT id FROM documents WHERE deletedAt IS NULL AND status IN ('PAGO') AND currency = :currency AND createdAt BETWEEN :startMs AND :endMs) GROUP BY description ORDER BY total DESC LIMIT :limit")
+    suspend fun topProductsByTotalAndCurrency(currency: String, startMs: Long, endMs: Long, limit: Int): List<ProductAggregation>
+
+    @Query("SELECT description, SUM(quantity) as quantity, SUM(total) as total FROM line_items WHERE documentId IN (SELECT id FROM documents WHERE deletedAt IS NULL AND status IN ('PAGO') AND createdAt BETWEEN :startMs AND :endMs) GROUP BY description ORDER BY quantity DESC LIMIT :limit")
+    suspend fun topProductsByQuantity(startMs: Long, endMs: Long, limit: Int): List<ProductAggregation>
+
+    @Query("SELECT description, SUM(quantity) as quantity, SUM(total) as total FROM line_items WHERE documentId IN (SELECT id FROM documents WHERE deletedAt IS NULL AND status IN ('PAGO') AND createdAt BETWEEN :startMs AND :endMs)")
+    suspend fun allProductsAggregated(startMs: Long, endMs: Long): List<ProductAggregation>
+
+    @Query("SELECT description, SUM(quantity) as quantity, SUM(total) as total FROM line_items WHERE documentId IN (SELECT id FROM documents WHERE deletedAt IS NULL AND status IN ('PAGO') AND currency = :currency AND createdAt BETWEEN :startMs AND :endMs)")
+    suspend fun allProductsAggregatedByCurrency(currency: String, startMs: Long, endMs: Long): List<ProductAggregation>
 }

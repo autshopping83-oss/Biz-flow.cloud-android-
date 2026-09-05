@@ -50,6 +50,7 @@ fun HomeScreen(
     onCreateDocument: (DocumentType) -> Unit = {},
     onViewHistory: () -> Unit = {},
     onNewExpense: () -> Unit = {},
+    onOpenReports: () -> Unit = {},
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
 ) {
     val recentDocuments by viewModel.recentDocuments.collectAsStateWithLifecycle()
@@ -101,7 +102,7 @@ fun HomeScreen(
                 QuickActionsSection(onCreateDocument = onCreateDocument)
             }
             item {
-                QuickAccessSection(onNewExpense = onNewExpense)
+                QuickAccessSection(onNewExpense = onNewExpense, onOpenReports = onOpenReports)
             }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -189,7 +190,7 @@ private fun QuickActionsSection(onCreateDocument: (DocumentType) -> Unit) {
 }
 
 @Composable
-private fun QuickAccessSection(onNewExpense: () -> Unit = {}) {
+private fun QuickAccessSection(onNewExpense: () -> Unit = {}, onOpenReports: () -> Unit = {}) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         QuickAccessChip(
             label = stringResource(R.string.home_quick_expense),
@@ -200,7 +201,7 @@ private fun QuickAccessSection(onNewExpense: () -> Unit = {}) {
         QuickAccessChip(
             label = stringResource(R.string.home_quick_reports),
             icon = Icons.Filled.Assessment,
-            onClick = { /* Fase 6: relatorios */ },
+            onClick = onOpenReports,
             modifier = Modifier.weight(1f),
         )
     }

@@ -36,6 +36,7 @@ import com.bizflow.cloud.ui.screens.ClientsScreen
 import com.bizflow.cloud.ui.screens.FinanceScreen
 import com.bizflow.cloud.ui.screens.ProductsScreen
 import com.bizflow.cloud.ui.screens.PlaceholderScreen
+import com.bizflow.cloud.ui.screens.ReportsScreen
 import io.github.jan.supabase.gotrue.SessionStatus
 import kotlinx.coroutines.flow.collectLatest
 
@@ -87,6 +88,9 @@ fun AppShell() {
                             restoreState = true
                         }
                     },
+                    onOpenReports = {
+                        navController.navigate(EditorRoute.REPORTS)
+                    },
                 )
             }
             composable(BottomDestination.DOCUMENTS.route) {
@@ -130,6 +134,9 @@ fun AppShell() {
             }
             composable(EditorRoute.PRODUCTS) {
                 ProductsScreen(onBack = { navController.popBackStack() })
+            }
+            composable(EditorRoute.REPORTS) {
+                ReportsScreen()
             }
             composable(EditorRoute.COMPANY_SETTINGS) {
                 CompanySettingsScreen(onClose = { navController.popBackStack() })
@@ -177,6 +184,7 @@ private object EditorRoute {
     const val EDITOR = "documentEditor"
     const val COMPANY_SETTINGS = "companySettings"
     const val PRODUCTS = "products"
+    const val REPORTS = "reports"
     val AUTH_ROUTES = listOf(AccountRoute.ACCOUNT, AccountRoute.LOGIN, AccountRoute.SIGNUP, AccountRoute.RECOVER)
 }
 
