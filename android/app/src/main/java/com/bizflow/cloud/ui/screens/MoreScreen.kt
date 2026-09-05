@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
@@ -61,6 +62,7 @@ fun MoreScreen(
     modifier: Modifier = Modifier,
     onOpenCompanySettings: () -> Unit = {},
     onOpenProducts: () -> Unit = {},
+    onOpenReports: () -> Unit = {},
     onOpenAccount: () -> Unit = {},
     onSignOut: suspend () -> Unit = {},
 ) {
@@ -102,6 +104,14 @@ fun MoreScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onOpenProducts() },
+            )
+            ListItem(
+                headlineContent = { Text(text = stringResource(R.string.reports_title)) },
+                leadingContent = { Icon(Icons.Filled.Assessment, contentDescription = null) },
+                trailingContent = { Icon(Icons.Filled.ChevronRight, contentDescription = null) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenReports() },
             )
             ListItem(
                 headlineContent = { Text(text = stringResource(R.string.more_settings)) },

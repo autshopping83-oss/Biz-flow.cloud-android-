@@ -128,6 +128,9 @@ fun AppShell() {
                     onOpenProducts = {
                         navController.navigate(EditorRoute.PRODUCTS)
                     },
+                    onOpenReports = {
+                        navController.navigate(EditorRoute.REPORTS)
+                    },
                     onOpenAccount = { navController.navigate(AccountRoute.ACCOUNT) },
                     onSignOut = { app.authManager.signOut() },
                 )
