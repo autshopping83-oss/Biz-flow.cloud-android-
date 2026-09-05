@@ -157,6 +157,8 @@
     <string name="finance_delete_confirm">Supprimer le mouvement « %1$s » ?</string>
     <string name="finance_filter_all">Tous</string>
     <string name="finance_filter_all_categories">Toutes</string>
+    <string name="finance_filter_all_currencies">Toutes</string>
+    <string name="finance_select_currency_hint">Sélectionnez une devise pour voir le résumé et les graphiques.</string>
     <string name="finance_income_vs_expense">Recettes vs Dépenses</string>
     <string name="finance_expenses_by_category">Dépenses par catégorie</string>
     <string name="finance_evolution">Évolution</string>

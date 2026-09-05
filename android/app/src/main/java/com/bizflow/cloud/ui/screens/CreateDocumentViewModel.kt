@@ -41,6 +41,7 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import java.util.UUID
 data class CreateDocumentUiState(
     val type: DocumentType = DocumentType.FATURA,
@@ -205,10 +206,21 @@ class CreateDocumentViewModel(
             val items = buildItems(state)
             val number = existingDocumentNumber ?: documentRepository.nextNumber(state.type)
             val document = buildDocument(state, items, number)
+
+            val previousStatus = if (existingDocumentId != null) {
+                transactionRepository.getByDocumentId(document.id)?.let {
+                    if (it.deletedAt == null) DocumentStatus.PAGO else null
+                }
+            } else null
+
             documentRepository.save(document, items)
+
             if (document.status == DocumentStatus.PAGO) {
                 createFinanceFromDocument(document)
+            } else if (previousStatus == DocumentStatus.PAGO && document.status != DocumentStatus.PAGO) {
+                transactionRepository.softDeleteByDocumentId(document.id)
             }
+
             onSaved()
         }
     }
@@ -217,8 +229,10 @@ class CreateDocumentViewModel(
         val existing = transactionRepository.getByDocumentId(document.id)
         if (existing != null) return
         val timestamp = try {
-            SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(document.date)?.time
-        } catch (_: Exception) { System.currentTimeMillis() }
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            sdf.timeZone = TimeZone.getDefault()
+            sdf.parse(document.date)?.time
+        } catch (_: Exception) { null }
         transactionRepository.save(
             TransactionEntity(
                 id = UUID.randomUUID().toString(),

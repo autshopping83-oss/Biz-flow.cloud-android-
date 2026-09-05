@@ -157,6 +157,8 @@
     <string name="finance_delete_confirm">删除交易 "%1$s"？</string>
     <string name="finance_filter_all">全部</string>
     <string name="finance_filter_all_categories">全部</string>
+    <string name="finance_filter_all_currencies">全部</string>
+    <string name="finance_select_currency_hint">选择货币以查看摘要和图表。</string>
     <string name="finance_income_vs_expense">收入 vs 支出</string>
     <string name="finance_expenses_by_category">按分类支出</string>
     <string name="finance_evolution">趋势</string>

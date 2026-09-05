@@ -49,7 +49,7 @@ class HomeViewModel(
     val monthlyRevenue: StateFlow<Double> = combine(
         transactionRepository.observeAll(),
         currency,
-    ) { transactions, _ ->
+    ) { transactions, settingsCurrency ->
         val cal = Calendar.getInstance()
         cal.set(Calendar.DAY_OF_MONTH, 1)
         cal.set(Calendar.HOUR_OF_DAY, 0)
@@ -64,7 +64,11 @@ class HomeViewModel(
         cal.set(Calendar.MILLISECOND, 999)
         val monthEnd = cal.timeInMillis
         transactions
-            .filter { it.type == FinanceViewModel.TYPE_INCOME && it.timestamp in monthStart..monthEnd }
+            .filter {
+                it.type == FinanceViewModel.TYPE_INCOME &&
+                    it.timestamp in monthStart..monthEnd &&
+                    it.currency.equals(settingsCurrency, ignoreCase = true)
+            }
             .sumOf { it.amount }
     }.stateIn(
         scope = viewModelScope,

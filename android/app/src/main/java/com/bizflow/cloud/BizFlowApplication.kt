@@ -117,6 +117,7 @@ class BizFlowApplication : Application() {
                         database.documentDao().clearForUser(userId)
                         database.lineItemDao().clearForUser(userId)
                         database.clientDao().clearForUser(userId)
+                        database.transactionDao().clearForUser(userId)
                         database.syncQueueDao().clearForUser(userId)
                     }
                 }

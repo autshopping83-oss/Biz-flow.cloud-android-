@@ -24,6 +24,15 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE deletedAt IS NULL AND documentId = :documentId LIMIT 1")
     fun observeByDocumentId(documentId: String): Flow<TransactionEntity?>
 
+    @Query("SELECT * FROM transactions WHERE documentId = :documentId AND deletedAt IS NOT NULL LIMIT 1")
+    suspend fun getSoftDeletedByDocumentId(documentId: String): TransactionEntity?
+
+    @Query("UPDATE transactions SET deletedAt = :now, updatedAt = :now WHERE documentId = :documentId AND deletedAt IS NULL")
+    suspend fun softDeleteByDocumentId(documentId: String, now: Long)
+
+    @Query("DELETE FROM transactions WHERE userId = :userId")
+    suspend fun clearForUser(userId: String)
+
     @Query("""
         SELECT * FROM transactions
         WHERE deletedAt IS NULL

@@ -16,6 +16,7 @@ import com.bizflow.cloud.data.repository.TransactionRepository
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import java.util.TimeZone
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -52,6 +53,8 @@ class FinanceViewModel(
         val filterType: FilterType = FilterType.ALL,
         val filterCategory: String? = null,
         val currency: String = "MZN",
+        val selectedCurrency: String? = null,
+        val availableCurrencies: List<String> = emptyList(),
         val isLoading: Boolean = true,
     )
 
@@ -66,15 +69,34 @@ class FinanceViewModel(
     private val _period = MutableStateFlow(currentMonthPeriod())
     private val _filterType = MutableStateFlow(FilterType.ALL)
     private val _filterCategory = MutableStateFlow<String?>(null)
+    private val _selectedCurrency = MutableStateFlow<String?>(null)
 
     val uiState: StateFlow<FinanceUiState> = combine(
         _period,
         _filterType,
         _filterCategory,
+        _selectedCurrency,
         transactionRepository.observeAll(),
         companySettingsRepository.observeCurrency(),
-    ) { period, filterType, filterCategory, allTransactions, currency ->
-        val periodTransactions = allTransactions.filter {
+    ) { period, filterType, filterCategory, selectedCurrency, allTransactions, settingsCurrency ->
+
+        val currencies = allTransactions
+            .map { it.currency }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .sorted()
+
+        val activeCurrency = selectedCurrency ?: settingsCurrency
+
+        val currencyFiltered = if (activeCurrency.isNotBlank()) {
+            allTransactions.filter {
+                it.currency.equals(activeCurrency, ignoreCase = true)
+            }
+        } else {
+            allTransactions
+        }
+
+        val periodTransactions = currencyFiltered.filter {
             it.timestamp in period.startMs..period.endMs
         }
 
@@ -103,7 +125,7 @@ class FinanceViewModel(
             .groupBy { it.category }
             .mapValues { (_, v) -> v.sumOf { it.amount } }
 
-        val monthlyData = computeMonthlyData(allTransactions, period)
+        val monthlyData = computeMonthlyData(currencyFiltered, period)
 
         FinanceUiState(
             period = period,
@@ -120,7 +142,9 @@ class FinanceViewModel(
             monthlyData = monthlyData,
             filterType = filterType,
             filterCategory = filterCategory,
-            currency = currency,
+            currency = settingsCurrency,
+            selectedCurrency = activeCurrency,
+            availableCurrencies = currencies,
             isLoading = false,
         )
     }.stateIn(
@@ -139,6 +163,10 @@ class FinanceViewModel(
 
     fun setFilterCategory(category: String?) {
         _filterCategory.value = category
+    }
+
+    fun setCurrency(currency: String?) {
+        _selectedCurrency.value = currency
     }
 
     fun setCurrentMonth() {
@@ -195,35 +223,10 @@ class FinanceViewModel(
         viewModelScope.launch { transactionRepository.softDelete(id) }
     }
 
-    suspend fun createTransactionFromDocument(document: DocumentEntity) {
-        val existing = transactionRepository.getByDocumentId(document.id)
-        if (existing != null) return
-
-        val timestamp = parseDateToTimestamp(document.date)
-        val transaction = TransactionEntity(
-            id = UUID.randomUUID().toString(),
-            userId = null,
-            type = TYPE_INCOME,
-            amount = document.total,
-            description = "Documento ${document.number} — ${document.clientName.ifBlank { "Sem cliente" }}",
-            category = CATEGORY_DOCUMENT,
-            date = document.date,
-            timestamp = timestamp,
-            receiptId = null,
-            documentId = document.id,
-            currency = document.currency,
-            synced = false,
-            updatedAt = System.currentTimeMillis(),
-            deletedAt = null,
-        )
-        transactionRepository.save(transaction)
-    }
-
     private fun computeMonthlyData(
         allTransactions: List<TransactionEntity>,
         currentPeriod: FinancePeriod,
     ): List<MonthData> {
-        val calendar = Calendar.getInstance()
         val fmt = SimpleDateFormat("MMM", Locale.getDefault())
         val months = mutableListOf<MonthData>()
 
@@ -261,6 +264,7 @@ class FinanceViewModel(
     private fun parseDateToTimestamp(date: String): Long {
         return try {
             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            sdf.timeZone = TimeZone.getDefault()
             sdf.parse(date)?.time ?: System.currentTimeMillis()
         } catch (_: Exception) {
             System.currentTimeMillis()
@@ -328,8 +332,6 @@ class FinanceViewModel(
             val label = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
             return FinancePeriod(start, end, label)
         }
-
-        val FINANCE_CATEGORIES = emptyList<String>()
 
         val Factory: Factory = viewModelFactory {
             initializer {

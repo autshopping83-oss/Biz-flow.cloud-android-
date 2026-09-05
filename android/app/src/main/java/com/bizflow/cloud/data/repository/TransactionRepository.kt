@@ -25,6 +25,17 @@ class TransactionRepository(
     suspend fun getByDocumentId(documentId: String): TransactionEntity? =
         transactionDao.getByDocumentId(documentId)
 
+    suspend fun getSoftDeletedByDocumentId(documentId: String): TransactionEntity? =
+        transactionDao.getSoftDeletedByDocumentId(documentId)
+
+    suspend fun softDeleteByDocumentId(documentId: String) {
+        transactionDao.softDeleteByDocumentId(documentId, System.currentTimeMillis())
+    }
+
+    suspend fun clearForUser(userId: String) {
+        transactionDao.clearForUser(userId)
+    }
+
     suspend fun save(transaction: TransactionEntity) {
         val uid = userIdProvider()
         val owned = if (uid != null && transaction.userId == null) transaction.copy(userId = uid) else transaction

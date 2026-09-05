@@ -136,6 +136,14 @@ fun FinanceScreen(
                     )
                 }
 
+                item {
+                    FinanceCurrencyFilter(
+                        selectedCurrency = state.selectedCurrency,
+                        availableCurrencies = state.availableCurrencies,
+                        onCurrencyChange = { viewModel.setCurrency(it) },
+                    )
+                }
+
                 if (state.transactions.isEmpty() && state.filterType == FinanceViewModel.FilterType.ALL && state.filterCategory == null) {
                     item {
                         FinanceEmptyState(
@@ -146,51 +154,62 @@ fun FinanceScreen(
                         )
                     }
                 } else {
-                    item {
-                        FinanceSummary(
-                            balance = state.balance,
-                            income = state.totalIncome,
-                            expense = state.totalExpense,
-                            documentIncome = state.documentIncome,
-                            currency = state.currency,
-                        )
-                    }
-
-                    item {
-                        FinanceFilters(
-                            filterType = state.filterType,
-                            filterCategory = state.filterCategory,
-                            categories = state.categoryExpenses.keys.toList(),
-                            onFilterTypeChange = { viewModel.setFilter(it) },
-                            onFilterCategoryChange = { viewModel.setFilterCategory(it) },
-                        )
-                    }
-
-                    if (state.monthlyData.isNotEmpty()) {
+                    if (state.selectedCurrency != null) {
                         item {
-                            BarChartSection(
-                                data = state.monthlyData,
-                                currency = state.currency,
-                            )
-                        }
-                    }
-
-                    if (state.totalIncome > 0 || state.totalExpense > 0) {
-                        item {
-                            IncomeExpenseDonut(
+                            FinanceSummary(
+                                balance = state.balance,
                                 income = state.totalIncome,
                                 expense = state.totalExpense,
-                                currency = state.currency,
+                                documentIncome = state.documentIncome,
+                                currency = state.selectedCurrency ?: state.currency,
                             )
                         }
-                    }
 
-                    if (state.categoryExpenses.isNotEmpty()) {
                         item {
-                            CategoryDonut(
-                                categoryExpenses = state.categoryExpenses,
-                                totalExpense = state.totalExpense,
-                                currency = state.currency,
+                            FinanceFilters(
+                                filterType = state.filterType,
+                                filterCategory = state.filterCategory,
+                                categories = state.categoryExpenses.keys.toList(),
+                                onFilterTypeChange = { viewModel.setFilter(it) },
+                                onFilterCategoryChange = { viewModel.setFilterCategory(it) },
+                            )
+                        }
+
+                        if (state.monthlyData.isNotEmpty()) {
+                            item {
+                                BarChartSection(
+                                    data = state.monthlyData,
+                                    currency = state.selectedCurrency ?: state.currency,
+                                )
+                            }
+                        }
+
+                        if (state.totalIncome > 0 || state.totalExpense > 0) {
+                            item {
+                                IncomeExpenseDonut(
+                                    income = state.totalIncome,
+                                    expense = state.totalExpense,
+                                    currency = state.selectedCurrency ?: state.currency,
+                                )
+                            }
+                        }
+
+                        if (state.categoryExpenses.isNotEmpty()) {
+                            item {
+                                CategoryDonut(
+                                    categoryExpenses = state.categoryExpenses,
+                                    totalExpense = state.totalExpense,
+                                    currency = state.selectedCurrency ?: state.currency,
+                                )
+                            }
+                        }
+                    } else if (state.availableCurrencies.size > 1) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.finance_select_currency_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                             )
                         }
                     }
@@ -400,6 +419,34 @@ private fun SummaryMiniCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+        }
+    }
+}
+
+@Composable
+private fun FinanceCurrencyFilter(
+    selectedCurrency: String?,
+    availableCurrencies: List<String>,
+    onCurrencyChange: (String?) -> Unit,
+) {
+    if (availableCurrencies.isEmpty()) return
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+        androidx.compose.foundation.layout.FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            FilterChip(
+                selected = selectedCurrency == null,
+                onClick = { onCurrencyChange(null) },
+                label = { Text(stringResource(R.string.finance_filter_all_currencies), fontSize = 11.sp) },
+            )
+            availableCurrencies.take(8).forEach { code ->
+                FilterChip(
+                    selected = selectedCurrency == code,
+                    onClick = { onCurrencyChange(if (selectedCurrency == code) null else code) },
+                    label = { Text(code, fontSize = 11.sp) },
+                )
+            }
         }
     }
 }

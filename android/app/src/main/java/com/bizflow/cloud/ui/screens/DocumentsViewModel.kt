@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.bizflow.cloud.BizFlowApplication
 import com.bizflow.cloud.data.local.model.DocumentWithItems
 import com.bizflow.cloud.data.repository.DocumentRepository
+import com.bizflow.cloud.data.repository.TransactionRepository
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 
 class DocumentsViewModel(
     private val repository: DocumentRepository,
+    private val transactionRepository: TransactionRepository,
 ) : ViewModel() {
 
     val documents: StateFlow<List<DocumentWithItems>> = repository.observeAll()
@@ -34,14 +36,20 @@ class DocumentsViewModel(
         )
 
     fun delete(id: String) {
-        viewModelScope.launch { repository.softDelete(id) }
+        viewModelScope.launch {
+            transactionRepository.softDeleteByDocumentId(id)
+            repository.softDelete(id)
+        }
     }
 
     companion object {
         val Factory: Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as BizFlowApplication
-                DocumentsViewModel(app.documentRepository)
+                DocumentsViewModel(
+                    app.documentRepository,
+                    app.transactionRepository,
+                )
             }
         }
     }
