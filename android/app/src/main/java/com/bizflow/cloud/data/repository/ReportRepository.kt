@@ -18,8 +18,14 @@ class ReportRepository(
     suspend fun documentCountByStatusAndPeriod(status: String, startMs: Long, endMs: Long): Int =
         documentDao.countByStatusAndPeriod(status, startMs, endMs)
 
+    suspend fun documentCountByStatusAndPeriodAndCurrency(status: String, currency: String, startMs: Long, endMs: Long): Int =
+        documentDao.countByStatusAndPeriodAndCurrency(status, currency, startMs, endMs)
+
     suspend fun documentCountByTypeAndPeriod(type: String, startMs: Long, endMs: Long): Int =
         documentDao.countByTypeAndPeriod(type, startMs, endMs)
+
+    suspend fun documentCountByTypeAndPeriodAndCurrency(type: String, currency: String, startMs: Long, endMs: Long): Int =
+        documentDao.countByTypeAndPeriodAndCurrency(type, currency, startMs, endMs)
 
     suspend fun salesTotalByPeriod(startMs: Long, endMs: Long): Double =
         documentDao.sumTotalByPeriod(startMs, endMs)
@@ -45,11 +51,20 @@ class ReportRepository(
     suspend fun topClientNamesByTotal(startMs: Long, endMs: Long, limit: Int = 10): List<String> =
         documentDao.topClientNamesByTotal(startMs, endMs, limit)
 
+    suspend fun topClientNamesByTotalAndCurrency(currency: String, startMs: Long, endMs: Long, limit: Int = 10): List<String> =
+        documentDao.topClientNamesByTotalAndCurrency(currency, startMs, endMs, limit)
+
     suspend fun clientTotalByPeriod(clientName: String, startMs: Long, endMs: Long): Double =
         documentDao.sumTotalByClientAndPeriod(clientName, startMs, endMs)
 
+    suspend fun clientTotalByPeriodAndCurrency(clientName: String, currency: String, startMs: Long, endMs: Long): Double =
+        documentDao.sumTotalByClientAndPeriodAndCurrency(clientName, currency, startMs, endMs)
+
     suspend fun clientDocumentCountByPeriod(clientName: String, startMs: Long, endMs: Long): Int =
         documentDao.countByClientAndPeriod(clientName, startMs, endMs)
+
+    suspend fun clientDocumentCountByPeriodAndCurrency(clientName: String, currency: String, startMs: Long, endMs: Long): Int =
+        documentDao.countByClientAndPeriodAndCurrency(clientName, currency, startMs, endMs)
 
     suspend fun topProductsByRevenue(startMs: Long, endMs: Long, limit: Int = 10): List<ProductAggregation> =
         lineItemDao.topProductsByTotal(startMs, endMs, limit)
@@ -59,6 +74,9 @@ class ReportRepository(
 
     suspend fun topProductsByQuantity(startMs: Long, endMs: Long, limit: Int = 10): List<ProductAggregation> =
         lineItemDao.topProductsByQuantity(startMs, endMs, limit)
+
+    suspend fun topProductsByQuantityAndCurrency(currency: String, startMs: Long, endMs: Long, limit: Int = 10): List<ProductAggregation> =
+        lineItemDao.topProductsByQuantityAndCurrency(currency, startMs, endMs, limit)
 
     suspend fun allProductsAggregated(startMs: Long, endMs: Long): List<ProductAggregation> =
         lineItemDao.allProductsAggregated(startMs, endMs)

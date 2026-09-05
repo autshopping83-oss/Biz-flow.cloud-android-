@@ -1,15 +1,21 @@
 package com.bizflow.cloud.core.util
 
+import com.bizflow.cloud.data.model.CurrencyCatalog
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
+import kotlin.math.abs
 
 fun formatMoney(amount: Double, currency: String, locale: Locale = Locale("pt")): String {
+    val currencyObj = CurrencyCatalog.byCode(currency)
+    val decimalDigits = currencyObj?.decimalDigits ?: 2
+
     val symbols = DecimalFormatSymbols(locale)
-    val df = DecimalFormat("#,##0.00", symbols)
-    val formatted = df.format(kotlin.math.abs(amount))
+    val pattern = if (decimalDigits == 0) "#,##0" else "#,##0.${"0".repeat(decimalDigits)}"
+    val df = DecimalFormat(pattern, symbols)
+    val formatted = df.format(abs(amount))
     val groupingSep = symbols.groupingSeparator
     val decimalSep = symbols.decimalSeparator
     val result = formatted

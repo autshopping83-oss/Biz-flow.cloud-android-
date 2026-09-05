@@ -59,6 +59,12 @@ interface DocumentDao {
     @Query("SELECT COUNT(*) FROM documents WHERE deletedAt IS NULL AND createdAt BETWEEN :startMs AND :endMs")
     suspend fun observeCountByPeriod(startMs: Long, endMs: Long): Int
 
+    @Query("SELECT COUNT(*) FROM documents WHERE deletedAt IS NULL AND status = :status AND currency = :currency AND createdAt BETWEEN :startMs AND :endMs")
+    suspend fun countByStatusAndPeriodAndCurrency(status: String, currency: String, startMs: Long, endMs: Long): Int
+
+    @Query("SELECT COUNT(*) FROM documents WHERE deletedAt IS NULL AND type = :type AND currency = :currency AND createdAt BETWEEN :startMs AND :endMs")
+    suspend fun countByTypeAndPeriodAndCurrency(type: String, currency: String, startMs: Long, endMs: Long): Int
+
     @Query("SELECT COALESCE(SUM(total), 0.0) FROM documents WHERE deletedAt IS NULL AND status IN ('PAGO') AND createdAt BETWEEN :startMs AND :endMs")
     suspend fun sumTotalByPeriod(startMs: Long, endMs: Long): Double
 
@@ -77,14 +83,23 @@ interface DocumentDao {
     @Query("SELECT COALESCE(AVG(total), 0.0) FROM documents WHERE deletedAt IS NULL AND status IN ('PAGO') AND currency = :currency AND createdAt BETWEEN :startMs AND :endMs")
     suspend fun avgTotalByPeriodAndCurrency(currency: String, startMs: Long, endMs: Long): Double
 
-    @Query("SELECT clientName FROM documents WHERE deletedAt IS NULL AND clientName != '' AND createdAt BETWEEN :startMs AND :endMs GROUP BY clientName ORDER BY COUNT(*) DESC LIMIT :limit")
+    @Query("SELECT clientName FROM documents WHERE deletedAt IS NULL AND clientName != '' AND status IN ('PAGO') AND createdAt BETWEEN :startMs AND :endMs GROUP BY clientName ORDER BY COUNT(*) DESC LIMIT :limit")
     suspend fun topClientNamesByCount(startMs: Long, endMs: Long, limit: Int): List<String>
+
+    @Query("SELECT clientName FROM documents WHERE deletedAt IS NULL AND clientName != '' AND status IN ('PAGO') AND currency = :currency AND createdAt BETWEEN :startMs AND :endMs GROUP BY clientName ORDER BY SUM(total) DESC LIMIT :limit")
+    suspend fun topClientNamesByTotalAndCurrency(currency: String, startMs: Long, endMs: Long, limit: Int): List<String>
 
     @Query("SELECT clientName FROM documents WHERE deletedAt IS NULL AND clientName != '' AND status IN ('PAGO') AND createdAt BETWEEN :startMs AND :endMs GROUP BY clientName ORDER BY SUM(total) DESC LIMIT :limit")
     suspend fun topClientNamesByTotal(startMs: Long, endMs: Long, limit: Int): List<String>
 
+    @Query("SELECT COALESCE(SUM(total), 0.0) FROM documents WHERE deletedAt IS NULL AND status IN ('PAGO') AND clientName = :clientName AND currency = :currency AND createdAt BETWEEN :startMs AND :endMs")
+    suspend fun sumTotalByClientAndPeriodAndCurrency(clientName: String, currency: String, startMs: Long, endMs: Long): Double
+
     @Query("SELECT COALESCE(SUM(total), 0.0) FROM documents WHERE deletedAt IS NULL AND status IN ('PAGO') AND clientName = :clientName AND createdAt BETWEEN :startMs AND :endMs")
     suspend fun sumTotalByClientAndPeriod(clientName: String, startMs: Long, endMs: Long): Double
+
+    @Query("SELECT COUNT(*) FROM documents WHERE deletedAt IS NULL AND status IN ('PAGO') AND clientName = :clientName AND currency = :currency AND createdAt BETWEEN :startMs AND :endMs")
+    suspend fun countByClientAndPeriodAndCurrency(clientName: String, currency: String, startMs: Long, endMs: Long): Int
 
     @Query("SELECT COUNT(*) FROM documents WHERE deletedAt IS NULL AND status IN ('PAGO') AND clientName = :clientName AND createdAt BETWEEN :startMs AND :endMs")
     suspend fun countByClientAndPeriod(clientName: String, startMs: Long, endMs: Long): Int

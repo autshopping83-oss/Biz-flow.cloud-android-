@@ -103,10 +103,10 @@ class ReportsViewModel(
         selectedTab: ReportTab,
         availableCurrencies: List<String>,
     ): ReportsUiState {
-        val sales = buildSalesMetrics(period, activeCurrency)
-        val documents = buildDocumentMetrics(period, activeCurrency)
-        val products = buildProductMetrics(period, activeCurrency)
-        val clients = buildClientRanking(period, activeCurrency)
+        val sales = buildSalesMetrics(period, activeCurrency, selectedCurrency != null)
+        val documents = buildDocumentMetrics(period, activeCurrency, selectedCurrency != null)
+        val products = buildProductMetrics(period, activeCurrency, selectedCurrency != null)
+        val clients = buildClientRanking(period, activeCurrency, selectedCurrency != null)
 
         return ReportsUiState(
             period = period,
@@ -122,9 +122,13 @@ class ReportsViewModel(
         )
     }
 
-    private suspend fun buildSalesMetrics(period: ReportPeriod, currency: String): SalesMetrics {
+    private suspend fun buildSalesMetrics(period: ReportPeriod, currency: String, isCurrencySelected: Boolean): SalesMetrics {
         val totalSales = reportRepository.salesTotalByPeriodAndCurrency(currency, period.startMs, period.endMs)
-        val paidCount = reportRepository.documentCountByStatusAndPeriod(DocumentStatus.PAGO.name, period.startMs, period.endMs)
+        val paidCount = if (isCurrencySelected) {
+            reportRepository.documentCountByStatusAndPeriodAndCurrency(DocumentStatus.PAGO.name, currency, period.startMs, period.endMs)
+        } else {
+            reportRepository.documentCountByStatusAndPeriod(DocumentStatus.PAGO.name, period.startMs, period.endMs)
+        }
         val averageTicket = reportRepository.averageTicketByPeriodAndCurrency(currency, period.startMs, period.endMs)
 
         val salesByType = mutableMapOf<String, Double>()
@@ -143,15 +147,35 @@ class ReportsViewModel(
         )
     }
 
-    private suspend fun buildDocumentMetrics(period: ReportPeriod, currency: String): DocumentMetrics {
-        val paid = reportRepository.documentCountByStatusAndPeriod(DocumentStatus.PAGO.name, period.startMs, period.endMs)
-        val issued = reportRepository.documentCountByStatusAndPeriod(DocumentStatus.EMITIDO.name, period.startMs, period.endMs)
-        val pending = reportRepository.documentCountByStatusAndPeriod(DocumentStatus.PENDENTE.name, period.startMs, period.endMs)
-        val cancelled = reportRepository.documentCountByStatusAndPeriod(DocumentStatus.ANULADO.name, period.startMs, period.endMs)
+    private suspend fun buildDocumentMetrics(period: ReportPeriod, currency: String, isCurrencySelected: Boolean): DocumentMetrics {
+        val paid = if (isCurrencySelected) {
+            reportRepository.documentCountByStatusAndPeriodAndCurrency(DocumentStatus.PAGO.name, currency, period.startMs, period.endMs)
+        } else {
+            reportRepository.documentCountByStatusAndPeriod(DocumentStatus.PAGO.name, period.startMs, period.endMs)
+        }
+        val issued = if (isCurrencySelected) {
+            reportRepository.documentCountByStatusAndPeriodAndCurrency(DocumentStatus.EMITIDO.name, currency, period.startMs, period.endMs)
+        } else {
+            reportRepository.documentCountByStatusAndPeriod(DocumentStatus.EMITIDO.name, period.startMs, period.endMs)
+        }
+        val pending = if (isCurrencySelected) {
+            reportRepository.documentCountByStatusAndPeriodAndCurrency(DocumentStatus.PENDENTE.name, currency, period.startMs, period.endMs)
+        } else {
+            reportRepository.documentCountByStatusAndPeriod(DocumentStatus.PENDENTE.name, period.startMs, period.endMs)
+        }
+        val cancelled = if (isCurrencySelected) {
+            reportRepository.documentCountByStatusAndPeriodAndCurrency(DocumentStatus.ANULADO.name, currency, period.startMs, period.endMs)
+        } else {
+            reportRepository.documentCountByStatusAndPeriod(DocumentStatus.ANULADO.name, period.startMs, period.endMs)
+        }
 
         val countByType = mutableMapOf<String, Int>()
         for (type in DocumentType.entries) {
-            countByType[type.code] = reportRepository.documentCountByTypeAndPeriod(type.code, period.startMs, period.endMs)
+            countByType[type.code] = if (isCurrencySelected) {
+                reportRepository.documentCountByTypeAndPeriodAndCurrency(type.code, currency, period.startMs, period.endMs)
+            } else {
+                reportRepository.documentCountByTypeAndPeriod(type.code, period.startMs, period.endMs)
+            }
         }
 
         return DocumentMetrics(
@@ -164,22 +188,38 @@ class ReportsViewModel(
         )
     }
 
-    private suspend fun buildProductMetrics(period: ReportPeriod, currency: String): ProductMetrics {
+    private suspend fun buildProductMetrics(period: ReportPeriod, currency: String, isCurrencySelected: Boolean): ProductMetrics {
         val topByRevenue = reportRepository.topProductsByRevenueAndCurrency(currency, period.startMs, period.endMs, 10)
-        val topByQuantity = reportRepository.topProductsByQuantity(period.startMs, period.endMs, 10)
+        val topByQuantity = if (isCurrencySelected) {
+            reportRepository.topProductsByQuantityAndCurrency(currency, period.startMs, period.endMs, 10)
+        } else {
+            reportRepository.topProductsByQuantity(period.startMs, period.endMs, 10)
+        }
         return ProductMetrics(
             topByRevenue = topByRevenue,
             topByQuantity = topByQuantity,
         )
     }
 
-    private suspend fun buildClientRanking(period: ReportPeriod, currency: String): List<ClientRanking> {
-        val topNames = reportRepository.topClientNamesByTotal(period.startMs, period.endMs, 10)
+    private suspend fun buildClientRanking(period: ReportPeriod, currency: String, isCurrencySelected: Boolean): List<ClientRanking> {
+        val topNames = if (isCurrencySelected) {
+            reportRepository.topClientNamesByTotalAndCurrency(currency, period.startMs, period.endMs, 10)
+        } else {
+            reportRepository.topClientNamesByTotal(period.startMs, period.endMs, 10)
+        }
         return topNames.map { name ->
             ClientRanking(
                 name = name,
-                documentCount = reportRepository.clientDocumentCountByPeriod(name, period.startMs, period.endMs),
-                totalValue = reportRepository.clientTotalByPeriod(name, period.startMs, period.endMs),
+                documentCount = if (isCurrencySelected) {
+                    reportRepository.clientDocumentCountByPeriodAndCurrency(name, currency, period.startMs, period.endMs)
+                } else {
+                    reportRepository.clientDocumentCountByPeriod(name, period.startMs, period.endMs)
+                },
+                totalValue = if (isCurrencySelected) {
+                    reportRepository.clientTotalByPeriodAndCurrency(name, currency, period.startMs, period.endMs)
+                } else {
+                    reportRepository.clientTotalByPeriod(name, period.startMs, period.endMs)
+                },
             )
         }
     }
