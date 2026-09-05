@@ -27,8 +27,8 @@ android {
         applicationId = "com.bizflow.cloud"
         minSdk = 22
         targetSdk = 36
-        versionCode = 9
-        versionName = "1.4.5"
+        versionCode = 10
+        versionName = "1.4.6"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val supabaseUrl = resolveProperty("SUPABASE_URL")
@@ -51,6 +51,12 @@ android {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("release")
+        }
+    }
+
+    bundle {
+        release {
+            debugSymbolLevel = com.android.build.api.dsl.DebugSymbolLevel.FULL
         }
     }
 
