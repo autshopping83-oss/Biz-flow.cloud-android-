@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.bizflow.cloud.BizFlowApplication
 import com.bizflow.cloud.data.local.entity.DocumentEntity
 import com.bizflow.cloud.data.local.entity.TransactionEntity
+import com.bizflow.cloud.data.model.CurrencyCatalog
 import com.bizflow.cloud.data.model.DocumentStatus
 import com.bizflow.cloud.data.repository.CompanySettingsRepository
 import com.bizflow.cloud.data.repository.DocumentRepository
@@ -78,13 +79,16 @@ class FinanceViewModel(
         _selectedCurrency,
         transactionRepository.observeAll(),
         companySettingsRepository.observeCurrency(),
-    ) { period, filterType, filterCategory, selectedCurrency, allTransactions, settingsCurrency ->
+    ) { args: Array<Any> ->
+        @Suppress("UNCHECKED_CAST")
+        val period = args[0] as FinancePeriod
+        val filterType = args[1] as FilterType
+        val filterCategory = args[2] as String?
+        val selectedCurrency = args[3] as String?
+        val allTransactions = args[4] as List<TransactionEntity>
+        val settingsCurrency = args[5] as String
 
-        val currencies = allTransactions
-            .map { it.currency }
-            .filter { it.isNotBlank() }
-            .distinct()
-            .sorted()
+        val availableCurrencies = CurrencyCatalog.ALL.map { it.code }
 
         val activeCurrency = selectedCurrency ?: settingsCurrency
 
@@ -144,7 +148,7 @@ class FinanceViewModel(
             filterCategory = filterCategory,
             currency = settingsCurrency,
             selectedCurrency = activeCurrency,
-            availableCurrencies = currencies,
+            availableCurrencies = availableCurrencies,
             isLoading = false,
         )
     }.stateIn(
