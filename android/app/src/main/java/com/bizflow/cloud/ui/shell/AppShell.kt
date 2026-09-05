@@ -139,7 +139,7 @@ fun AppShell() {
                 ProductsScreen(onBack = { navController.popBackStack() })
             }
             composable(EditorRoute.REPORTS) {
-                ReportsScreen()
+                ReportsScreen(onBack = { navController.popBackStack() })
             }
             composable(EditorRoute.COMPANY_SETTINGS) {
                 CompanySettingsScreen(onClose = { navController.popBackStack() })
