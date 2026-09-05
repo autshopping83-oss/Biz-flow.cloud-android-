@@ -1,5 +1,7 @@
 package com.bizflow.cloud.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +16,7 @@ import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Settings
@@ -25,8 +28,10 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -63,6 +68,7 @@ fun MoreScreen(
     onOpenCompanySettings: () -> Unit = {},
     onOpenProducts: () -> Unit = {},
     onOpenReports: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
     onOpenAccount: () -> Unit = {},
     onSignOut: suspend () -> Unit = {},
 ) {
@@ -70,7 +76,15 @@ fun MoreScreen(
     val scope = rememberCoroutineScope()
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showLanguages by rememberSaveable { mutableStateOf(false) }
+    var showFirstAccess by rememberSaveable { mutableStateOf(false) }
     val currentLanguage = LocaleHelper.getCurrentLanguageTag(context)
+
+    LaunchedEffect(Unit) {
+        val prefs = context.getSharedPreferences("bizflow_about", android.content.Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("first_access_shown", false)) {
+            showFirstAccess = true
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -128,6 +142,14 @@ fun MoreScreen(
                     .clickable { onOpenAccount() },
             )
             ListItem(
+                headlineContent = { Text(text = stringResource(R.string.about_title)) },
+                leadingContent = { Icon(Icons.Filled.Info, contentDescription = null) },
+                trailingContent = { Icon(Icons.Filled.ChevronRight, contentDescription = null) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenAbout() },
+            )
+            ListItem(
                 headlineContent = { Text(text = stringResource(R.string.more_sign_out)) },
                 leadingContent = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) },
                 modifier = Modifier.clickable { scope.launch { onSignOut() } },
@@ -153,6 +175,15 @@ fun MoreScreen(
                 showLanguages = false
             },
             onDismiss = { showLanguages = false },
+        )
+    }
+    if (showFirstAccess) {
+        FirstAccessDialog(
+            onDismiss = {
+                showFirstAccess = false
+                context.getSharedPreferences("bizflow_about", android.content.Context.MODE_PRIVATE)
+                    .edit().putBoolean("first_access_shown", true).apply()
+            },
         )
     }
 }
@@ -209,5 +240,46 @@ private fun LanguageDialog(
             }
         },
         confirmButton = {},
+    )
+}
+
+@Composable
+private fun FirstAccessDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Filled.Info, contentDescription = null) },
+        title = { Text(text = stringResource(R.string.about_first_access_title)) },
+        text = {
+            Column {
+                Text(
+                    text = stringResource(R.string.about_first_access_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                ListItem(
+                    headlineContent = { Text(text = stringResource(R.string.about_terms)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.biz-flow.cloud/termos"))
+                            context.startActivity(intent)
+                        },
+                )
+                ListItem(
+                    headlineContent = { Text(text = stringResource(R.string.about_privacy)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.biz-flow.cloud/privacidade"))
+                            context.startActivity(intent)
+                        },
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.about_continue))
+            }
+        },
     )
 }

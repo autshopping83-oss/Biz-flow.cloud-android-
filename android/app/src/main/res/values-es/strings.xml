@@ -247,4 +247,15 @@
     <string name="reports_quantity_format">%1$d unidades</string>
     <string name="reports_client_docs_format">%1$d documentos</string>
     <string name="reports_search_currency">Buscar moneda…</string>
+    <string name="about_title">Acerca de Biz-flow.cloud</string>
+    <string name="about_app_name">Biz-flow.cloud</string>
+    <string name="about_version">Versión de la aplicación: %1$s</string>
+    <string name="about_legal">LEGAL</string>
+    <string name="about_terms">Términos de Uso</string>
+    <string name="about_privacy">Política de Privacidad</string>
+    <string name="about_website_label">Sitio web</string>
+    <string name="about_support">CONTACTO/SOPORTE</string>
+    <string name="about_first_access_title">Bienvenido a Biz-flow.cloud</string>
+    <string name="about_first_access_message">Puede consultar nuestros documentos legales en cualquier momento a través de Más → Acerca de Biz-flow.cloud.</string>
+    <string name="about_continue">Continuar</string>
 </resources>

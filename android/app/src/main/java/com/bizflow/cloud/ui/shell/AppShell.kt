@@ -32,6 +32,7 @@ import com.bizflow.cloud.ui.screens.CreateDocumentScreen
 import com.bizflow.cloud.ui.screens.DocumentsScreen
 import com.bizflow.cloud.ui.screens.HomeScreen
 import com.bizflow.cloud.ui.screens.MoreScreen
+import com.bizflow.cloud.ui.screens.AboutScreen
 import com.bizflow.cloud.ui.screens.ClientsScreen
 import com.bizflow.cloud.ui.screens.FinanceScreen
 import com.bizflow.cloud.ui.screens.ProductsScreen
@@ -131,6 +132,9 @@ fun AppShell() {
                     onOpenReports = {
                         navController.navigate(EditorRoute.REPORTS)
                     },
+                    onOpenAbout = {
+                        navController.navigate(EditorRoute.ABOUT)
+                    },
                     onOpenAccount = { navController.navigate(AccountRoute.ACCOUNT) },
                     onSignOut = { app.authManager.signOut() },
                 )
@@ -140,6 +144,9 @@ fun AppShell() {
             }
             composable(EditorRoute.REPORTS) {
                 ReportsScreen(onBack = { navController.popBackStack() })
+            }
+            composable(EditorRoute.ABOUT) {
+                AboutScreen(onBack = { navController.popBackStack() })
             }
             composable(EditorRoute.COMPANY_SETTINGS) {
                 CompanySettingsScreen(onClose = { navController.popBackStack() })
@@ -188,6 +195,7 @@ private object EditorRoute {
     const val COMPANY_SETTINGS = "companySettings"
     const val PRODUCTS = "products"
     const val REPORTS = "reports"
+    const val ABOUT = "about"
     val AUTH_ROUTES = listOf(AccountRoute.ACCOUNT, AccountRoute.LOGIN, AccountRoute.SIGNUP, AccountRoute.RECOVER)
 }
 

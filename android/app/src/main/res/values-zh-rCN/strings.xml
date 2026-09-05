@@ -247,4 +247,15 @@
     <string name="reports_quantity_format">%1$d 件</string>
     <string name="reports_client_docs_format">%1$d 份文档</string>
     <string name="reports_search_currency">搜索货币…</string>
+    <string name="about_title">关于 Biz-flow.cloud</string>
+    <string name="about_app_name">Biz-flow.cloud</string>
+    <string name="about_version">应用版本：%1$s</string>
+    <string name="about_legal">法律信息</string>
+    <string name="about_terms">使用条款</string>
+    <string name="about_privacy">隐私政策</string>
+    <string name="about_website_label">网站</string>
+    <string name="about_support">联系/支持</string>
+    <string name="about_first_access_title">欢迎使用 Biz-flow.cloud</string>
+    <string name="about_first_access_message">您可以随时通过 更多 → 关于 Biz-flow.cloud 查阅我们的法律文件。</string>
+    <string name="about_continue">继续</string>
 </resources>
