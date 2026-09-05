@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.bizflow.cloud.data.local.entity.LineItemEntity
+import com.bizflow.cloud.data.local.model.ProductAggregation
 
 @Dao
 interface LineItemDao {

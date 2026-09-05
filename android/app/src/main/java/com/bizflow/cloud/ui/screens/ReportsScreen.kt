@@ -234,7 +234,8 @@ private fun ReportTabRow(
         modifier = Modifier.fillMaxWidth(),
         edgePadding = 16.dp,
     ) {
-        tabs.forEach { (tab, Pair(label, icon)) ->
+        tabs.forEach { (tab, tabInfo) ->
+            val (label, icon) = tabInfo
             Tab(
                 selected = selectedTab == tab,
                 onClick = { onSelectTab(tab) },
